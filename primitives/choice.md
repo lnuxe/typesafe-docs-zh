@@ -1,6 +1,6 @@
 # Choice
 
-> A Choice is a System One question type for selecting one option from a defined set. The answer includes the selected option, a probability for each option, and confidence.
+> Choice 是一种 System One 问题类型，用于从定义好的集合中选出一个选项。答案包含选中的选项、每个选项的概率以及置信度。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,32 +231,32 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Use a Choice when the answer is one of a fixed set of options. For example, which team handles a ticket, which category a product belongs to, or which language a code snippet is written in. If the answer is a position on a spectrum, use a [Score](/primitives/score). If it's a yes or no, use a [Noul](/primitives/noul). [Choose a question type](/primitives#choose-a-question-type) compares all three.
+当答案是固定选项集合中的一个时，使用 Choice。例如：工单应由哪个团队处理、商品属于哪个类目、代码片段是用什么语言写的。如果答案是谱系上的位置，用 [Score](/primitives/score)；如果是是/非问题，用 [Noul](/primitives/noul)。三者的对比见[选择问题类型](/primitives#choose-a-question-type)。
 
-A Choice answer is the selected option in `choice`. The model also returns a probability for every option in `probabilities`, and a `confidence` value for the selected option.
+Choice 答案是 `choice` 中选中的选项。模型还会在 `probabilities` 中返回每个选项的概率，以及在 `confidence` 中返回所选选项的置信度。
 
-Example questions:
+示例问题：
 
 ```
-"What programming language is this code written in"
-  → options: python, javascript, typescript, go, rust, other
+"这段代码是用什么编程语言写的"
+  → 选项：python, javascript, typescript, go, rust, other
 
-"What type of meeting is this based on the title and description"
-  → options: standup, planning, retrospective, one on one, brainstorm, none of the above
+"根据标题和描述，这是什么类型的会议"
+  → 选项：standup, planning, retrospective, one on one, brainstorm, none of the above
 
-"Which product category does this item belong to"
-  → options: electronics, clothing, home garden, food and beverage
+"这件商品属于哪个产品类目"
+  → 选项：electronics, clothing, home garden, food and beverage
 ```
 
-## Request structure
+## 请求结构
 
-The POST request body to the [TypeSafe API](/api) has a specific structure. The top level has three fields: `state`, the content to evaluate; `model`; and `questions`, a map from question ids you choose to question objects. Each Choice question has the following fields:
+发送到 [TypeSafe API](/api) 的 POST 请求体有固定的结构。顶层有三个字段：`state`（待评估的内容）、`model`，以及 `questions`（由你选择的问题 id 到问题对象的映射）。每个 Choice 问题有以下字段：
 
-* `type`: Always `"choice"`.
-* `instructions`: The question the model answers.
-* `criteria`: The answer options, as a map. Each key is an option name and each value is a description of that option.
+* `type`：固定为 `"choice"`。
+* `instructions`：模型要回答的问题。
+* `criteria`：答案选项，以映射形式给出。每个键是选项名，每个值是该选项的描述。
 
-Below is a request where the state is a support ticket from an online shoe store and the question is which team should handle it:
+下面这个请求中，状态是一家在线鞋店的客服工单，问题是该由哪个团队处理：
 
 <TypesafeExample
   display="request"
@@ -277,9 +277,9 @@ questions: {
 }}
 />
 
-You choose the question id, `department` in this case. The answer is returned under the same id. The model never sees the question id. The option names and their descriptions are both sent to the model, so write descriptions that separate the options from each other.
+问题 id 由你选择，本例中是 `department`。答案会以相同的 id 返回。模型永远看不到问题 id。选项名及其描述都会发送给模型，因此描述要能把各选项区分开。
 
-Our [client SDKs](/sdk) provide typed questions. In Python, the same question is a `Choice`:
+我们的[客户端 SDK](/sdk) 提供类型化的问题。在 Python 中，同一个问题写作一个 `Choice`：
 
 ```python theme={null}
 from typesafe_sdk import Choice, TypeSafeClient
@@ -302,17 +302,17 @@ with TypeSafeClient() as client:
     print(response.answers["department"].choice)
 ```
 
-Use the `system_one` method or the `https://api.typesafe.ai/v1/systemone` endpoint to call a System One model. The `model` field selects which model handles the request. [How to build with TypeSafe](/concepts/how-to-build-with-system-one) covers where in your code to call it.
+使用 `system_one` 方法或 `https://api.typesafe.ai/v1/systemone` 端点调用 System One 模型。`model` 字段选择由哪个模型处理请求。在代码的哪个位置调用它，见[如何用 TypeSafe 构建](/concepts/how-to-build-with-system-one)。
 
-Use one of our [client SDKs](/sdk) or call the [HTTP API](/api) directly. If a coding agent is writing the integration for you, install the [TypeSafe agent skill](/agent-skill#installation) first so it knows the request and response shapes.
+使用我们的[客户端 SDK](/sdk) 之一，或直接调用 [HTTP API](/api)。如果是编码智能体替你写集成代码，请先安装 [TypeSafe 智能体技能](/agent-skill#installation)，让它了解请求和响应的形态。
 
 <Note>
-  `instructions` and each entry in `criteria` can be a string, an object, or an array. Start with a string. Use an object when a description needs several kinds of guidance, such as what an option covers, what it doesn't cover, and some examples. See [Structured instructions and criteria](#structured-instructions-and-criteria) below and the [API reference](/api#param-instructions-1).
+  `instructions` 和 `criteria` 中的每个条目都可以是字符串、对象或数组。先用字符串。当一条描述需要多种指引时再用对象，例如选项涵盖什么、不涵盖什么、以及一些示例。参见下文[结构化的指令与判据](#structured-instructions-and-criteria)和 [API 参考](/api#param-instructions-1)。
 </Note>
 
-## Response structure
+## 响应结构
 
-The response has one entry in `answers` per question, under the ids from the request. This is the response to the example request above:
+响应的 `answers` 中每个问题一个条目，键与请求中的 id 相同。这是对上面示例请求的响应：
 
 ```json theme={null}
 {
@@ -336,27 +336,27 @@ The response has one entry in `answers` per question, under the ids from the req
 }
 ```
 
-Besides `type`, each Choice answer has three values:
+除 `type` 外，每个 Choice 答案还有三个值：
 
-* `choice`: The option with the highest probability.
-* `probabilities`: The full probability distribution across every option. The sum of all values is 1.
-* [`confidence`](/confidence): A number from 0 to 1 computed from how `probabilities` is spread. A flat shape, with probability spread across several options, means low confidence. A single peak on one option means high confidence.
+* `choice`：概率最高的选项。
+* `probabilities`：所有选项上的完整概率分布，各值之和为 1。
+* [`confidence`](/confidence)：一个 0 到 1 的数，由 `probabilities` 的分散程度计算而来。形状平坦（概率摊在多个选项上）意味着低置信度；单一选项上出现尖峰意味着高置信度。
 
-This ticket is an easy one, so all of the probability is on `returns` and confidence is 1.0. A ticket that mentions a wrong size and a missing refund would split probability between `returns` and `billing`, and confidence would drop.
+这张工单很简单，所以全部概率都落在 `returns` 上，置信度为 1.0。如果一张工单既提到尺码错误又提到退款未到，概率就会在 `returns` 和 `billing` 之间分摊，置信度随之下降。
 
-## Good practice: ask more than one question per call
+## 最佳实践：每次调用问多个问题
 
-Ask every Choice question your code might need in a single request rather than one request per question. Questions are evaluated in parallel. Adding questions barely changes the response time, and the code can ignore answers it doesn't need. Extra questions still cost tokens. [Ask multiple questions together](/primitives#ask-multiple-questions-together) explains this in full; the next section shows five Choice questions in one call.
+把你代码可能用到的每个 Choice 问题都放进一次请求，而不是每个问题一次请求。问题会被并行评估。增加问题几乎不改变响应时间，代码可以忽略不需要的答案。额外的问题仍然消耗 token。完整说明见[一次提问多个问题](/primitives#ask-multiple-questions-together)；下一节展示了在一次调用中提出五个 Choice 问题。
 
-The same logic applies to the options inside a single Choice question. A Choice question accepts up to 255 options, and adding options costs a few tokens each, so give the model the full list of teams, categories, or products rather than a shortlist. Add an `other` or `none of the above` option when the list might not cover every input, so the model can say none of the others fit.
+同样的逻辑也适用于单个 Choice 问题内部的选项。一个 Choice 问题最多接受 255 个选项，每个选项各消耗少量 token，因此直接把完整的团队、类目或产品列表给模型，而不是只给一份候选名单。当列表可能覆盖不了所有输入时，加一个 `other` 或 `none of the above` 选项，让模型能够表达"其余选项都不符合"。
 
-To classify documents through a deep hierarchy or large taxonomy, chain Choice questions level by level. The [Hierarchical Classification cookbook](/cookbooks/hierarchical_classification) shows how to run a beam search over Choice probabilities, keeping the best `K` candidate paths at each level instead of committing to a single greedy path.
+要通过深层级结构或大型分类体系给文档分类，可以逐级串联 Choice 问题。[层级分类 cookbook](/cookbooks/hierarchical_classification) 展示了如何在 Choice 概率上执行束搜索，每一级保留最优的 `K` 条候选路径，而不是只沿一条贪婪路径走到底。
 
-## A more complex example
+## 一个更复杂的例子
 
-The basic example above routes a ticket to a team. A bigger support system might also need the return reason, the delivery problem, what the customer wants, and the customer's tone.
+上面的基础示例只是把工单路由到某个团队。更大的客服系统可能还需要退货原因、物流问题、客户想要什么、客户的语气。
 
-The request below asks five Choice questions about a ticket that is more ambiguous than the first: it involves three teams and doesn't say what the customer wants.
+下面的请求针对一张比第一张更含糊的工单提出五个 Choice 问题：它涉及三个团队，而且没说清客户想要什么。
 
 <TypesafeExample
   display="request"
@@ -418,9 +418,9 @@ questions: {
 }}
 />
 
-Two of these Choice questions are speculative: `return_reason` only matters if the `department` is `returns`, and `shipping_issue` only matters if it's `shipping`. The `tone` question uses `null` descriptions because the option names are clear on their own.
+其中两个 Choice 问题是推测性的：`return_reason` 只在 `department` 为 `returns` 时才有意义，`shipping_issue` 只在 `shipping` 时才有意义。`tone` 问题的描述用 `null`，因为选项名本身已经足够清楚。
 
-The TypeSafe response:
+TypeSafe 的响应：
 
 ```json theme={null}
 {
@@ -489,15 +489,15 @@ The TypeSafe response:
 }
 ```
 
-Each question is answered on its own against the ticket:
+每个问题都独立针对这张工单作答：
 
-* The `department` answer is `returns` with a 0.61 probability, but `billing` has 0.35 because of the double charge. The ticket belongs to two teams, and the split confidence of 0.42 reflects that.
-* The `return_reason` is `wrong_size` with a confidence of 1.0, which is expected because it says this clearly in the ticket.
-* The `shipping_issue` answer is split between `delayed` and `other`. It's a speculative question and `department` didn't come back as shipping, so it can be ignored by the code, as shown in the example code snippet below.
-* The `requested_resolution` answer leans to `refund` at 0.40, with `replacement` and `exchange` sharing most of the rest, and the confidence is 0.20. The double charge suggests money back, the wrong size suggests a swap, and the customer never says which they want.
-* The `tone` answer is `frustrated` with a probability of 0.84 and a confidence of 0.76.
+* `department` 的答案是 `returns`（概率 0.61），但由于双重扣款，`billing` 拿到了 0.35。这张工单属于两个团队，0.42 的分裂置信度正反映了这一点。
+* `return_reason` 是 `wrong_size`，置信度 1.0——意料之中，工单里写得明明白白。
+* `shipping_issue` 的答案在 `delayed` 和 `other` 之间分裂。这是个推测性问题，且 `department` 并未返回 shipping，代码可以忽略它，如下面示例代码所示。
+* `requested_resolution` 的答案倾向 `refund`（0.40），`replacement` 和 `exchange` 分摊了其余大部分，置信度只有 0.20。双重扣款指向退款，尺码错误指向换货，而客户从未说要哪个。
+* `tone` 的答案是 `frustrated`，概率 0.84，置信度 0.76。
 
-The example code below reads the answers it needs, ignores the rest, and treats a low-confidence answer as a reason to ask rather than act:
+下面的示例代码读取它需要的答案、忽略其余的，并把低置信度答案当作"先询问、不擅自行动"的理由：
 
 ```python theme={null}
 from typesafe_sdk import Choice, TypeSafeClient
@@ -557,27 +557,27 @@ def triage(ticket: str) -> None:
 
     department = answers["department"]
     if department.confidence < 0.3:
-        # Not clear which team to send to. Let a person decide.
+        # 不清楚该派给哪个团队。让人来决定。
         send_to_manual_triage(ticket)
         return
 
     if department.choice == "returns":
-        # return_reason answer is only used here
+        # return_reason 的答案只在这里使用
         assign(ticket, team="returns", issue=answers["return_reason"].choice)
     elif department.choice == "shipping":
-        # shipping_issue answer is only used here
+        # shipping_issue 的答案只在这里使用
         assign(ticket, team="shipping", issue=answers["shipping_issue"].choice)
     else:
         assign(ticket, team="billing")
 
-    # A second team with a real share of the probability gets a copy
+    # 概率占比确实可观的第二个团队会收到副本
     for team, probability in department.probabilities.items():
         if team != department.choice and probability > 0.25:
             notify(ticket, team=team)
 
     resolution = answers["requested_resolution"]
     if resolution.confidence < 0.5:
-        # The customer hasn't said what they want. Ask, don't guess.
+        # 客户没说想要什么。问，别猜。
         ask_customer_what_they_want(ticket)
     elif resolution.choice == "refund":
         flag_for_refund_approval(ticket)
@@ -586,17 +586,17 @@ def triage(ticket: str) -> None:
         flag_for_senior_agent(ticket)
 ```
 
-For the ticket above, this assigns the ticket to the returns team with issue `wrong_size`, sends the billing team a copy because its 0.35 share is over the 0.25 threshold, and asks the customer what they want because the resolution confidence of 0.20 is under 0.5. The code does not use the `shipping_issue` answer.
+对上面那张工单，这段代码把工单派给 returns 团队并附上问题 `wrong_size`；由于 billing 的 0.35 占比超过了 0.25 的阈值，给 billing 团队发了一份副本；由于期望解决方案的置信度 0.20 低于 0.5，会去询问客户想要什么。代码没有使用 `shipping_issue` 的答案。
 
-One request, five answers, and the routing logic is ordinary `if` statements. If you later need to know the customer's language, or which product the ticket is about, add another Choice question to `TRIAGE_QUESTIONS`; the request count stays at one.
+一次请求、五个答案，路由逻辑就是普通的 `if` 语句。之后如果你还需要知道客户的语言、或工单涉及哪件商品，往 `TRIAGE_QUESTIONS` 里再加一个 Choice 问题即可，请求数依然是一。
 
-The [smart home assistant demo](/demos/smart-home) evaluates every user request against a long list of Choice questions in one call: the request category, the room, the device, and the action. Most of those questions are irrelevant to any one request and the code ignores them.
+[智能家居助手演示](/demos/smart-home)在一次调用中用一长串 Choice 问题评估每一条用户请求：请求类目、房间、设备、动作。这些问题中的大多数对任何单条请求都不相关，代码会忽略它们。
 
-## Structured instructions and criteria
+## 结构化的指令与判据
 
-Start with a one-line description per option. When two options are similar and the model keeps confusing them, describe each one with an object instead of a string. Give it fields for what the option covers, what belongs to a neighboring option instead, and a few example inputs.
+先从每个选项一行描述开始。当两个选项相近、模型反复混淆时，把字符串换成对象来描述每个选项。给它加上字段：该选项涵盖什么、哪些该归到相邻选项、以及几个示例输入。
 
-The two answer options below, return\_policy and return\_status, are easy to confuse. A ticket about either one can mention returns and refunds, so each option says what it is not for.
+下面的两个答案选项 return\_policy 和 return\_status 很容易混淆。关于其中任何一个的工单都可能提到退货和退款，所以每个选项都写明了它不适用于什么。
 
 <TypesafeExample
   display="request"
@@ -633,7 +633,7 @@ questions: {
 }}
 />
 
-The response is `return_status` at confidence 1.0:
+响应是 `return_status`，置信度 1.0：
 
 ```json theme={null}
 {
@@ -656,4 +656,4 @@ The response is `return_status` at confidence 1.0:
 }
 ```
 
-The field names `question`, `focus`, `what`, `not_for`, and `examples` are not part of the API, and none are reserved. You choose them, the same way you choose option names. The model sees the names along with the values, so use short names that label what follows.
+字段名 `question`、`focus`、`what`、`not_for`、`examples` 不是 API 的一部分，也没有任何保留字段。它们由你选择，与你选择选项名的方式相同。模型会看到这些名字及其对应的值，因此用简短、能标注其后内容的名字。
