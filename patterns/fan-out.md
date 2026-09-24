@@ -1,6 +1,6 @@
-# Speculative fan-out
+# 推测性扇出
 
-> Send many questions in a single call, including speculative ones, and let your code decide what's relevant.
+> 在一次调用里发送多个问题（包括暂时用不上的），让代码自己判断哪些结果相关。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,13 +231,13 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Because TypeSafe supports sending many questions in a single API call, we recommend putting all of the questions your system needs in a single request, and then using code to decide what is relevant after the fact. All questions are evaluated in parallel, so adding more questions usually has little effect on response time.
+TypeSafe 支持在一次 API 调用里发送多个问题，所以建议把系统需要的所有问题都放进同一次请求，事后再用代码判断哪些结果是相关的。所有问题并行评估，多问几个通常对响应时间几乎没有影响。
 
-## Example: support ticket triage
+## 示例：客服工单分流
 
-Let's imagine you are building a support system that needs to triage support tickets. You need to classify the ticket into a category. If it's a bug report, you also need to determine the severity of the bug.
+设想你在做一个客服系统，需要给工单分流：先把工单归到一个类别；如果它是缺陷报告，还要判断缺陷有多严重。
 
-Instead of asking for the category first and then the severity in a follow-up call, you can ask for both at the same time. If the ticket is not a bug report, you simply ignore the results of the bug severity question.
+不必先问类别、再补一次调用问严重程度，这两个问题可以同时问。如果工单不是缺陷报告，忽略严重程度那个问题的答案即可。
 
 ```mermaid actions={true} theme={null}
 %%{init: {"fontFamily": "Inter, sans-serif", "flowchart": {"rankSpacing": 35, "wrappingWidth": 300, "subGraphTitleMargin": {"top": 8, "bottom": 60}}}}%%
@@ -262,7 +262,7 @@ flowchart LR
     route -- "feature_request" --> feat["log it<br/>sent to devs"]
 ```
 
-### Step 1: speculative fan-out
+### 第 1 步：推测性扇出
 
 <TypesafeExample
   title="questions"
@@ -310,12 +310,12 @@ questions: {
 />
 
 <Note>
-  **Speculative questions:** `bug_severity` and `has_reproducible_steps` only matter if the ticket is a bug report. `refund_requested` only matters for billing. We include all upfront because additional questions usually have little effect on response time. If the ticket turns out to be a feature request, the bug severity result will be irrelevant, in which case your code path simply ignores it.
+  **推测性问题：** 只有工单确实是缺陷报告时，`bug_severity` 和 `has_reproducible_steps` 才有意义；`refund_requested` 只对账单类工单有意义。之所以一开始就全部问掉，是因为多问几个问题通常对响应时间几乎没有影响。如果工单最终是功能请求，缺陷严重程度的答案就用不上，代码路径直接忽略即可。
 </Note>
 
-### Step 2: route with code
+### 第 2 步：用代码路由
 
-Your code decides what is relevant based on the classification result:
+代码根据分类结果决定哪些答案是相关的：
 
 ```python title="triage.py" theme={null}
 category = response.answers["category"]
@@ -339,9 +339,9 @@ elif category.choice == "billing":
 elif category.choice == "feature_request":
     log_feature_request(ticket_id)
 
-# Frustration is useful regardless of category
+# 沮丧程度在任何类别下都有用
 if frustration.score > 1.5:
     flag_for_priority_response(ticket_id)
 ```
 
-Everything needed for the full decision tree comes from one call. Speculative questions are ignored when irrelevant and save a round trip when they are not.
+整棵决策树需要的一切都来自这一次调用。推测性问题在无关时被忽略，在有关时省下一次往返。

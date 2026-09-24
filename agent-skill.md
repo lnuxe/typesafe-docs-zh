@@ -1,14 +1,14 @@
-# Agent skill
+# 智能体技能
 
-> Drop-in skill for Claude Code, Codex, and other agent environments.
+> 可直接装进 Claude Code、Codex 等智能体环境的技能包。
 
-The TypeSafe agent skill gives your AI coding agent full context on the TypeSafe API: the three question [types](/primitives), the architectural [patterns](/patterns), and best practices for structuring evaluations.
+TypeSafe 智能体技能为你的 AI 编码智能体补上 TypeSafe API 的完整上下文：三种问题[类型](/primitives)、架构[模式](/patterns)，以及组织评估的最佳实践。
 
-## Installation
+## 安装
 
 <Tabs>
   <Tab title="Claude Code">
-    Run these two commands in your terminal:
+    在终端里运行这两条命令：
 
     ```bash theme={null}
     claude plugin marketplace add typesafe-ai/skills
@@ -16,16 +16,16 @@ The TypeSafe agent skill gives your AI coding agent full context on the TypeSafe
     ```
   </Tab>
 
-  <Tab title="Other agents">
+  <Tab title="其他智能体">
     ```bash theme={null}
     npx skills add typesafe-ai/skills --skill typesafe-ai
     ```
 
-    Choose your agent when prompted. Installation is project-local by default; add `-g` to install globally.
+    提示时选择你在用的智能体。默认装到当前项目；加 `-g` 装到全局。
   </Tab>
 
-  <Tab title="Copy to your agent">
-    Paste this prompt into your coding agent:
+  <Tab title="复制给智能体">
+    把下面这段提示词粘贴给你的编码智能体：
 
     ```text wrap theme={null}
     Install the TypeSafe skill. If you're in Claude Code, run `claude plugin marketplace add typesafe-ai/skills`, then `claude plugin install typesafe@typesafe-ai`. If you're in another agent, run `npx skills add typesafe-ai/skills --skill typesafe-ai` and select your agent. Use one installation method. You can read the skill directly at https://github.com/typesafe-ai/skills/blob/main/skills/typesafe-ai/SKILL.md (raw: https://raw.githubusercontent.com/typesafe-ai/skills/main/skills/typesafe-ai/SKILL.md). Then use the TypeSafe skill when working on this project.
@@ -33,42 +33,42 @@ The TypeSafe agent skill gives your AI coding agent full context on the TypeSafe
   </Tab>
 </Tabs>
 
-Read [SKILL.md on GitHub](https://github.com/typesafe-ai/skills/blob/main/skills/typesafe-ai/SKILL.md) or fetch the [raw Markdown](https://raw.githubusercontent.com/typesafe-ai/skills/main/skills/typesafe-ai/SKILL.md) directly. For manual installation, copy the entire [skills/typesafe-ai directory](https://github.com/typesafe-ai/skills/tree/main/skills/typesafe-ai), including its reference files, into your agent's skills directory.
+也可以直接读 GitHub 上的 [SKILL.md](https://github.com/typesafe-ai/skills/blob/main/skills/typesafe-ai/SKILL.md)，或直接取[原始 Markdown](https://raw.githubusercontent.com/typesafe-ai/skills/main/skills/typesafe-ai/SKILL.md)。手动安装时，把整个 [skills/typesafe-ai 目录](https://github.com/typesafe-ai/skills/tree/main/skills/typesafe-ai)（含其中的参考文件）复制进你的智能体的 skills 目录。
 
-Choose one installation method to avoid duplicate copies.
+只选一种安装方式，避免装上重复的副本。
 
-### Updates
+### 更新
 
-For the Claude Code plugin, run:
+Claude Code 插件这样更新：
 
 ```bash theme={null}
 claude plugin marketplace update typesafe-ai
 claude plugin update typesafe@typesafe-ai
 ```
 
-Restart Claude Code or run `/reload-plugins` to load the update. To enable automatic updates, open `/plugin`, select **Marketplaces → typesafe-ai → Enable auto-update**.
+重启 Claude Code，或运行 `/reload-plugins` 加载更新。想开启自动更新，打开 `/plugin`，选择 **Marketplaces → typesafe-ai → Enable auto-update**。
 
-For skills.sh installations, run `npx skills update`. For manual copies, replace the entire skill directory with the latest GitHub version.
+用 skills.sh 安装的，运行 `npx skills update`。手动复制的，用 GitHub 上的最新版本整个替换技能目录。
 
-## Example prompts
+## 提示词示例
 
-Naming the skill in your prompt — "use the TypeSafe skill" — works in any agent, so each of the prompts below does that. With the Claude Code plugin, you can also invoke `/typesafe:typesafe-ai` directly.
+在提示词里点名技能——写「use the TypeSafe skill」——在任何智能体里都管用，所以下面每段提示词都这么写。装了 Claude Code 插件之后，也可以直接调用 `/typesafe:typesafe-ai`。
 
-* A good prompt to start with is a brainstorming prompt to help you figure out where TypeSafe can best be used in a project.
+* 起步推荐用一段头脑风暴式提示词，让它帮你想清楚项目里哪些地方最适合用 TypeSafe。
 
   ```text theme={null}
   Using the TypeSafe skill, explore the project and find opportunities for using
   intelligent judgement to stand in for complex parsing or other fragile code.
   ```
 
-* You can also create an [API key](https://console.typesafe.ai/keys) and give your agent permission to figure out the best way to use TypeSafe by running cheap test queries.
+* 也可以创建一个 [API 密钥](https://console.typesafe.ai/keys)，允许智能体跑一些便宜的测试查询，自己摸索出最合适的用法。
 
   ```text theme={null}
   Using the TypeSafe skill, run some experiments using the TypeSafe API key that I've
   exported to `TYPESAFE_API_KEY`. Propose changes based on the most promising results.
   ```
 
-* Point your agent at a [specific cookbook](/cookbooks/consistency_noul_cookbook) that solves a problem you have in your codebase, or point it at the [cookbooks index](/cookbooks) and ask if there are any patterns that are similar to the ones in your project.
+* 把某个能解决你代码库里具体问题的 [cookbook](/cookbooks/consistency_noul_cookbook) 指给智能体，或者把它指到 [cookbook 索引](/cookbooks)，让它看看有没有跟你项目里相似的模式。
 
   ```text theme={null}
   Using the TypeSafe skill, analyze my code and see if there are any applicable
@@ -76,31 +76,31 @@ Naming the skill in your prompt — "use the TypeSafe skill" — works in any ag
   refactor my code to be less fragile or complex.
   ```
 
-## Good vibe coding principles
+## 好的 vibe coding 原则
 
-1. Talk it out with your agent, using the example prompts above as a starting point.
-2. Review the plan and ensure it makes sense before implementing it.
-3. Put the constants (questions and thresholds) in a single place so they're easy to review. Agents aren't great at writing questions, so expect to edit collaboratively with them.
-4. Don't take assertions at face value; encourage the agent to validate its assumptions.
+1. 以上面的提示词示例为起点，和智能体把需求聊清楚。
+2. 动手前先看方案，确认它讲得通。
+3. 把常量（问题和阈值）集中放在一处，方便审阅。智能体写问题写得不怎么样，做好和它一起改的准备。
+4. 不要照单全收它的结论，让它自己去验证假设。
 
-## Common issues
+## 常见问题
 
-### The agent isn't using the skill
+### 智能体没有用这个技能
 
-With the Claude Code plugin, invoke `/typesafe:typesafe-ai`. In other agents, ask to "use the TypeSafe skill". If it still does not load, confirm the installer targeted the agent you are using, then restart the agent.
+装了 Claude Code 插件就直接调用 `/typesafe:typesafe-ai`；其他智能体里让它「use the TypeSafe skill」。还是不加载的话，确认安装时选的是你现在用的那个智能体，然后重启它。
 
-### Routing isn't working like you expect
+### 路由的表现和预期不符
 
-Check the questions and thresholds. It's possible that your thresholds are either set too high (causing false negatives) or too low (causing false positives). You may also need to tweak your questions to be more specific.
+先看问题和阈值。可能是阈值设高了（产生漏判），也可能是设低了（产生误判）。也可能需要把问题改得更具体。
 
-### You're using confidence thresholds everywhere
+### 到处都在用置信度阈值
 
-If all you care about is choosing the best option, you just need to choose the option with the highest confidence (rather than setting a confidence threshold). If you have a specific statistical algorithm in mind, you should probably be using probabilities instead of confidence.
+如果你只关心选出最好的那个选项，直接选置信度最高的就行，不必再设置信度阈值。如果你心里有具体的统计算法，那多半该用概率，而不是置信度。
 
-### It's difficult to review TypeSafe code
+### TypeSafe 代码不好审阅
 
-The most important thing for humans to review is the questions and any threshold constants used in your TypeSafe code. These should be defined in a single code file so that they're easy to find without too much spelunking.
+最需要人审的是 TypeSafe 代码里的问题和阈值常量。把它们定义在同一个代码文件里，不用到处翻就能找到。
 
-### The agent invents request or response fields
+### 智能体会编造请求或响应字段
 
-A stale skill can cause this. Update it using your installation method above and retry.
+技能版本太旧会导致这种情况。按上面的安装方式更新技能，然后重试。

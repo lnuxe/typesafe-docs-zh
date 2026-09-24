@@ -4,3 +4,6 @@ node_modules
 *.log
 .env
 .vercel
+__pycache__/
+*.pyc
+_audit_out.txt

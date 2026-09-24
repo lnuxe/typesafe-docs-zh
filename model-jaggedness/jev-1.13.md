@@ -1,50 +1,50 @@
-# Jev 1.13 jaggedness
+# Jev 1.13 已知缺陷
 
-> Jev isn't perfect. Here are some jagged edges we are aware of with jev-1.13. Many of these will be fixed in later versions.
+> Jev 并非完美。以下是我们在 jev-1.13 上已知的一些锯齿效应（jaggedness）。其中不少会在后续版本中修复。
 
 <Note>
-  **Applies to `jev-1.13`.** Last reviewed 2026-09-17.
+  **适用于 `jev-1.13`。** 最近复核时间 2026-09-17。
 </Note>
 
-`jev-1.13` is fast, calibrated, and good at common-sense judgment but it is not perfect. `jev-1.13` does the best on [System One](/concepts/system-one) tasks. It may struggle with tasks that require additional levels of indirection. It can be quite literal in its understanding. It struggles with tasks that require numeric precision.
+`jev-1.13` 速度快、经过校准、擅长常识判断，但它并非完美。`jev-1.13` 在 [System One](/concepts/system-one) 类任务上表现最好。对于需要更多层间接的任务，它可能吃力。它的理解可能相当字面。对于需要数值精度的任务，它也吃力。
 
-## The failure modes in detail
+## 失效模式详解
 
-| # | Failure mode                                                                        | Do this instead                                                |
-| - | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1 | [Literal reading](#literal-reading)                                                 | Write the exact condition, criteria for each available options |
-| 2 | [Math and Numbers](#math-and-numbers)                                               | Keep the arithmetic in code                                    |
-| 3 | [Date and time comparison](#date-and-time-comparison)                               | Extract components; compare in code                            |
-| 4 | [Indirection](#indirection)                                                         | Reduce hops; point to the relevant state                       |
-| 5 | [Large state full of irrelevant detail](#large-state-full-of-irrelevant-detail)     | Filter first; send only what the question needs                |
-| 6 | [Adversarial content](#adversarial-content)                                         | Write precise prompts, and test edge cases before deploying    |
-| 7 | [Contradictory instructions and criteria](#contradictory-instructions-and-criteria) | Align the criteria and instruction                             |
-| 8 | [Common-sense structural invariants](#common-sense-structural-invariants)           | Ask each decision one way; enforce identities in code          |
-| 9 | [Generation](#generation)                                                           | Use a generative model                                         |
+| # | 失效模式                                                                       | 应该这样做                                     |
+| - | ------------------------------------------------------------------------------ | ---------------------------------------------- |
+| 1 | [字面理解](#literal-reading)                                                   | 写出确切的条件、每个可用选项的判据             |
+| 2 | [数学与数字](#math-and-numbers)                                                | 把算术留在代码里                               |
+| 3 | [日期与时间比较](#date-and-time-comparison)                                    | 先抽取组成部分，再在代码中比较                 |
+| 4 | [间接性](#indirection)                                                         | 减少跳转；直接指向相关的状态                   |
+| 5 | [充斥无关细节的大状态](#large-state-full-of-irrelevant-detail)                 | 先过滤；只发送问题真正需要的内容               |
+| 6 | [对抗性内容](#adversarial-content)                                             | 写精确的提示词，并在部署前测试边界情况         |
+| 7 | [互相矛盾的指令与判据](#contradictory-instructions-and-criteria)               | 让判据与指令保持一致                           |
+| 8 | [常识性的结构不变量](#common-sense-structural-invariants)                      | 每个决策只按一个方向提问；在代码中强制恒等式   |
+| 9 | [生成](#generation)                                                            | 使用生成式模型                                 |
 
-## Literal reading
+## 字面理解
 
-`jev-1.13` answers the question you wrote, not the one you meant. Scoping words, negations, and implied conditions are read at face value. A question will be answered based on the words written in the instruction, whereas a person might have read the intent behind the instructions.
+`jev-1.13` 回答的是你写下的问题，而不是你想问的问题。限定词、否定和隐含条件都会被按字面解读。问题会依据指令中写下的文字来回答，而人可能会读出指令背后的意图。
 
-**Instead:** state the exact condition in the `instructions`. Be specific. Put boundary cases in the criteria. When you look at a wrong answer and find yourself explaining what you really meant, that explanation is the missing half of the instruction. Where interpretation is unavoidable, split it into two literal questions and combine them in code.
+**改进办法：** 在 `instructions` 中写明确切的条件。要具体。把边界情况写进判据里。当你看着一个错误答案、忍不住解释自己真正想说什么时，那番解释正是指令缺失的那一半。在解释无法避免的地方，把它拆成两个字面的问题，再在代码里合并。
 
-## Math and Numbers
+## 数学与数字
 
-Jev is not a calculator. We strongly recommend implementing any mathematical logic in code. Jev will perform better on semantic questions than mathematical ones.
+Jev 不是计算器。凡是数学逻辑，都强烈建议在代码中实现。Jev 在语义问题上的表现会好于数学问题。
 
-### Counting
+### 计数
 
-`jev-1.13` does not count reliably. This covers characters in a word, occurrences of a term in a passage, and items in a long list. The model recognizes the shape of an answer rather than tallying, and the error grows with the size of the thing being counted.
+`jev-1.13` 无法可靠计数。这包括一个词里的字符数、某个术语在一段文本中出现的次数，以及长列表中的条目数。模型识别的是答案的形状，而不是真的在清点，并且误差会随着被计数对象规模的增长而变大。
 
-Before asking a counting question, ask why the count needs a model at all. If the unit is something a regular expression or a parser can find, the count belongs in code and the model has nothing to add.
+在提出计数问题之前，先想清楚这件事为什么非得让模型来做。如果计数单位是正则表达式或解析器就能找到的东西，那么计数就属于代码，模型帮不上忙。
 
-**Instead:** count in code. When you want to count items matching some criteria, iterate in code over the candidates and ask one question for each, then add up the answers yourself.
+**改进办法：** 在代码中计数。想统计符合某些条件的条目时，用代码遍历选项，对每一项问一个问题，然后自己把答案加起来。
 
 ```python theme={null}
 from typesafe_sdk import Noul, TypeSafeClient
 
 client = TypeSafeClient(model="jev-1.13")
-YES = 0.5  # up to you on what you want the threshold to be, depends on your usecase.
+YES = 0.5  # 阈值取在哪里由你决定，取决于你的用例。
 
 items = ["typesafe", "apple", "california", "banana", "likes", "calibration", "orange", "vertex"]
 
@@ -59,94 +59,93 @@ result = client.system_one(
 count = sum(result.nouls[f"item_{i}"].noul > YES for i in range(len(items)))
 ```
 
-### Numeric representations
+### 数值表示
 
-`jev-1.13` will perform better on semantic representations than numeric. For example, questions about colors using hex values will underperform compared to those using the English names. Given RGB triples or hex values it cannot reliably judge whether two values are near each other.
+`jev-1.13` 在语义化的表示上表现更好，在数值表示上更差。例如，用十六进制值描述颜色的问题，表现会不如用颜色英文名提问。给定 RGB 三元组或十六进制值，它无法可靠判断两个值是否接近。
 
-Similarly, questions about high-level programming languages will perform better than questions about low level assembly, or binary encoded instructions.
+同理，关于高级编程语言的问题，表现会好于关于底层汇编或二进制编码指令的问题。
 
-**Instead:** do the conversion in code and pass in either the computed number or a named bucket. Keep the model for the part that is genuinely a judgment, such as whether a color reads as a warning.
+**改进办法：** 转换在代码里做，只把算好的数字或命名好的分桶传进去。模型留给真正需要判断的部分，比如某种颜色读起来是否像警告。
 
-### Math using score
+### 用 score 做数学
 
-Please do not use score outputs (e.g., expectations and probability) to compute the exact magnitude of a number between two levels of a criterion. You can use the expectation to check if it passes a particular threshold, but `jev-1.13`'s score levels are weak in numerical calibration. It will not be able to help you reconstruct the exact number by interpolating between the nearest two levels.
+请不要用 score 输出（例如期望值和概率）去计算某个数字在判据两档之间的确切量级。你可以用期望值来判断是否越过某个阈值，但 `jev-1.13` 的 score 档位在数值校准上很弱。它无法通过在最近的两个档位之间插值来帮你还原出那个确切的数字。
 
-## Date and time comparison
+## 日期与时间比较
 
-`jev-1.13` reads dates as text, not as ordered quantities. Asking which of two dates comes first, how far apart they are, or whether one falls inside a window is unreliable. It gets worse with mixed formats, relative references and domain boundaries such as quarters, settlement windows, and accrual periods.
+`jev-1.13` 把日期当作文本，而不是有序的量。问两个日期哪个在前、相隔多远，或者某个日期是否落在一个时间窗口内，都不可靠。格式混杂、相对引用，以及季度、结算窗口、计提周期这类领域边界，会让它更糟。
 
-**Instead:** split the work. Extraction is a judgment, so give it to the model. Arithmetic is not, so keep it in code.
+**改进办法：** 把工作拆开。抽取是判断，交给模型。算术不是，留在代码里。
 
-Every part of a date is a small closed set: twelve months, thirty-one possible days, a bounded range of years. That turns extraction into a [Choice](/primitives/choice) over enumerated options rather than free-form parsing, and it gives you somewhere to put an explicit "not stated" option so a missing part is reported rather than guessed. Code assembles the parts into a real date and owns everything after that, including ordering, duration, offset, and weekday.
+日期的每一部分都是一个小型封闭集合：十二个月、最多三十一天、有界的年份范围。这让抽取变成在枚举选项上的 [Choice](/primitives/choice)，而不是自由格式的解析，也让你有地方放一个明确的「未说明」选项，使缺失的部分被如实报告而不是被猜出来。代码把这些部分组装成真正的日期，并接管此后的一切，包括排序、时长、偏移和星期几。
 
-The [date extraction cookbook](/cookbooks/date_extraction_cookbook) has the worked version, including relative dates and confidence gating.
+[日期抽取 cookbook](/cookbooks/date_extraction_cookbook) 里有完整示例，包括相对日期和置信度门控。
 
-## Indirection
+## 间接性
 
-Instructions carrying double negatives or complex indirection are answered less reliably. A question about a property of a property or something that requires multiple hops of reasoning costs accuracy.
+指令里带双重否定或复杂间接时，答案的可靠性会下降。关于某个属性之属性的问题，或需要多跳推理的问题，都会损失准确率。
 
-**Instead:** write your instructions as directly as possible. When possible, identify the relevant parts of state by name.
+**改进办法：** 尽可能直接地写指令。可行时，按名称指出状态中的相关部分。
 
-## Large state full of irrelevant detail
+## 充斥无关细节的大状态
 
-Accuracy falls as the state grows with content unrelated to the decision. Unrelated detail acts as a distractor, and a large state makes it harder to tell which part of the input produced a wrong answer.
+当状态中混入与决策无关的内容时，准确率会下降。无关细节会充当干扰项，而状态越大，越难判断是输入的哪一部分导致了错误答案。
 
-**Instead:** retrieve and filter in code first, and send only the fields the question needs. When it's not possible to filter in state, you can use a [Noul](/primitives/noul) to filter for relevance. The [classifying RAG passages cookbook](/cookbooks/classifying_rag_passages) has a worked example.
+**改进办法：** 先在代码中检索和过滤，只发送问题需要的字段。如果无法在状态中过滤，可以用一个 [Noul](/primitives/noul) 来筛出相关性。[分类 RAG 段落 cookbook](/cookbooks/classifying_rag_passages) 有完整的例子。
 
 <Note>
-  **Context length limit.** `jev-1.13` has a bounded context window. See the [Models](/models) page for the exact token limits.
+  **上下文长度限制。** `jev-1.13` 的上下文窗口是有界的。确切的 token 上限见[模型](/models)页。
 </Note>
 
-## Adversarial content
+## 对抗性内容
 
-State is data, and `jev-1.13` does not treat it as hostile by default. Content written to adversarially steer the model, whether that is an injected instruction, a deliberately misleading framing, or text that argues for its own classification, can move the answer. We expect to improve on this in the future.
+状态是数据，`jev-1.13` 默认不会把它当作敌意内容。以对抗方式引导模型的内容——无论是注入的指令、刻意误导的框架，还是为自己争取某个分类的文本——都可能改变答案。我们预期未来会在这方面做出改进。
 
-**Instead:** be explicit in the criteria. Test your integration thoroughly before deploying it to many users.
+**改进办法：** 在判据中写清楚。在部署给大量用户之前，充分测试你的集成。
 
-## Contradictory instructions and criteria
+## 互相矛盾的指令与判据
 
-When the `instructions` and the `criteria` ask for different things, `jev-1.13` might get confused. The best performance comes from clear phrasing. For example, a Noul where `true` maps to no and `false` maps to yes will perform worse. Aim for instructions which are easy for the average person to read and understand.
+当 `instructions` 和 `criteria` 要求的东西不一致时，`jev-1.13` 可能会困惑。最好的表现来自清晰的措辞。例如，`true` 映射到否、`false` 映射到是的 Noul，表现会更差。指令要以普通人容易读懂、容易理解为目标。
 
-**Instead:** treat the criteria as an extension of the instruction. Align the two using clear and precise language.
+**改进办法：** 把判据当作指令的延伸。用清晰、精确的语言让两者对齐。
 
-## Common-sense structural invariants
+## 常识性的结构不变量
 
-`jev-1.13` is extremely consistent, meaning you should expect quantitatively similar outputs for semantically similar inputs.
-However there are many structural invariants one might imagine to hold that simply aren't guaranteed by the model.
+`jev-1.13` 高度一致，也就是说，对语义相似的输入，应当期待数量上相似的输出。然而，人们可能设想的许多结构不变量，模型根本没保证。
 
-For example, "Is the customer asking for a refund?", asked as a [Noul](/primitives/noul) and as a yes/no [Choice](/primitives/choice) on the ticket "I'm not happy with the fit. What are my options here?":
+例如，对工单「我对合身程度不满意。我有哪些选择？」问「客户是否要求退款？」，分别作为一个 [Noul](/primitives/noul) 和一个是/否 [Choice](/primitives/choice)：
 
 | Noul `noul` | Choice `yes` | Choice `no` | Choice `confidence` |
 | ----------- | ------------ | ----------- | ------------------- |
 | 0.22        | 0.01         | 0.99        | 0.97                |
 
-The comparable numbers are `noul` and `probabilities["yes"]`, and it is not obvious how to interpret either the Choice output and confidence for the Noul question or vice versa.
+可比的数字是 `noul` 和 `probabilities["yes"]`，而 Noul 问题对应的 Choice 输出和置信度该怎么解读，或者反过来该怎么解读，都不明确。
 
-The same question and its negation, "Is the customer asking for something other than a refund?", as two Nouls on the ticket "I was charged twice for the same order. Can someone look into this?":
+同一个问题及其否定形式「客户要求的是退款以外的东西吗？」，作为两个 Noul 问在工单「同一笔订单我被扣了两次费。有人能查一下吗？」上：
 
 | `refund` | `not_refund` | Sum  |
 | -------- | ------------ | ---- |
 | 0.72     | 0.47         | 1.19 |
 
-There are many reasons that `P(noul)` and `1 - P(not noul)` may not be directly comparable.
+`P(noul)` 与 `1 - P(not noul)` 不能直接比较，原因有很多。
 
-**Instead:** don't rely on expected structural invariance, and word questions to mean directly what you want. Don't carry a threshold tuned on a Noul over to a Choice, and don't hold the model to arithmetic identities between separate questions. A Choice over options and one Noul per option answer different questions: the Choice is relative, settling *which* option, while each Noul is absolute and can be low for all of them. The [skill suggestion cookbook](/cookbooks/skill_suggestion) uses both on the same shortlist, the Choice to pick a skill and the Nouls to decide whether to suggest one at all.
+**改进办法：** 不要依赖假想中的结构不变性，把问题写成你真正想要的意思。不要把在 Noul 上调好的阈值搬到 Choice 上，也不要要求模型在彼此独立的问题之间满足算术恒等式。对选项的 Choice 和每个选项一个 Noul 回答的是不同的问题：Choice 是相对的，决定的是*哪一个*选项；而每个 Noul 是绝对的，可能对每个选项都给出低值。[技能推荐 cookbook](/cookbooks/skill_suggestion) 在同一个选项列表上两者都用，用 Choice 挑出一个技能，用 Noul 决定到底要不要推荐。
 
-## Generation
+## 生成
 
-`jev-1.13` is not trained to generate text. While you can force it to by chaining choices, this will not work well and will be very slow. For data extraction, it is better to extract possible options using regex or a generative model and let `jev-1.13` pick the correct extraction.
+`jev-1.13` 没有为生成文本而训练。虽然你可以通过串联 Choice 逼它生成，但效果不会好，而且会非常慢。用于数据抽取时，更好的做法是先用正则或生成式模型找出可能的选项，再让 `jev-1.13` 挑出正确的那个。
 
-**Instead:** when the answer space is bounded, turn extraction into a [Choice](/primitives/choice) over the options rather than asking for the value itself. If you really need to generate text... there are other models for that.
+**改进办法：** 当答案空间有界时，把抽取变成在选项上的 [Choice](/primitives/choice)，而不是直接索要那个值。如果你确实需要生成文本……那得用别的模型。
 
 <Info>
-  **As a reminder, avoid the following:**
+  **再次提醒，请避免以下做法：**
 
-  * Asking the model something code can compute exactly.
-  * Hiding several judgments inside one question.
-  * System Two tasks: more layers of indirections
-  * Giving it more context in `state` than the question needs. Jev suffers from context rot, so unrelated material in the `state` costs you accuracy.
+  * 让模型去做代码能精确计算的事。
+  * 把多个判断藏在一个问题里。
+  * 系统 2 任务：更多层间接。
+  * 给 `state` 塞进比问题所需更多的上下文。Jev 会受上下文腐烂（context-rot）影响，`state` 里无关的材料会拉低准确率。
 </Info>
 
 <Tip>
-  Found a failure mode that belongs on this list? We want to hear about it. Reach us on [Discord](https://discord.com/invite/WUujKYBp8s).
+  发现了应该加进这份清单的失效模式？我们想听。到 [Discord](https://discord.com/invite/WUujKYBp8s) 找我们。
 </Tip>

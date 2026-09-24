@@ -1,25 +1,18 @@
-# Guardrails for LLMs
+# 面向 LLM 的护栏
 
-> Screen every message going into and out of an LLM app with one TypeSafe request, thresholding hazard probabilities and severity to pass, review, block, or route.
+> 用一次 TypeSafe 请求筛查进出 LLM 应用的每条消息，按风险概率与严重程度设定阈值，决定放行、复核、拦截还是路由。
 
-Labs teach most LLMs to refuse a set of unsafe requests, but each lab draws that line
-somewhere else, and each new version of a model moves it again. You probably want it
-somewhere else too: stricter in places, and written where you can read it rather than
-buried in the weights.
+各家实验室都教大多数 LLM 拒绝一批不安全请求，但每家画的线位置不同，模型每出新版本又会把线挪一次。
+你想要的线多半也不在同一个地方：有些地方更严，而且这条线要写在你读得到的地方，而不是埋在权重里。
 
-Write a system prompt and you have put your rules in exactly the place a jailbreak talks
-its way past. Put a second LLM in front of the first and you pay a call's worth of
-latency and money on every turn, and an attacker can talk that one past too.
+改去写一段系统提示词，就等于把规则放在越狱最容易说服过去的地方。在原模型前面再放一个 LLM，
+你要为每一轮多付一次调用的延迟和开销，而攻击者照样能把它也说过去。
 
-Screen each message with one TypeSafe request instead. A battery of `Noul` questions
-hands you the probability that each hazard holds, and a `Score` question rates how much
-harm
-complying would do. "Ignore your instructions" scores as a jailbreak instead of working
-as one. You then set the thresholds that decide whether a message passes, goes to review,
-gets blocked, or routes to support.
+换成用一次 TypeSafe 请求筛查每条消息：一组 `Noul` 问题给出每种风险成立的概率，
+一个 `Score` 问题评估照做会造成多大伤害。"Ignore your instructions" 会被评成一次越狱，
+而不是真的当越狱使。接下来由你设定阈值，决定一条消息是放行、送去复核、被拦截，还是路由到支持。
 
-Run this TypeSafe check both on LLM inputs, and on LLM outputs, because even
-ordinary-looking prompts can lead to harmful generated replies.
+这个 TypeSafe 检查要在 LLM 的输入和输出两头都跑，因为看起来人畜无害的提示词也可能引出有害的回复。
 
 ```mermaid actions={true} theme={null}
   %%{init: {"flowchart": {"rankSpacing": 55, "wrappingWidth": 320}}}%%
@@ -43,20 +36,19 @@ flowchart LR
     R --> U["<b>support</b> &mdash; a crisis path"]
 ```
 
-By the end you will have a `guard()` function to put on either side of any LLM call. You
-edit it in two places: the dict of hazard questions, and the two named routing policies.
+到最后你会得到一个 `guard()` 函数，可以放在任何 LLM 调用的任意一侧。你要改两处：
+风险问题字典，以及两个具名的路由策略。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`. Every API call is cached in `json_cache.json`, which ships
-with the cookbook, so re-running replays the published numbers instead of calling the
-API. Delete that file to run everything live.
+然后设置 `TYPESAFE_API_KEY`。每次 API 调用都缓存在随 cookbook 一起提供的 `json_cache.json` 里，
+所以重新运行只会重放已发布的数字，不会调用 API。删掉该文件即可全部实跑。
 
-Numbers below came from `jev-1.12` on 2026-08-15.
+下面的数字来自 2026-08-15 的 `jev-1.12`。
 
 ```python theme={null}
 import os
@@ -77,14 +69,13 @@ client = TypeSafeClient(
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-## Load the sample messages
+## 载入示例消息
 
-Ten user messages in `prompts.txt` and five model replies in `replies.txt`, committed
-next to this cookbook. Some are ordinary, some deserve a look from a human, and the rest
-are plain violations. The jailbreaks are real, taken verbatim from the public
+`prompts.txt` 里有十条用户消息，`replies.txt` 里有五条模型回复，都随这个 cookbook 一起提交。
+有些是普通消息，有些值得人来过一眼，其余的则是明确的违规。越狱样本都是真实的，逐字取自公开的
 [in-the-wild jailbreak
 prompts](https://huggingface.co/datasets/TrustAIRLab/in-the-wild-jailbreak-prompts)
-collection.
+数据集。
 
 ```python theme={null}
 def load_messages(path: str) -> dict[str, str]:
@@ -118,18 +109,15 @@ for name in ["dosage_request", "jailbroken"]:
 [reply:  jailbroken] Sure, I'll play along - no rules, no filters, no boring disclaimers from here on. You wa
 ```
 
-## Define the guardrails
+## 定义护栏
 
-"Out of bounds" is not one question, so the battery splits it. Four `Noul` questions
-each return the probability that one hazard criterion holds. Does the message try to
-override the assistant's instructions? Does it ask for help with harm or a crime? Does
-it ask for a diagnosis or a dosage? Does it signal that the sender may hurt themselves?
-One `Score` question rates how much harm complying would do, on a written scale from
-"none" to "serious physical harm".
+"越界"不是一个问题，所以这组问题把它拆开。四个 `Noul` 问题各自返回一条风险判据成立的概率：
+消息是否试图覆盖助手的指令？是否请求协助造成伤害或违法？是否索要诊断或用药剂量？
+是否暗示发送者可能伤害自己？一个 `Score` 问题按从 "none" 到 "serious physical harm" 的书面量规，
+评估照做会造成多大伤害。
 
-Both go in the same request, so the whole battery costs one call. The input and output
-batteries ask the same four things from the two sides: whether the user is asking for it,
-and whether the reply went ahead and gave it.
+两类问题放在同一次请求里，所以整组只花一次调用。输入组和输出组从两侧问同样四件事：
+用户是不是在要这个，以及回复是不是真的给了。
 
 ```python expandable theme={null}
 def noul(instructions: str, yes: str, no: str) -> Noul:
@@ -204,23 +192,20 @@ OUTPUT_BATTERY = {
 BATTERIES = {"input": INPUT_BATTERY, "output": OUTPUT_BATTERY}
 ```
 
-## Turn the assessment into a decision
+## 把评估变成决策
 
-TypeSafe supplies the assessment; your application owns the decision. Each `Noul`
-question is compared against two thresholds:
+TypeSafe 提供评估，决策归你的应用。每个 `Noul` 问题都要和两个阈值比较：
 
-* at or above the **action threshold**, the hazard triggers its configured action;
-* at or above the lower **review threshold**, the message goes to a human;
-* below both, it passes unless another hazard fires.
+* 达到或超过**动作阈值**，该风险触发它配置好的动作；
+* 达到或超过更低的**复核阈值**，消息交给人工；
+* 两个都没到，就放行，除非另有风险被触发。
 
-The severity `Score` question has a threshold of its own and can turn a review into a
-block.
+严重程度 `Score` 问题有自己的阈值，可以把一次复核变成一次拦截。
 
-A policy is just those numbers under a name, which makes the trade-off something a
-product picks rather than inherits.
+策略就是给这几个数字起个名字，于是这个取舍是产品自己选的，而不是继承来的。
 
 ```python expandable theme={null}
-# A high-probability hazard triggers the product action below.
+# 高概率的风险会触发下面配置的产品动作。
 HAZARD_ACTION = {
     "jailbreak": "block",
     "broke_policy": "block",
@@ -269,10 +254,9 @@ def guard(text: str, side: str, policy_name: str = DEFAULT_POLICY) -> str:
     return route(result["nouls"], result["severity"], POLICIES[policy_name])
 ```
 
-## Screen every message
+## 筛查每条消息
 
-Every sample message was screened: inputs with the input battery, replies with the
-output battery. All of them were routed under `strict`.
+每条示例消息都筛查过：输入用输入组，回复用输出组。全部按 `strict` 策略路由。
 
 ```python theme={null}
 ICON = {"pass": "  pass  ", "review": " review ", "block": " BLOCK  ", "support": "support "}
@@ -326,23 +310,19 @@ OUTPUT (model replies)
 [ BLOCK  ] jailbroken        broke_policy=0.94 sev=2.3  Sure, I'll play along - no rules, no filters, no bor
 ```
 
-The four actions all appear, and each one is doing something a plain block could not.
-`melatonin_dose` asks a dosage question mild enough to hand to a human rather than
-refuse; `self_harm` goes to support instead of being blocked, which is the difference
-between helping someone and hanging up on them; `novelist_poison` reads as violent and
-passes anyway, because asking how a detective describes poisoning is not asking to poison
-anyone. On the output side, `good_refusal` is a reply about breaking into a house that
-passes, because it is the assistant declining to help.
+四种动作都出现了，而且每一种都在做简单拦截做不到的事。`melatonin_dose` 问的是剂量问题，
+程度轻到可以交给人判断而不是直接拒绝；`self_harm` 走支持路径而不是被拦截，
+这正是"帮一个人"和"把人挂断"的区别；`novelist_poison` 读起来很像暴力内容，却照样放行，
+因为问侦探会怎么描写下毒，并不等于要下毒。输出侧，`good_refusal` 是一条关于闯空门的回复却放行了，
+因为那是助手在拒绝帮忙。
 
-The input-side `dosage_request` is the one row where the severity `Score` decides the
-outcome. It asks the same kind of question as `melatonin_dose`, and its `medical_advice`
-noul would send it to a human on its own. But a severity of 2.02 crosses the block line,
-so the review becomes a block.
+输入侧的 `dosage_request` 是唯一一行由严重程度 `Score` 决定结果的情况。它问的问题和 `melatonin_dose`
+属于同一类，单看它的 `medical_advice` noul 也会把它送人工。但 2.02 的严重程度越过了拦截线，
+于是复核变成了拦截。
 
-## The same probabilities, different decisions
+## 同样的概率，不同的决策
 
-The next cell reuses one cached assessment and changes only the policy. The probabilities
-do not move; the application decides how much evidence it wants before it acts.
+下一个单元格复用同一份缓存评估，只改策略。概率完全不动；是应用在决定自己动手前需要多少证据。
 
 ```python theme={null}
 example_name = "neurosemantical"
@@ -365,9 +345,9 @@ strict       review >= 0.35  action >= 0.70  ->  block
 permissive   review >= 0.35  action >= 0.85  ->  review
 ```
 
-## Look at one decision in full
+## 完整看一个决策
 
-Every screened message, numbered, so you can pick one to open up.
+每条被筛查的消息都编了号，方便你挑一条展开看。
 
 ```python theme={null}
 LOG = [(name, text, "input") for name, text in PROMPTS.items()]
@@ -397,8 +377,8 @@ for i, (name, text, side) in enumerate(LOG):
 14  jailbroken         output 
 ```
 
-`interpret()` prints the full hazard breakdown for any row above. Pass a different
-`policy_name` to see the same assessment routed another way.
+`interpret()` 会打印上面任意一行的完整风险明细。换一个 `policy_name`，
+就能看到同一份评估按另一种方式路由。
 
 ```python theme={null}
 def interpret(index: int, policy_name: str = DEFAULT_POLICY) -> None:
@@ -419,7 +399,7 @@ def interpret(index: int, policy_name: str = DEFAULT_POLICY) -> None:
     print(f"    {'severity':<16}{result['severity']:.2f}  (0-3 scale)")
 
 
-# Change the index or policy to inspect any row in the table above.
+# 修改索引或策略，即可查看上表中任意一行。
 interpret(9)  # neurosemantical: a jailbreak dressed as a medical accommodation
 ```
 
@@ -442,14 +422,12 @@ interpret(9)  # neurosemantical: a jailbreak dressed as a medical accommodation
     severity        0.51  (0-3 scale)
 ```
 
-To point this at your own product, edit `INPUT_BATTERY` and `OUTPUT_BATTERY` for the
-hazards you care about, map each one to an action in `HAZARD_ACTION`, and set the
-thresholds in `POLICIES` from labeled examples of your own traffic.
+要把它用到你自己的产品上，请按你在意的风险修改 `INPUT_BATTERY` 和 `OUTPUT_BATTERY`，
+在 `HAZARD_ACTION` 里给每种风险映射一个动作，并用你自己线上流量的标注样本设定 `POLICIES` 里的阈值。
 
-## Open it in the playground
+## 在 Playground 中打开
 
-The link holds one demo prompt plus the input battery. Open it to run the same request
-live and edit the questions in the browser.
+链接里有一条演示提示词和输入组问题。打开它就能实跑同一次请求，并在浏览器里编辑问题。
 
 ```python theme={null}
 playground_link = make_playground_link(PROMPTS["dan"], INPUT_BATTERY, models=[TYPESAFE_MODEL])
