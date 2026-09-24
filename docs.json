@@ -1,0 +1,216 @@
+{
+  "$schema": "https://mintlify.dev/docs.json",
+  "theme": "sequoia",
+  "name": "TypeSafe AI",
+  "description": "如何使用 TypeSafe 的 System One API",
+  "colors": {
+    "primary": "#7C3AED",
+    "light": "#A78BFA",
+    "dark": "#6D28D9"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo_light.png",
+    "dark": "/logo_dark.png",
+    "href": "https://typesafe.ai"
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "文档",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "开始使用",
+            "pages": [
+              "introduction",
+              "introduction/quickstart",
+              "introduction/coding-agents",
+              "concepts/use-case-map"
+            ]
+          },
+          {
+            "group": "核心概念",
+            "pages": [
+              "concepts/system-one",
+              "concepts/state",
+              {
+                "group": "原语（问题）",
+                "pages": [
+                  "primitives",
+                  "primitives/choice",
+                  "primitives/score",
+                  "primitives/noul",
+                  "primitives/advanced"
+                ]
+              },
+              "confidence",
+              "concepts/how-to-build-with-system-one",
+              "introduction/machine-learning-primer"
+            ]
+          },
+          {
+            "group": "模式",
+            "pages": [
+              "patterns",
+              "patterns/fan-out",
+              "patterns/confidence-routing",
+              "patterns/composite-scoring",
+              "patterns/intent-routing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Cookbooks",
+        "icon": "pen-tool",
+        "groups": [
+          {
+            "group": "Cookbooks",
+            "pages": [
+              "cookbooks",
+              "cookbooks/consistency_noul_cookbook",
+              "cookbooks/consistency_choice_cookbook",
+              "cookbooks/parallel_questions",
+              "cookbooks/rerank_typesafe",
+              "cookbooks/semantic_find",
+              "cookbooks/autoformat",
+              "cookbooks/function_calling",
+              "cookbooks/skill_suggestion",
+              "cookbooks/entity_alignment",
+              "cookbooks/classifying_rag_passages",
+              "cookbooks/citation_check",
+              "cookbooks/llm_guardrails",
+              "cookbooks/sde_cascade",
+              "cookbooks/date_extraction_cookbook",
+              "cookbooks/pre_parsed_value_extraction_cookbook",
+              "cookbooks/hierarchical_classification",
+              "cookbooks/autoresearch_feature_discovery",
+              "cookbooks/classification_using_confidence"
+            ]
+          },
+          {
+            "group": "演示",
+            "pages": [
+              "demos",
+              "demos/smart-home"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "参考",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "参考",
+            "pages": [
+              "models",
+              "api",
+              "agent-skill",
+              "legal",
+              "model-jaggedness/jev-1.13"
+            ]
+          },
+          {
+            "group": "客户端 SDK",
+            "pages": [
+              "sdk",
+              {
+                "group": "Python SDK",
+                "pages": [
+                  "sdk/python",
+                  "sdk/python/usage",
+                  "sdk/python/changelog",
+                  {
+                    "group": "API 参考",
+                    "pages": [
+                      "sdk/python/api",
+                      "sdk/python/api/clients/async",
+                      "sdk/python/api/clients/sync",
+                      "sdk/python/api/types/questions",
+                      "sdk/python/api/types/responses",
+                      "sdk/python/api/retries",
+                      "sdk/python/api/types/common",
+                      "sdk/python/api/exceptions",
+                      "sdk/python/api/constants"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "JavaScript SDK",
+                "pages": [
+                  "sdk/javascript",
+                  "sdk/javascript/changelog",
+                  {
+                    "group": "API 参考",
+                    "pages": [
+                      "sdk/javascript/api",
+                      "sdk/javascript/api/classes/APIConnectionError",
+                      "sdk/javascript/api/classes/APIError",
+                      "sdk/javascript/api/classes/APIPromise",
+                      "sdk/javascript/api/classes/APITimeoutError",
+                      "sdk/javascript/api/classes/APIUserAbortError",
+                      "sdk/javascript/api/classes/AuthenticationError",
+                      "sdk/javascript/api/classes/BadRequestError",
+                      "sdk/javascript/api/classes/InternalServerError",
+                      "sdk/javascript/api/classes/NotFoundError",
+                      "sdk/javascript/api/classes/PermissionDeniedError",
+                      "sdk/javascript/api/classes/RateLimitError",
+                      "sdk/javascript/api/classes/TypeSafeClient",
+                      "sdk/javascript/api/classes/TypeSafeError",
+                      "sdk/javascript/api/classes/UnprocessableEntityError",
+                      "sdk/javascript/api/interfaces/ChoiceQuestion",
+                      "sdk/javascript/api/interfaces/ChoiceResponse",
+                      "sdk/javascript/api/interfaces/Logger",
+                      "sdk/javascript/api/interfaces/ModelCard",
+                      "sdk/javascript/api/interfaces/Models",
+                      "sdk/javascript/api/interfaces/NoulQuestion",
+                      "sdk/javascript/api/interfaces/NoulResponse",
+                      "sdk/javascript/api/interfaces/Questions",
+                      "sdk/javascript/api/interfaces/RequestOptions",
+                      "sdk/javascript/api/interfaces/RetryPolicy",
+                      "sdk/javascript/api/interfaces/ScoreQuestion",
+                      "sdk/javascript/api/interfaces/ScoreResponse",
+                      "sdk/javascript/api/interfaces/SystemOneRequest",
+                      "sdk/javascript/api/interfaces/SystemOneRequestPayload",
+                      "sdk/javascript/api/interfaces/SystemOneResult",
+                      "sdk/javascript/api/interfaces/TypeSafeClientConfig",
+                      "sdk/javascript/api/interfaces/Usage",
+                      "sdk/javascript/api/interfaces/WithResponse",
+                      "sdk/javascript/api/type-aliases/ChoiceCriteria",
+                      "sdk/javascript/api/type-aliases/Description",
+                      "sdk/javascript/api/type-aliases/EntryType",
+                      "sdk/javascript/api/type-aliases/EnvVar",
+                      "sdk/javascript/api/type-aliases/Fetch",
+                      "sdk/javascript/api/type-aliases/JsonValue",
+                      "sdk/javascript/api/type-aliases/LogLevel",
+                      "sdk/javascript/api/type-aliases/Question",
+                      "sdk/javascript/api/type-aliases/ResultFor",
+                      "sdk/javascript/api/type-aliases/ScoreCriteria",
+                      "sdk/javascript/api/type-aliases/ScoreLegend",
+                      "sdk/javascript/api/type-aliases/ScoreOf",
+                      "sdk/javascript/api/variables/ENV",
+                      "sdk/javascript/api/variables/LOG_LEVELS",
+                      "sdk/javascript/api/variables/VERSION",
+                      "sdk/javascript/api/functions/choice",
+                      "sdk/javascript/api/functions/noul",
+                      "sdk/javascript/api/functions/score"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "social": {
+      "website": "https://typesafe.ai",
+      "github": "https://github.com/typesafe-ai"
+    }
+  }
+}
