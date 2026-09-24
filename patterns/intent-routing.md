@@ -1,6 +1,6 @@
-# Intent routing
+# 意图路由
 
-> Classify incoming requests and route each to the optimal handler: deterministic logic, a specialist LLM, or a human.
+> 对进来的请求分类，把每个请求路由到最合适的处理方：确定性逻辑、专用 LLM，或人工。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,11 +231,11 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Not every user request needs the same kind of handler. Some can be answered with a database lookup. Some need an LLM with domain-specific context. Some need a human. TypeSafe can sit in front of all of these as a fast, cheap classifier that determines which handler to invoke.
+不是每个用户请求都需要同一类处理方。有的查一次数据库就能回答，有的需要带领域上下文的 LLM，有的需要人工。TypeSafe 可以挡在这些处理方前面，用一次又快又便宜的分类决定该调用谁。
 
-## Example: customer service routing
+## 示例：客服路由
 
-Let's imagine you are building a customer service system. Messages come in and need to be routed to the right handler. Rather than sending every message through an expensive LLM to figure out what kind of request it is, you classify first and route accordingly.
+设想你在做一个客服系统：消息进来后要路由到正确的处理方。与其把每条消息都送进昂贵的 LLM 去判断它属于哪类请求，不如先分类再路由。
 
 ```mermaid actions={true} theme={null}
 %%{init: {"fontFamily": "Inter, sans-serif", "flowchart": {"rankSpacing": 35, "wrappingWidth": 300, "subGraphTitleMargin": {"top": 12, "bottom": 36}}}}%%
@@ -262,7 +262,7 @@ flowchart LR
     escalate -- "no" --> complaint["complaint resolution LLM"]
 ```
 
-### Step 1: classify intent and complexity
+### 第 1 步：分类意图与复杂度
 
 <TypesafeExample
   title="questions"
@@ -292,7 +292,7 @@ questions: {
 }}
 />
 
-### Step 2: route to the optimal handler
+### 第 2 步：路由到最合适的处理方
 
 ```python title="routing.py" theme={null}
 def route_ticket(ticket_id, response):
@@ -300,7 +300,7 @@ def route_ticket(ticket_id, response):
     complexity = response.answers["complexity"]
 
     if intent.confidence < 0.5:
-        # If we don't have enough confidence to classify, route to a human agent
+        # 置信度不足以分类时，转人工客服
         return route_to_human_agent(ticket_id)
 
     if intent.choice == "order_status":
@@ -314,14 +314,14 @@ def route_ticket(ticket_id, response):
 
     elif intent.choice == "complaint":
         low_confidence = complexity.confidence < 0.5
-        # A higher complexity.score leans toward the "escalation needed" end of the scale.
+        # complexity.score 越高，越靠近量规上「需要上报」的那一端。
         if complexity.score > 1 or low_confidence:
-            # Too complex for safe automation, or we're not sure about the complexity; route to a human.
+            # 要么复杂到无法安全自动化，要么复杂度本身拿不准，转人工。
             route_to_human_agent(ticket_id)
         else:
             handle_with_llm(ticket_id, COMPLAINT_RESOLUTION)
 ```
 
-One intent routes to deterministic code with no LLM involved. Two route to different specialist LLMs, each loaded with different context. One uses the complexity score to decide between an LLM and a human. TypeSafe handles the classification all in a single quick call; the expensive resources only get invoked for the requests that actually need them.
+有一种意图直接走确定性代码，完全不碰 LLM；两种意图分别走不同的专用 LLM，各自加载不同的上下文；还有一种用复杂度评分来决定走人还是走 LLM。TypeSafe 用一次快速调用做完分类，昂贵的资源只在真正需要时才被使用。
 
-Note the additional confidence check on the complexity score. As discussed in [Confidence](/confidence), it is always important to consider the meaning of a low confidence score in the context of the system and the stakes of the decision.
+注意这里对复杂度评分又做了一次置信度检查。正如[置信度](/confidence)所说，低置信度意味着什么，永远要结合系统上下文和这次决策的风险来判断。

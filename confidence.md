@@ -1,6 +1,6 @@
-# Confidence
+# 置信度
 
-> How TypeSafe reports certainty, how it differs from probability, and how to use it to control system behavior.
+> TypeSafe 如何报告确定性，它与概率有何不同，以及如何用它控制系统的行为。
 
 export function ConfidenceExplorer() {
   const [probabilities, setProbabilities] = useState([90, 6, 4]);

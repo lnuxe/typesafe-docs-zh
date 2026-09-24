@@ -1,187 +1,189 @@
-# Example use cases
+# 用例示例
 
-> Explore TypeSafe use cases by industry and turn promising ideas into software workflows.
+> 按行业浏览 TypeSafe 的用例，把有想法的方向落成软件工作流。
 
-Use this map to brainstorm where TypeSafe could fit in your industry. Open the closest industry, scan the example decisions, and adapt them to the documents and actions in your own workflow.
+用这张地图来发散：TypeSafe 可以放进你所在行业的哪些环节。打开最接近的行业，扫一遍示例决策，再把它们改成你工作流里真实的文档和动作。
 
-## Example use case categories
+## 用例类别示例
 
 <Columns cols={2}>
-  <Card title="AI Automation Software" icon="blocks">
-    Interleave AI with reliable software in a way where you can run it a million times in the background without a human co-pilot. Code owns control flow (not markdown files) while TypeSafe handles the semantic decisions and language understanding.
+  <Card title="AI 自动化软件" icon="blocks">
+    让 AI 与可靠的软件交错配合，好让你能在后台跑上百万次而无需人类副驾。控制流归代码所有（而不是 markdown 文件），语义判断和语言理解交给 TypeSafe。
   </Card>
 
-  <Card title="Real-time applications" icon="zap">
-    Frontier intelligence at real-time speeds (150ms) means AI can make decisions faster than human perception. Fast and smart enough to be programmed to play games or embedded into a UI.
+  <Card title="实时应用" icon="zap">
+    前沿智能以实时速度（150ms）运行，意味着 AI 做决定可以比人的感知还快。快到、聪明到可以写进游戏逻辑，也可以嵌进 UI。
   </Card>
 
-  <Card title="AI Map Reduce over Big Data" icon="database-zap">
-    100x cheaper means you can process giant datasets. Search for relevant information over giant corpuses, classify giant agent traces, and extract features to make predictions.
+  <Card title="大数据上的 AI MapReduce" icon="database-zap">
+    便宜 100 倍，意味着你处理得起巨型数据集：在超大语料上检索相关信息、对海量智能体轨迹分类、抽取特征做预测。
   </Card>
 
-  <Card title="Universal Verification" icon="badge-check">
-    Verify the input prompt, extractions, reasoning traces, tool calls, or inputs of any other AI. Detect jailbreaks, citation errors, hallucinations, mistakes, or other error-modes that other AIs or LLMs make at a fraction of the cost for the actual LLM call.
+  <Card title="通用校验" icon="badge-check">
+    校验输入提示词、抽取结果、推理轨迹、工具调用，或任何其他 AI 的输入。检测越狱、引用错误、幻觉、错误以及其他 AI 或 LLM 会犯的失效模式，成本只是那次 LLM 调用的一小部分。
   </Card>
 
-  <Card title="Harness Engineering" icon="wrench">
-    Use Jev queries to make your harness smarter - model routing, semantic context retrieval, LLM error detection and guardrails, reasoning trace classification at lightspeed and a fraction of the cost.
+  <Card title="Harness 工程" icon="wrench">
+    用 Jev 查询让你的 harness 更聪明：模型路由、语义上下文检索、LLM 错误检测与护栏、推理轨迹分类，速度极快，成本只是一小部分。
   </Card>
+
 </Columns>
 
-## Example automation use cases
+## 自动化用例示例
 
 <AccordionGroup>
-  <Accordion title="Search and retrieval" icon="search">
-    * Replace or supplement embeddings in RAG pipelines with semantic search, scoring, and ranking.
-    * Score query-to-candidate relevance.
-    * Rerank results with pairwise comparisons.
-    * Cross-encode queries and candidates for higher precision.
-    * Select useful context for downstream AI workflows.
+  <Accordion title="搜索与检索" icon="search">
+    * 用语义搜索、打分和排序替换或补充 RAG 流水线里的向量嵌入。
+    * 给查询与候选之间的相关性打分。
+    * 用两两比较对结果重排。
+    * 对查询与候选做交叉编码，换取更高的精确率。
+    * 为下游 AI 工作流挑选有用的上下文。
   </Accordion>
 
-  <Accordion title="Scientific discovery" icon="flask-conical">
-    * Screen papers against inclusion and exclusion criteria for systematic reviews.
-    * Label passages in interview transcripts, open-ended survey responses, and field notes using predefined themes or categories.
-    * Check whether cited passages support claims in manuscripts and generated summaries.
-    * Flag missing methodological details, such as controls, dataset descriptions, and experimental settings.
-    * Identify entities and relationships across papers to build research knowledge graphs, linking findings to supporting passages.
+  <Accordion title="科研发现" icon="flask-conical">
+    * 按纳入与排除判据筛选论文，用于系统性综述。
+    * 用预设主题或类目，给访谈记录、开放式问卷回答和田野笔记里的段落打标签。
+    * 检查被引段落是否真的支撑稿件和生成摘要里的论断。
+    * 标出缺失的方法学细节，比如对照组、数据集说明和实验设置。
+    * 跨论文识别实体与关系，构建科研知识图谱，并把结论关联到支撑它的段落。
   </Accordion>
 
-  <Accordion title="Model routing" icon="route">
-    * Use Jev to build a custom router that chooses which LLM receives each prompt.
-    * Set routing rules and thresholds for your specific workflow.
-    * Classify intent and domain.
-    * Estimate difficulty and risk.
-    * Escalate requests that need a more expensive model.
+  <Accordion title="模型路由" icon="route">
+    * 用 Jev 搭一个自定义路由器，决定每个提示词交给哪个 LLM。
+    * 按你的工作流设置路由规则和阈值。
+    * 对意图和领域分类。
+    * 估计难度和风险。
+    * 把需要更贵模型的请求上报。
   </Accordion>
 
-  <Accordion title="LLM guardrails" icon="shield">
-    * Place semantic checks on every LLM input, output, and tool call at a fraction of the cost of the LLM call.
-    * Detect jailbreaks and prompt injection.
-    * Identify policy violations and sensitive-data exposure.
-    * Detect tool-call errors and response-quality failures in real time.
-    * Log structured check results and probabilities to make AI system and harness failures easier to trace.
+  <Accordion title="LLM 护栏" icon="shield">
+    * 给每次 LLM 输入、输出和工具调用都加上语义检查，成本只是那次 LLM 调用的一小部分。
+    * 检测越狱和提示词注入。
+    * 识别策略违规与敏感数据泄露。
+    * 实时检测工具调用错误与响应质量问题。
+    * 把结构化的检查结果和概率记录下来，让 AI 系统与 harness 的故障更容易追溯。
   </Accordion>
 
-  <Accordion title="Semantic code linting" icon="code">
-    * Use Jev queries to add automated semantic lints to code and writing.
-    * Define checks for your team's coding conventions and writing guidelines.
-    * Run these checks in CI and flag violations for review.
+  <Accordion title="语义代码检查" icon="code">
+    * 用 Jev 查询给代码和文档加上自动化的语义检查。
+    * 针对团队的编码约定和写作规范定义检查项。
+    * 在 CI 里跑这些检查，把违规项标出来供人复核。
   </Accordion>
 
-  <Accordion title="Feature extraction for predictive modeling" icon="chart-spline">
-    * Use Jev to extract probabilistic features from natural-language data.
-    * Combine these features with structured data to train models for tasks with ground-truth outcomes.
-    * Use autoresearch workflows to propose feature definitions and evaluate their predictive value against held-out ground truth.
+  <Accordion title="预测建模的特征抽取" icon="chart-spline">
+    * 用 Jev 从自然语言数据中抽取概率化特征。
+    * 把这些特征与结构化数据结合，训练那些有真实结果可对照的任务模型。
+    * 用 autoresearch 工作流提出特征定义，并在留出的真实标签上评估它们的预测价值。
   </Accordion>
 
-  <Accordion title="Recruiting" icon="users">
-    * Evaluate resumes, applications, and interview feedback against explicit, job-related criteria.
-    * Identify relevant experience.
-    * Score evidence for required competencies.
-    * Match candidates to roles.
-    * Route candidates to hiring managers or recruiters.
-    * Escalate uncertain cases for human review.
+  <Accordion title="招聘" icon="users">
+    * 按明确的、与岗位相关的判据评估简历、申请材料和面试反馈。
+    * 识别相关经验。
+    * 对岗位所需能力的证据打分。
+    * 把候选人与岗位匹配。
+    * 把候选人路由给用人经理或招聘官。
+    * 把拿不准的案例上报人工复核。
   </Accordion>
 
-  <Accordion title="Lead generation" icon="user-round-search">
-    * Match company profiles, executive biographies, and inbound messages to an ideal customer profile.
-    * Score industry fit and company maturity.
-    * Detect buyer relevance, pain points, and purchase intent.
-    * Prioritize and route leads.
+  <Accordion title="销售线索挖掘" icon="user-round-search">
+    * 把公司简介、高管履历和主动来询的消息与理想客户画像做匹配。
+    * 对行业契合度和公司成熟度打分。
+    * 检测买方相关性、痛点和购买意向。
+    * 给线索排优先级并路由。
   </Accordion>
 
-  <Accordion title="Customer support" icon="headset">
-    * Classify incoming tickets by issue, product area, and customer intent.
-    * Process call transcripts to extract customer issues, commitments, and follow-up actions.
-    * Detect urgency, frustration, churn risk, and refund requests.
-    * Route cases to the right team, queue, or automated workflow.
-    * Verify support responses against policies and the customer's request.
+  <Accordion title="客户支持" icon="headset">
+    * 按问题类型、产品模块和客户意图对进线工单分类。
+    * 处理通话记录，抽取客户问题、承诺事项和后续动作。
+    * 检测紧迫性、沮丧程度、流失风险和退款请求。
+    * 把工单路由到正确的团队、队列或自动化工作流。
+    * 对照政策和客户诉求校验客服回复。
   </Accordion>
 
-  <Accordion title="Insurance claims" icon="clipboard-check">
-    * Classify first-notice-of-loss reports, adjuster notes, and supporting documents.
-    * Detect claim complexity, missing information, and potential fraud indicators.
-    * Prioritize claims for straight-through processing or specialist review.
-    * Escalate uncertain or high-risk cases to a human adjuster.
+  <Accordion title="保险理赔" icon="clipboard-check">
+    * 对出险报案、理算员笔记和佐证材料分类。
+    * 检测理赔复杂度、缺失信息和潜在欺诈迹象。
+    * 给理赔案件排优先级：直通处理，还是转专家复核。
+    * 把不确定或高风险的案件上报给人工理算员。
   </Accordion>
 
-  <Accordion title="Financial crime" icon="landmark">
-    * Evaluate transaction narratives, KYC documents, and alert histories for suspicious characteristics.
-    * Match entities across inconsistent names, profiles, and records.
-    * Prioritize alerts by risk, relevance, and evidence quality.
-    * Route ambiguous cases to investigators for review.
+  <Accordion title="金融犯罪" icon="landmark">
+    * 在交易摘要、KYC 材料和历史预警中查找可疑特征。
+    * 在写法不一致的姓名、档案和记录之间做实体匹配。
+    * 按风险、相关性和证据质量给预警排优先级。
+    * 把界定不清的案件路由给调查人员复核。
   </Accordion>
 
-  <Accordion title="Legal and compliance" icon="scale">
-    * Classify contracts, policies, regulatory filings, and marketing claims.
-    * Detect missing clauses, prohibited claims, and policy violations.
-    * Verify documents against explicit legal or compliance requirements.
-    * Escalate high-risk or uncertain findings to counsel or compliance teams.
+  <Accordion title="法务与合规" icon="scale">
+    * 对合同、政策、监管申报材料和营销声明分类。
+    * 检测缺失条款、违禁表述和策略违规。
+    * 对照明确的法律或合规要求校验文档。
+    * 把高风险或不确定的发现上报法务或合规团队。
   </Accordion>
 
-  <Accordion title="E-commerce marketplaces" icon="store">
-    * Classify and normalize product listings across inconsistent seller catalogs.
-    * Extract product attributes from titles and descriptions.
-    * Detect prohibited listings, counterfeit signals, review abuse, and policy violations.
-    * Rank products and route uncertain listings for human review.
+  <Accordion title="电商平台" icon="store">
+    * 在写法各异的卖家商品目录之间做分类和归一化。
+    * 从标题和描述里抽取商品属性。
+    * 检测违禁商品、假冒迹象、评论滥用和策略违规。
+    * 给商品排序，把不确定的商品挂出来人工复核。
   </Accordion>
 
-  <Accordion title="Moderation and trust and safety" icon="shield-check">
-    * Apply company-specific, nuanced criteria to decide which posts meet your moderation standards.
-    * Moderate user content and automated conversations across communities, customer support, and SDR workflows.
-    * Detect toxicity, harassment, spam, fraud, unsafe advice, personal-data exposure, opt-out requests, and policy-violating claims.
-    * Combine severity and confidence to allow, warn, review, or block content.
+  <Accordion title="内容审核与信任安全" icon="shield-check">
+    * 用贴合自家业务的细致判据，判断哪些帖子达到你的审核标准。
+    * 在社区、客户支持和 SDR 工作流中审核用户内容与自动会话。
+    * 检测毒性言论、骚扰、垃圾信息、欺诈、不安全建议、个人数据泄露、退订请求和违反政策的表述。
+    * 结合严重程度与置信度，决定放行、警告、送审还是拦截。
   </Accordion>
 
-  <Accordion title="Advertising" icon="megaphone">
-    * Evaluate creative assets, campaign copy, landing pages, and placement context.
-    * Classify brand safety and audience suitability.
-    * Check regulatory compliance and prohibited claims.
-    * Evaluate creative quality and ad-to-landing-page alignment.
+  <Accordion title="广告" icon="megaphone">
+    * 评估创意素材、投放文案、落地页和展示位置上下文。
+    * 对品牌安全性和受众适配度分类。
+    * 检查监管合规与违禁表述。
+    * 评估创意质量以及广告与落地页的一致性。
   </Accordion>
 
-  <Accordion title="Gaming" icon="gamepad-2">
-    * Evaluate player reports, in-game chat, reviews, and support conversations.
-    * Moderate chat and detect abuse, toxicity, or suspicious behavior.
-    * Annotate content and score frustration or engagement.
-    * Detect churn signals and route player-support requests.
+  <Accordion title="游戏" icon="gamepad-2">
+    * 评估玩家举报、游戏内聊天、评测和客服对话。
+    * 审核聊天内容，检测辱骂、毒性和可疑行为。
+    * 标注内容，并给沮丧程度或参与度打分。
+    * 检测流失信号，路由玩家支持请求。
   </Accordion>
 
-  <Accordion title="Risk assessment" icon="triangle-alert">
-    * Convert incident reports, claims notes, transaction descriptions, and vendor assessments into probabilistic risk indicators.
-    * Use these indicators in insurance and underwriting workflows.
-    * Classify risk types and detect suspicious characteristics.
-    * Score severity and prioritize review.
-    * Extract features for broader risk models.
+  <Accordion title="风险评估" icon="triangle-alert">
+    * 把事件报告、理赔笔记、交易描述和供应商评估转成概率化的风险指标。
+    * 在保险与核保工作流中使用这些指标。
+    * 对风险类型分类，检测可疑特征。
+    * 给严重程度打分并排定复核优先级。
+    * 为更大范围的风险模型抽取特征。
   </Accordion>
 
-  <Accordion title="Demand forecasting" icon="chart-spline">
-    * Enrich forecasting models with semantic signals from customer inquiries, sales notes, product reviews, support tickets, and market reports.
-    * Extract purchase intent, urgency, and product interest.
-    * Detect supply concerns, competitive pressure, and emerging demand themes.
-    * Feed those features into a forecasting model alongside historical time-series data.
+  <Accordion title="需求预测" icon="chart-spline">
+    * 用来自客户咨询、销售记录、商品评价、支持工单和市场报告的语义信号，给预测模型补充信息。
+    * 抽取购买意向、紧迫程度和产品兴趣。
+    * 检测供应隐患、竞争压力和正在浮现的需求主题。
+    * 把这些特征和历史时间序列数据一起喂给预测模型。
   </Accordion>
 
-  <Accordion title="Graphs and knowledge graphs" icon="network">
-    * Annotate and verify knowledge graphs with typed semantic decisions.
-    * Classify relationships and entity types.
-    * Detect contradictions between records or claims.
-    * Support probabilistic traversal and hierarchical classification.
+  <Accordion title="图与知识图谱" icon="network">
+    * 用类型化的语义判断来标注和校验知识图谱。
+    * 对关系和实体类型分类。
+    * 检测记录之间或论断之间的矛盾。
+    * 支持概率化遍历与层级分类。
   </Accordion>
+
 </AccordionGroup>
 
-## Example task categories
+## 任务类别示例
 
-| Decision shape                 | Reach for it when                                          | Examples                                                                |
+| 决策形态 | 什么时候用它 | 例子 |
 | ------------------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **Classification**             | One known category should win                              | Intent, topic, department, risk type, entity type                       |
-| **Detection**                  | You need a probability that one property is present        | Spam, fraud, urgency, jailbreaks, sensitive data                        |
-| **Scoring**                    | The answer belongs on an ordered rubric                    | Severity, relevance, quality, frustration, suitability                  |
-| **Routing**                    | A category selects the next code path                      | Tool use, escalation, model routing, support queues                     |
-| **Search**                     | You need to find items that match a natural-language query | Semantic search, document discovery, candidate generation               |
-| **Retrieval**                  | A workflow needs the most relevant context or records      | RAG context, evidence retrieval, knowledge lookup                       |
-| **Ranking**                    | Items need to be ordered by semantic relevance or quality  | Search results, recommendations, candidate prioritization               |
-| **Verification**               | An artifact must be checked for specific failure modes     | Citation support, policy violations, tool-call errors, response quality |
-| **ML Feature Extraction**      | A downstream classical ML model needs semantic signals     | Purchase intent, product interest, competitive pressure, churn signals  |
-| **Structured Data Extraction** | Known fields must be recovered from unstructured input     | Candidate attributes, order fields, document labels                     |
+| **分类** | 应当有一个已知类别胜出 | 意图、主题、部门、风险类型、实体类型 |
+| **检测** | 你需要「某属性存在」的概率 | 垃圾信息、欺诈、紧迫性、越狱、敏感数据 |
+| **评分** | 答案落在有序量规上 | 严重程度、相关性、质量、沮丧程度、适配度 |
+| **路由** | 由一个类别决定走哪条代码路径 | 工具调用、上报、模型路由、支持队列 |
+| **搜索** | 你需要找出匹配自然语言查询的条目 | 语义搜索、文档发现、候选生成 |
+| **检索** | 工作流需要最相关的上下文或记录 | RAG 上下文、证据检索、知识查询 |
+| **排序** | 条目需要按语义相关性或质量排序 | 搜索结果、推荐、候选优先级 |
+| **校验** | 某产物必须针对特定失效模式接受检查 | 引用支撑、策略违规、工具调用错误、响应质量 |
+| **ML 特征抽取** | 下游经典 ML 模型需要语义信号 | 购买意向、产品兴趣、竞争压力、流失信号 |
+| **结构化数据抽取** | 需要从非结构化输入里还原已知字段 | 候选人属性、订单字段、文档标签 |

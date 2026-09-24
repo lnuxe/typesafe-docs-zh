@@ -1,6 +1,6 @@
-# How to build with TypeSafe
+# 如何用 TypeSafe 构建
 
-> Design AI-powered software by keeping code in control and giving System One narrow, structured decisions.
+> 把控制权留在代码手里，只把狭窄、结构化的决策交给 System One，以此设计 AI 驱动的软件。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,33 +231,33 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-System One is TypeSafe's model for building AI-powered software, not agents. It does not generate code or choose its own next action. It provides AI primitives that embed into software, so code remains in control while the model handles common-sense judgments over unstructured data.
+System One 是 TypeSafe 用来构建 AI 驱动软件（而不是智能体）的模型。它不生成代码，也不自己决定下一步做什么。它提供能嵌进软件的原语，因此控制权始终在代码手里，模型只负责对非结构化数据做常识性判断。
 
 <Info>
-  **Summary:** build a normal software workflow and insert System One only where AI is needed.
+  **小结：** 搭一个普通的软件工作流，只在需要 AI 的地方插入 System One。
 
-  * Keep control flow, deterministic rules, and side effects in code.
-  * Break broad judgments into narrow, typed questions with explicit instructions and criteria.
-  * Give each question only the context it needs.
-  * Use probabilities and confidence to act, ask for review, or escalate.
-  * Ask independent questions together, then compose their answers in code.
+  * 控制流、确定性规则和副作用都留在代码里。
+  * 把宽泛的判断拆成狭窄、类型化的问题，并写明指令和判据。
+  * 每个问题只给需要的上下文。
+  * 用概率分布和置信度来决定执行、请求复核，还是上报人工。
+  * 把互相独立的问题放在一起问，然后在代码里组合它们的答案。
 </Info>
 
-## Three software architectures
+## 三种软件架构
 
-TypeSafe is designed for building **AI-powered software**, where code owns the workflow and AI handles narrow, structured decisions.
+TypeSafe 是为构建**AI 驱动的软件**而设计的：工作流归代码所有，AI 只负责狭窄、结构化的决策。
 
 <Tabs>
-  <Tab title="Traditional software">
-    Traditional code is a complex decision tree made from simple software primitives. Because each primitive is reliable, developers can compose them into higher-level abstractions.
+  <Tab title="传统软件">
+    传统代码是用简单的软件原语搭出来的复杂决策树。因为每个原语都可靠，开发者才可以把它们组合成更高层的抽象。
   </Tab>
 
-  <Tab title="LLM agents">
-    An agent processes instructions and chooses its next step. This works well when a person is monitoring the process, but every loop introduces another opportunity to go off the rails.
+  <Tab title="LLM 智能体">
+    智能体会处理指令并自己选择下一步。有人在盯着流程时这样做没问题，但每多一次循环，就多一次跑偏的机会。
   </Tab>
 
-  <Tab title="AI-powered software">
-    Code handles deterministic work and owns the control flow. The model appears only where the system needs programmable common sense or needs to interpret unstructured data. Each AI task is kept atomic and constrained.
+  <Tab title="AI 驱动的软件">
+    代码负责确定性工作，掌握控制流。模型只出现在系统需要可编程的常识、或者需要理解非结构化数据的地方。每个 AI 任务都保持原子化、受约束。
   </Tab>
 </Tabs>
 
@@ -267,43 +267,43 @@ TypeSafe is designed for building **AI-powered software**, where code owns the w
   <img className="hidden dark:block" src="https://mintcdn.com/ts-docs/aFVnpmCIX68NpsV1/images/how-to-build-with-typesafe/software-architectures-dark.webp?fit=max&auto=format&n=aFVnpmCIX68NpsV1&q=85&s=8e6c2c73bdd4c9b541c4f9294bd829b5" alt="Traditional software, agents, and AI-powered software shown as three different system architectures." width="2048" height="1117" data-path="images/how-to-build-with-typesafe/software-architectures-dark.webp" />
 </Frame>
 
-## What makes System One composable
+## System One 为什么可组合
 
 <Columns cols={2}>
-  <Card title="Structured" icon="braces">
-    System One is type-safe by construction. Decisions and probabilities conform to the structured software types and JSON schema your code expects, so it never has to recover a value from generated prose.
+  <Card title="结构化" icon="braces">
+    System One 在构造上就是类型安全的。决策和概率符合你代码期望的结构化软件类型与 JSON schema，因此不必再从生成的散文里把值捞回来。
   </Card>
 
-  <Card title="Parallel" icon="split">
-    Questions are evaluated independently and in parallel. One primitive's result does not become hidden context that changes another primitive's result.
+  <Card title="并行" icon="split">
+    问题被独立、并行地评估。一个原语的结果不会变成隐藏上下文，去改变另一个原语的结果。
   </Card>
 
-  <Card title="Comparable" icon="arrow-up-down">
-    Outputs are sortable and can drive smart `if` statements, thresholds, and comparisons.
+  <Card title="可比较" icon="arrow-up-down">
+    输出可以排序，能驱动更聪明的 `if` 语句、阈值和比较。
   </Card>
 
-  <Card title="Fast" icon="gauge">
-    Most queries complete in about 100 ms. System One is fast enough for real-time request paths and user interfaces.
+  <Card title="快" icon="gauge">
+    大多数查询在 100 ms 左右返回。System One 快到足以用在实时请求链路和用户界面上。
   </Card>
 
-  <Card title="Calibrated confidence" icon="chart-no-axes-combined">
-    [RLCD](/introduction/machine-learning-primer) communicates uncertainty through calibrated probabilities instead of tending toward overconfidence.
+  <Card title="校准的置信度" icon="chart-no-axes-combined">
+    [RLCD](/introduction/machine-learning-primer) 用校准后的概率表达不确定性，而不是倾向于过度自信。
   </Card>
 
-  <Card title="Self-consistent" icon="repeat-2">
-    System One is designed to return stable answers across repeated evaluations. See the [self-consistency cookbook](/cookbooks/consistency_noul_cookbook).
+  <Card title="自一致性" icon="repeat-2">
+    System One 的设计目标是在反复评估同一输入时给出稳定的答案。见[自一致性 cookbook](/cookbooks/consistency_noul_cookbook)。
   </Card>
 </Columns>
 
-Because every output is constrained to the supplied options, the model returns a full probability distribution over those options rather than inventing a value outside the schema. TypeSafe's target is a greater than 100× intelligence-to-speed-and-cost ratio; the underlying bet is that cheaper intelligence will create much more demand.
+因为每个输出都被限制在给定的选项内，模型返回的是这些选项上的完整概率分布，而不是凭空造出 schema 之外的值。TypeSafe 的目标是让智能与速度、成本的比值超过 100×；背后的赌注是：更便宜的智能会带来大得多的需求。
 
-## Design a System One workflow
+## 设计 System One 工作流
 
 <Steps titleSize="h3">
-  <Step title="Use code when you can">
-    Keep deterministic work in code. It is reliable and cheap. Avoid agent `while` loops when a software workflow can express the same behavior.
+  <Step title="能用代码就用代码">
+    确定性工作留在代码里：可靠，而且便宜。软件工作流能表达同样的行为时，就不要用智能体的 `while` 循环。
 
-    <Accordion title="Example: keep deterministic rules in code">
+    <Accordion title="示例：把确定性规则留在代码里">
       ```python theme={null}
       days_overdue = (today - invoice.due_date).days
 
@@ -312,13 +312,13 @@ Because every output is constrained to the supplied options, the model returns a
       ```
     </Accordion>
 
-    Browse the [System One patterns](/patterns) for bounded ways to compose model decisions with code.
+    如何以有边界的方式把模型决策与代码组合起来，见 [System One 模式](/patterns)。
   </Step>
 
-  <Step title="Decompose the input state">
-    Include only the context relevant to the current questions. This helps the model avoid distractions and context rot. Do not rely on knowledge stored in model weights when current information can come from your own knowledge base.
+  <Step title="拆解输入状态">
+    只包含与当前问题相关的上下文。这能帮模型避开干扰和上下文腐烂。当前信息能从你自己的知识库拿到时，就不要依赖存在模型权重里的知识。
 
-    <Accordion title="Example: send only relevant context">
+    <Accordion title="示例：只发送相关的上下文">
       <TypesafeExample
         title="request"
         display="request"
@@ -340,11 +340,11 @@ Because every output is constrained to the supplied options, the model returns a
     </Accordion>
   </Step>
 
-  <Step title="Use structure in the input state">
-    Use nested JSON for the `state` and `questions` fields. Point questions at specific values when that removes ambiguity, and include the backtick characters around each path inside the question.
+  <Step title="在输入状态里使用结构">
+    `state` 和 `questions` 字段都用嵌套 JSON。当指向具体值能消除歧义时，就让问题指向具体值，并在问题里给每个路径加上反引号。
 
-    <Accordion title="Example: reference a nested value">
-      Use a backticked dot-and-index path to point a question at a specific nested value, such as `support.tickets[0].message`.
+    <Accordion title="示例：引用一个嵌套值">
+      用带反引号的点号加下标路径，让问题指向某个具体的嵌套值，例如 `support.tickets[0].message`。
 
       <TypesafeExample
         title="request"
@@ -393,16 +393,16 @@ Because every output is constrained to the supplied options, the model returns a
     </Accordion>
   </Step>
 
-  <Step title="Decompose the questions">
-    Ask the most explicit, narrow, specific, atomic questions you can. Break down complex or ill-defined questions into separate questions that each evaluate one property.
+  <Step title="拆解问题">
+    尽量问最明确、最狭窄、最具体、最原子的问题。把复杂或定义不清的问题拆成各自只评估一个属性的独立问题。
 
     <Info>
-      This is probably the most important concept in this guide. Broad questions hide several judgments behind one answer. Atomic questions expose those judgments so you can inspect, tune, and combine them in code.
+      这大概是本指南最重要的概念。宽泛的问题把好几个判断藏在一个答案背后。原子化的问题把这些判断摊开，你就能在代码里检查、调优和组合它们。
     </Info>
 
-    <Accordion title="Example: decompose spam detection">
+    <Accordion title="示例：拆解垃圾邮件检测">
       <TypesafeExample
-        title="One broad question (bad)"
+        title="一个宽泛的问题（差）"
         display="questions"
         example={{
       state: {
@@ -433,7 +433,7 @@ Because every output is constrained to the supplied options, the model returns a
       />
 
       <TypesafeExample
-        title="Decomposed questions (good)"
+        title="拆解后的问题（好）"
         display="questions"
         example={{
       state: {
@@ -490,9 +490,9 @@ Because every output is constrained to the supplied options, the model returns a
       />
     </Accordion>
 
-    <Accordion title="Example: verify a tool-call trace">
+    <Accordion title="示例：验证工具调用轨迹">
       <TypesafeExample
-        title="One broad question (bad)"
+        title="一个宽泛的问题（差）"
         display="questions"
         example={{
       state: {
@@ -555,7 +555,7 @@ Because every output is constrained to the supplied options, the model returns a
       />
 
       <TypesafeExample
-        title="Decomposed questions (good)"
+        title="拆解后的问题（好）"
         display="questions"
         example={{
       state: {
@@ -659,17 +659,17 @@ Because every output is constrained to the supplied options, the model returns a
     </Accordion>
   </Step>
 
-  <Step title="Use structure in the questions">
-    Keep questions short. `instructions` and `criteria` are usually strings, and for a short, unambiguous question a string is all you need. They can also be objects or arrays. Put the question in one field and the data that guides the question in the others.
+  <Step title="在问题里使用结构">
+    问题写短一点。`instructions` 和 `criteria` 通常是字符串，对简短、无歧义的问题来说，字符串就够了。它们也可以是对象或数组。把问题放进一个字段，把指导这个问题的数据放进其他字段。
 
-    Structure helps in these situations:
+    结构在这些情况下有用：
 
-    * The question needs context or examples. A long sentence of background information or a list of example inputs belongs in named fields next to the question, where your code can add to them or swap them without rewriting the question.
-    * Part of the question comes from your code. When a value comes from a database, put it in its own field instead of splicing it into a string template.
-    * Several questions have similar instructions. A request takes one state and can include multiple questions. Adding supplementary data can help make questions distinct.
+    * 问题需要上下文或示例。一长句背景信息或一组示例输入，应该放进问题旁边有名字的字段里，这样代码可以增补或替换它们，而不必改写问题。
+    * 问题的一部分来自你的代码。值来自数据库时，把它放进独立字段，而不是拼进字符串模板。
+    * 多个问题的指令相似。一次请求接收一个状态，可以包含多个问题。补充数据有助于把这些问题区分开。
 
-    <Accordion title="Example: reference a record from your code">
-      This Noul compares a resume in the state against a record from a candidate database. The record goes into `potential_duplicate` as it is, and the question refers to it by name.
+    <Accordion title="示例：引用来自你代码的一条记录">
+      这个 Noul 把状态里的一份简历与候选人数据库里的一条记录做比较。记录原样放进 `potential_duplicate`，问题按名字引用它。
 
       <TypesafeExample
         title="questions"
@@ -700,11 +700,11 @@ Because every output is constrained to the supplied options, the model returns a
       />
     </Accordion>
 
-    The "potential\_duplicate" data sourced from code can change over time. The "question" references it using backticks.
+    来自代码的 "potential\_duplicate" 数据会随时间变化。"question" 用反引号引用它。
 
-    The descriptions inside `criteria` can be objects too. For a Choice, each option's description can be an object that says what the option covers, what belongs to a different option, and a few examples. Use the same field names across options so the model can compare them directly.
+    `criteria` 里的描述也可以是对象。对 Choice 来说，每个选项的描述可以是一个对象，说明这个选项涵盖什么、什么归别的选项，以及几个示例。各选项使用相同的字段名，模型就能直接比较它们。
 
-    <Accordion title="Example: define contrastive Choice criteria">
+    <Accordion title="示例：定义有对比性的 Choice 判据">
       <TypesafeExample
         title="questions"
         display="questions"
@@ -743,31 +743,31 @@ Because every output is constrained to the supplied options, the model returns a
       />
     </Accordion>
 
-    Each question type's page has a worked example:
+    每种问题类型的页面都有一个完整示例：
 
-    * [Noul](/primitives/noul#structured-instructions) compares one resume against several candidate records, one question per record, with the questions built in code.
-    * [Choice](/primitives/choice#structured-instructions-and-criteria) describes two easily confused options with what each covers, what it's not for, and examples.
-    * [Score](/primitives/score#structured-level-descriptions) gives each level a description and example situations.
+    * [Noul](/primitives/noul#structured-instructions) 把一份简历与多条候选人记录逐条比较，一条记录一个问题，问题在代码里构造。
+    * [Choice](/primitives/choice#structured-instructions-and-criteria) 描述两个容易混淆的选项，分别说明各自涵盖什么、不适用于什么，并给出示例。
+    * [Score](/primitives/score#structured-level-descriptions) 给每个档位配上描述和示例场景。
 
-    The [structured-data-extraction cascade cookbook](/cookbooks/sde_cascade) shows the shared-wording case, asking the same battery of questions about every field of an extracted record.
+    [结构化数据抽取级联 cookbook](/cookbooks/sde_cascade) 展示了措辞共用的情形：对抽取出的记录里的每个字段，都问同一组问题。
 
-    A short, unambiguous question or criterion can remain a string. Add structure when it separates guidance that would otherwise blur together. For the full set of places structure is accepted, see [Advanced: structure](/primitives/advanced).
+    简短、无歧义的问题或判据可以保持字符串形式。当结构化能把原本会混在一起的指引分开时，就加上结构。结构可以用在哪些位置，完整清单见[进阶：结构化](/primitives/advanced)。
   </Step>
 
-  <Step title="Ask a lot of questions">
-    Ask many narrow, independent questions about the same state in one request. This is how you maximize effectiveness and intelligence per dollar with the API: questions run in parallel, and code can combine their signals without adding serial model round trips.
+  <Step title="大量提问">
+    在一次请求里，针对同一个状态问许多狭窄、独立的问题。这是用 API 把效果和每美元智能最大化的方式：问题并行执行，代码可以组合它们的信号，而不用增加串行的模型往返。
 
-    See the [Speculative Fan-Out pattern](/patterns/fan-out) and [Parallel questions cookbook](/cookbooks/parallel_questions).
+    见[推测性扇出模式](/patterns/fan-out)和[并行问题 cookbook](/cookbooks/parallel_questions)。
   </Step>
 
-  <Step title="Combine question outputs in code (or feed into a classical ML model)">
-    Combine independent answers with deterministic rules or weighted sums. For learned composition, use the probabilities as features in a downstream classical machine-learning model.
+  <Step title="在代码里组合问题输出（或喂给经典 ML 模型）">
+    用确定性规则或加权求和把互相独立的答案组合起来。要做基于学习的组合，就把概率当作特征，交给下游的经典机器学习模型。
 
-    <Accordion title="Example: combine signals with a weighted score">
+    <Accordion title="示例：用加权分数组合信号">
       ```python theme={null}
       answers = response.answers
 
-      # Combine independent signals into one application-specific score.
+      # 把互相独立的信号组合成一个应用专属的分数。
       quality = (
           0.4 * answers["answers_request"].noul
           + 0.4 * answers["citations_are_supported"].noul
@@ -776,13 +776,13 @@ Because every output is constrained to the supplied options, the model returns a
       ```
     </Accordion>
 
-    [Composite Scoring](/patterns/composite-scoring) shows how to preserve individual judgments while combining them. If you do not have labels for a downstream model, use an ensemble of expensive reasoning models to generate them; the [AutoResearch cookbook](/cookbooks/autoresearch_feature_discovery) shows how to train a classical model on System One outputs.
+    [复合评分](/patterns/composite-scoring) 展示了如何在组合判断的同时保留每个判断。如果下游模型没有标签，可以用一组昂贵的推理模型来生成标签；[AutoResearch cookbook](/cookbooks/autoresearch_feature_discovery) 展示了如何用 System One 的输出训练经典模型。
   </Step>
 
-  <Step title="Route on uncertainty">
-    Make code take different actions for confident and unconfident answers. Escalate uncertain cases to a person or a more expensive reasoning model. Test thresholds by plotting confidence against accuracy on your data.
+  <Step title="按不确定性路由">
+    让代码对置信度高和置信度低的答案采取不同动作。把不确定的案例上报给人工或更昂贵的推理模型。在你的数据上画置信度与准确率的对比图来测试阈值。
 
-    <Accordion title="Example: route by confidence">
+    <Accordion title="示例：按置信度路由">
       ```python theme={null}
       answer = response.answers["card_help_topic"]
 
@@ -793,24 +793,24 @@ Because every output is constrained to the supplied options, the model returns a
       ```
     </Accordion>
 
-    See [Confidence](/confidence) and [Confidence-Gated Routing](/patterns/confidence-routing) for choosing thresholds and matching them to the risk of each action.
+    如何选择阈值，以及如何让阈值匹配每种动作的风险，见[置信度](/confidence)和[置信度门控路由](/patterns/confidence-routing)。
   </Step>
 </Steps>
 
 <Tip>
-  Decomposition does not require more round trips. Questions over the same state run in parallel.
+  拆解并不需要更多往返。针对同一个状态的问题并行执行。
 </Tip>
 
-## Putting it all together
+## 全部串起来
 
-This support-ticket workflow keeps deterministic work in code, sends only relevant structured context, evaluates many atomic questions in one request, and composes the answers with explicit confidence gates.
+这个客服工单工作流把确定性工作留在代码里，只发送相关的结构化上下文，在一次请求里评估许多原子问题，并用明确的置信度门控组合答案。
 
 ```python title="triage_ticket.py" theme={null}
 from typesafe_sdk import Choice, Noul, NoulCriteria, Score, TypeSafeClient
 
 
 def triage_ticket(ticket, customer):
-    # Handle deterministic states without calling a model.
+    # 不调用模型就能处理的确定性情况。
     if ticket["status"] == "closed":
         return "no_action"
 
@@ -818,7 +818,7 @@ def triage_ticket(ticket, customer):
         order for order in customer["orders"] if order["status"] != "delivered"
     ]
 
-    # Include only the structured context needed by the questions below.
+    # 只包含下面这些问题需要的结构化上下文。
     state = {
         "ticket": {
             "message": ticket["message"],
@@ -834,7 +834,7 @@ def triage_ticket(ticket, customer):
         },
     }
 
-    # Ask structured, atomic questions together so they run in parallel.
+    # 把结构化、原子化的问题放在一起问，让它们并行执行。
     questions = {
         "topic": Choice(
             instructions={
@@ -989,7 +989,7 @@ def triage_ticket(ticket, customer):
             questions=questions,
         )
 
-    # Compose independent spam signals with weights controlled by code.
+    # 用代码控制的权重组合互相独立的垃圾邮件信号。
     answers = response.answers
     spam_risk = (
         0.45 * answers["requests_credentials"].noul
@@ -997,14 +997,14 @@ def triage_ticket(ticket, customer):
         + 0.25 * answers["unexpected_reward"].noul
     )
 
-    # Escalate uncertain judgments instead of guessing.
+    # 判断不确定时上报，而不是猜。
     spam_is_uncertain = 0.4 < spam_risk < 0.6
     if spam_is_uncertain or answers["topic"].confidence < 0.75:
         return route_to_human_review(ticket)
     if spam_risk >= 0.6:
         return quarantine_as_spam(ticket)
 
-    # Let code decide which speculative answers matter on this path.
+    # 由代码决定这条路径上哪些推测性答案是有用的。
     if answers["topic"].choice == "billing":
         return route_to_billing(
             ticket,

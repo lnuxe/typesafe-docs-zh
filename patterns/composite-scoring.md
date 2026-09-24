@@ -1,6 +1,6 @@
-# Composite scoring
+# 复合评分
 
-> Break a complex judgment into atomic scores, combine with weights you control in code.
+> 把复杂的判断拆成原子化的评分，再用你自己控制的权重在代码里组合。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,11 +231,11 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Oftentimes we want to rank a set of items based on several criteria at once. Composite scoring is an easy way to think about this: break the judgment into independent dimensions, score each one separately, and combine them with weights you control in code.
+经常需要一次按多个判据给一组条目排序。复合评分的思路很直接：把判断拆成互相独立的维度，每个维度单独打分，再用你自己控制的权重在代码里组合。
 
-## Example: resume screening
+## 示例：简历筛选
 
-Let's imagine you are processing resumes for engineering roles. You want to rank the candidates based on several criteria, and ultimately select the top X candidates for further review.
+设想你在筛选工程岗位的简历：想按多个判据给候选人排序，最终挑出前 X 名进入下一轮。
 
 ```mermaid actions={true} theme={null}
 %%{init: {"fontFamily": "Inter, sans-serif", "flowchart": {"rankSpacing": 35, "wrappingWidth": 300, "subGraphTitleMargin": {"top": 12, "bottom": 36}}}}%%
@@ -260,7 +260,7 @@ flowchart LR
     em --> rank
 ```
 
-### Step 1: score each dimension independently
+### 第 1 步：每个维度单独打分
 
 <TypesafeExample
   title="questions"
@@ -319,9 +319,9 @@ questions: {
 }}
 />
 
-### Step 2: combine with weights
+### 第 2 步：用权重组合
 
-Each dimension is normalized to 0–1 and weighted. The weights give you an easy way to adjust the relative importance of each dimension, without losing any of the nuance of the individual scores.
+每个维度先归一化到 0–1 再加权。权重让你能方便地调整各维度的相对重要性，同时又不会丢掉单项评分里的细节。
 
 ```python title="scoring.py" theme={null}
 py      = response.answers["python_depth"].score / 4
@@ -329,11 +329,11 @@ lead    = response.answers["team_leadership"].score / 4
 arch    = response.answers["system_design"].score / 4
 general = response.answers["generalist"].score / 4
 
-# Senior IC
+# 资深 IC
 ic_score = (0.40 * py) + (0.10 * lead) + (0.40 * arch) + (0.10 * general)
 
-# Engineering Manager
+# 工程经理
 em_score = (0.15 * py) + (0.40 * lead) + (0.20 * arch) + (0.25 * general)
 ```
 
-This gives you the ability to rank the candidates based on the composite score. But more importantly, it gives you visibility into how exactly the final score is being calculated. If the highest ranking candidates are not matching your expectations, you can adjust the weights to find the right balance.
+这样就能按复合评分给候选人排序。更重要的是，最终分数是怎么算出来的完全可见。如果排在最前面的候选人和预期不符，调权重就行，直到配比合适。

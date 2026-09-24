@@ -1,6 +1,6 @@
-# Confidence-gated routing
+# 置信度门控路由
 
-> Use confidence as a second axis. The answer tells you what; confidence tells you whether to act.
+> 把置信度当作第二条判断轴。答案告诉你是什么，置信度告诉你该不该动手。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,11 +231,11 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-One of TypeSafe's most powerful features is [confidence](/confidence). By being intentional with the way you gate decisions on confidence, you can build systems that are both reliable and safe.
+[置信度](/confidence)是 TypeSafe 最有力的特性之一。有意识地用置信度给决策设闸，就能搭出既可靠又安全的系统。
 
-## Example: voice banking commands
+## 示例：语音银行指令
 
-Let's imagine you are building a voice banking interface to allow the user to interact with their account verbally. While you always want to have reasonable confidence in interpreting the user's intent, some actions are riskier than others and thus demand a higher confidence threshold.
+设想你在做一个语音银行界面，让用户用说话的方式操作账户。理解用户意图时当然希望置信度足够高，但有些操作比别的更危险，也就需要更高的置信度阈值。
 
 ```mermaid actions={true} theme={null}
 %%{init: {"fontFamily": "Inter, sans-serif", "flowchart": {"rankSpacing": 35, "wrappingWidth": 300, "subGraphTitleMargin": {"top": 12, "bottom": 36}}}}%%
@@ -254,7 +254,7 @@ flowchart LR
     gate -- "approve_transfer<br/>above 0.85" --> approve["approve the transfer"]
 ```
 
-### Step 1: determine the user's intent
+### 第 1 步：判断用户意图
 
 <TypesafeExample
   title="questions"
@@ -274,31 +274,31 @@ questions: {
 }}
 />
 
-### Step 2: confidence-gated routing
+### 第 2 步：置信度门控路由
 
 ```python theme={null}
 action = response.answers["intent"]
 
-# Below 0.6 confidence on any action, route to a human
+# 任何操作的置信度低于 0.6，转人工
 if action.confidence < 0.6:
     route_to_support_agent(account_id)
 
 elif action.choice == "check_balance":
-    # Low stakes. 0.6 confidence is sufficient.
+# 风险低，0.6 的置信度就够了。
     show_balance(account_id)
 
 elif action.choice == "approve_transfer":
     if action.confidence > 0.85:
-        # High stakes, but high confidence. Safe to act automatically.
+# 高风险，但置信度高，可以自动执行。
         approve_transfer(account_id)
     else:
-        # High stakes, moderate confidence. Verify intent first.
+# 高风险，置信度中等，先确认意图。
         ask_user_to_confirm("Just to confirm: you would like to approve this transfer, is that correct?")
 
 else:
     route_to_support_agent(account_id)
 ```
 
-The 0.6 floor catches anything the model is genuinely uncertain about. Above that floor, each action type has its own threshold based on the consequences of acting on a wrong classification. Checking a balance at 0.6 is fine because the worst case is the user having to listen to the balance read-out. But approving a transfer requires very high confidence (>0.85), otherwise the system should ask the user to confirm.
+0.6 这条下限兜住了模型真正不确定的一切。在这条线之上，每种操作按做错分类的后果各自设阈值。查余额给 0.6 就够了，最坏也不过是用户听一遍余额。但批准转账需要很高的置信度（>0.85），否则系统应当先请用户确认。
 
-See [Confidence](/confidence) for more details on how to think about confidence in your systems.
+关于如何在系统里考虑置信度，详见[置信度](/confidence)。

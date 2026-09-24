@@ -1,11 +1,10 @@
-# Function calling
+# 函数调用
 
-> Turns natural-language trading requests into calls to ordinary typed functions by mapping function names and closed-set arguments to confidence-aware TypeSafe questions.
+> 把自然语言的交易请求转换成对普通类型化函数的调用：将函数名和封闭集合参数映射为带置信度的 TypeSafe 问题。
 
-When you order a "large iced oat latte, no sweetener," the barista does not write your
-sentence down. They mark four options on a cup. This cookbook does the same thing for
-a trading API: a sentence goes in, and out comes a function name and its arguments as
-evaluated enums, each with a confidence.
+你点一杯 "large iced oat latte, no sweetener" 时，咖啡师不会把你整句话抄下来，
+而是在杯子上勾四个选项。这个 cookbook 对交易 API 做的就是同一件事：输入一句话，
+输出一个函数名和它的参数，参数是评估好的枚举值，每个都带置信度。
 
 ```text theme={null}
 "plot rolling correlation between nvda and spy for the past month"
@@ -21,8 +20,8 @@ evaluated enums, each with a confidence.
     list_symbols()                                                     confidence 1.00
 ```
 
-Those calls go to ten ordinary functions in a trading assistant. Their arguments take
-values from fixed lists, so they are `Literal`s already:
+这些调用会落到交易助手里十个普通函数上。它们的参数取值来自固定列表，
+所以本来就是 `Literal`：
 
 ```python theme={null}
 def plot_price(
@@ -36,22 +35,20 @@ def plot_price(
 ): ...
 ```
 
-An argument whose values come from a fixed list is a closed set. When it takes one value
-out of that list, it gets a `Choice` question over exactly those values, so whatever
-reaches the function is a value the function accepts. You leave the functions alone. What
-you add is a spec that says in plain words what each argument means. By the end you have a
-`Dispatcher` you can point at your own functions.
+取值来自固定列表的参数就是一个封闭集合。当它从该列表里取一个值时，会得到一个正好覆盖这些值的
+`Choice` 问题，因此最终传到函数里的，一定是函数能接受的值。函数本身不用改。
+你要加的是一份规格，用大白话说明每个参数是什么意思。做到最后，你会得到一个
+`Dispatcher`，可以指向你自己的函数。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install ipython polars matplotlib numpy 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-Set `TYPESAFE_API_KEY`. Two modules sit beside this file. `trader.py` holds the ten
-functions, plus a TypeSafe client that reads answers from a cache, so re-rendering replays
-the numbers below without calling the API. `dispatch.py` holds the code that reads a
-signature and a spec and makes the call.
+设置 `TYPESAFE_API_KEY`。本文件旁边放着两个模块。`trader.py` 里是那十个函数，
+外加一个从缓存读取答案的 TypeSafe 客户端，因此重新渲染只会重放下面的数字，不会调用 API。
+`dispatch.py` 里是读取函数签名与规格、发起调用的代码。
 
 ```python theme={null}
 import json
@@ -70,13 +67,12 @@ print(f"{len(TOOLS)} functions over {load().height:,} one-minute bars")
 10 functions over 156,780 one-minute bars
 ```
 
-## Find the closed sets in the signatures
+## 在函数签名里找出封闭集合
 
-The type hints already say which arguments come from a fixed list, and what is in each
-list. `closed_sets` reads a signature and sorts those arguments into three shapes: a
-**choice** (a `Literal`, so one value out of the list), a **set** (a `list[Literal[...]]`,
-so any number of them), or a **flag** (a `bool`, so on or off). All ten functions are
-defined in `trader.py`.
+类型提示已经说明哪些参数来自固定列表，以及每个列表里有什么。`closed_sets` 读取一个签名，
+把这些参数分成三种形态：**choice**（一个 `Literal`，从列表里取一个值）、
+**set**（一个 `list[Literal[...]]`，可以取任意多个）、**flag**（一个 `bool`，开或关）。
+十个函数都定义在 `trader.py` 里。
 
 ```python theme={null}
 for name, fn in TOOLS.items():
@@ -105,16 +101,14 @@ print(
 28 fillable arguments in total
 ```
 
-`top_movers` shows what gets left out. Of its three arguments, two are closed sets. The
-third, `limit`, is an `int`, so it never gets a question and keeps its default of 3. Free
-text, numbers and dates work the same way: no question, and the function's default stands.
+`top_movers` 展示了什么会被略过。它的三个参数里有两个是封闭集合。第三个 `limit` 是 `int`，
+因此不会生成问题，保留默认值 3。自由文本、数字和日期同理：不生成问题，用函数的默认值。
 
-## Write the spec
+## 编写规格
 
-The `Literal` gives you the strings `"1mo"` and `"3mo"`. It does not say that a user typing
-"this quarter" means the second one. The spec says that. It holds a question per argument,
-a line per option, a description per function, and one more question that picks between the
-functions. It lives in `spec.json`, and an LLM can write it for you from the signatures.
+`Literal` 给了你 `"1mo"` 和 `"3mo"` 这两个字符串，但它没说用户输入 "this quarter" 时指的是后者。
+规格负责把这件事说清楚。它包含每个参数一个问题、每个选项一行说明、每个函数一段描述，
+外加一个在函数之间做选择的问题。它放在 `spec.json` 里，可以让 LLM 根据函数签名替你写出来。
 
 ```python theme={null}
 SPEC = json.loads(Path("spec.json").read_text())
@@ -150,25 +144,20 @@ for argument in ("style", "moving_average"):
 }
 ```
 
-The option keys are the strings the function takes, so nothing has to map a label back to
-an argument afterwards. `stated` makes an argument optional. It is a second yes/no question
-asking whether the command says anything about that argument at all. When the answer is no,
-the call leaves that argument out and the function's own default applies.
+选项的键就是函数接受的字符串，所以事后不需要再把标签映射回参数。`stated` 让参数变成可选的：
+它是第二个 yes/no 问题，问命令里到底有没有提到这个参数。当答案是 no 时，
+这次调用会略过该参数，改用函数自身的默认值。
 
-A set argument gets its question once per member, with `{}` standing in for the member
-name. `"Does the user want {} in the comparison?"` becomes one question per ticker.
+集合参数的每个成员各得到自己的一个问题，`{}` 代表成员名。
+`"Does the user want {} in the comparison?"` 会为每个股票代码变成一个独立的问题。
+每个问题写的是想法本身，而不是用户可能选用的字面词，因为匹配靠的是含义："is amd tracking nvidia lately"
+能命中 `rolling_correlation`，尽管 *tracking* 和 *lately* 都没在 `spec.json` 里出现过。
+不要拿参数名给问题起名——`"Which resolution?"` 让命令无从匹配。
 
-Write each question about the idea rather than the words a user might pick, because the
-match is on meaning: "is amd tracking nvidia lately" reaches `rolling_correlation` even
-though neither *tracking* nor *lately* appears anywhere in `spec.json`. Avoid naming a
-question after its parameter - `"Which resolution?"` gives the command nothing to match
-against.
+## 把规格变成问题
 
-## Turn the spec into questions
-
-`Dispatcher` builds the questions from the spec once. Each command is then one request
-carrying the choice of function and every function's arguments, and the dispatcher reads
-only the chosen function's answers.
+`Dispatcher` 只根据规格构建一次问题。之后每条命令就是一次请求，携带函数的选择以及每个函数的参数，
+而 dispatcher 只读取被选中函数的答案。
 
 ```python theme={null}
 assistant = Dispatcher(SPEC, TOOLS, client)
@@ -191,10 +180,9 @@ for qid in (
   compare_returns.symbols.NVDA  noul    Does the user want NVDA in the comparison?
 ```
 
-## Run fourteen commands
+## 运行十四条命令
 
-A request occupies one line, and its `confidence` is the least certain judgement behind
-that call.
+一次请求占一行，它的 `confidence` 是这次调用背后最不确定的那个判断。
 
 ```python theme={null}
 COMMANDS = [
@@ -254,14 +242,13 @@ for command, call in CALLS.items():
       rolling_correlation(symbol='AMD', benchmark='NVDA')               confidence 0.82   tool 0.82
 ```
 
-Both long commands came out as asked. "plot rolling correlation between nvda and spy for
-the past month" filled four arguments from one sentence. Two of them, `symbol` and
-`benchmark`, draw from the same six tickers, and each ticker landed in the right argument
-because the questions spell out the roles: *the one being measured, named first* against
-*the second one named, the yardstick*. "compare nvda amd and msft over the past three
-months" put three tickers in the set and left the other three out.
+两条较长的命令都按预期执行。"plot rolling correlation between nvda and spy for the past month"
+用一句话填满了四个参数。其中 `symbol` 和 `benchmark` 取自同样的六个股票代码，
+每个代码都落到了正确的参数上，因为问题把两个角色的分工写清楚了：*先被命名、被度量的那个*，
+对 *后命名的那个、作为基准的那个*。"compare nvda amd and msft over the past three months"
+把三个代码放进了集合，另外三个排除在外。
 
-Running three of them:
+运行其中三条：
 
 ```python theme={null}
 for command in (
@@ -285,7 +272,7 @@ for command in (
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/function_calling/function_calling.executed.3.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=aa525f18af5bb4b5ae4ac29335d74554" alt="output" width="1331" height="468" data-path="cookbooks/function_calling/function_calling.executed.3.png" />
 
-And the ones that answer in text:
+再看那些用文本作答的：
 
 ```python theme={null}
 for command in ("how did the market do this week", "biggest losers today"):
@@ -310,14 +297,13 @@ top 3 losers over 1d
   AAPL      1.40%  ->  258.71 
 ```
 
-## Read the confidence
+## 读懂置信度
 
-`confidence` reports the least certain judgement in the call, rather than the product of
-all of them, since one wrong argument is enough to spoil the result. A product answers a
-different question ("is every part right"), and it falls as a function takes more
-arguments, whether or not any one judgement is shaky.
+`confidence` 报告的是这次调用里最不确定的那个判断，而不是所有判断的乘积，因为一个参数错就足以毁掉结果。
+乘积回答的是另一个问题（"is every part right"），而且随着函数参数变多它必然下降，
+不管其中某一个判断是否真的不稳。
 
-Where that number came from, argument by argument:
+逐个参数看这个数字是怎么来的：
 
 ```python theme={null}
 call = CALLS["is amd tracking nvidia lately"]
@@ -341,16 +327,14 @@ print(f"  weakest argument: {call.weakest().name}")
   weakest argument: benchmark
 ```
 
-`window` and `resolution` are both omitted here, because "lately" does not say how far back
-or on what bars, so `rolling_correlation` runs on its own defaults of one month and hourly
-bars. That is what the `stated` question is for. Without it, the choice would have to name
-some window, and it would have named one confidently.
+这里的 `window` 和 `resolution` 都被略过了，因为 "lately" 没说回看多久、用哪种 K 线，
+于是 `rolling_correlation` 用自己的默认值跑：一个月、小时线。这正是 `stated` 问题的用途。
+没有它，choice 就必须挑一个窗口，而且会很有信心地挑一个。
 
-## Open it in the playground
+## 在 Playground 中打开
 
-The link below holds one command and the questions for the function it picked: the choice
-over the ten function descriptions, and `rolling_correlation`'s four arguments. Edit the
-command there and the arguments change with it.
+下面的链接包含一条命令，以及它选中的函数所对应的问题：在十段函数描述之间做选择的问题，
+加上 `rolling_correlation` 的四个参数。在那里修改命令，参数会跟着变。
 
 ```python theme={null}
 COMMAND = "plot rolling correlation between nvda and spy for the past month"

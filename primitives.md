@@ -1,6 +1,6 @@
-# Primitives (Questions)
+# 原语（问题）
 
-> The three TypeSafe question types (Choice, Score, Noul), the typed answers they return, how to choose between them, and how to ask several at once.
+> TypeSafe 的三种问题类型（Choice、Score、Noul）、它们返回的类型化答案、如何选用，以及如何一次提出多个问题。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";

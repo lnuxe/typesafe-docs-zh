@@ -1,0 +1,53 @@
+name: i18n audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: 中文化审计
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 校验 docs.json 是合法 JSON
+        run: |
+          python -c "import json; json.load(open('docs.json', encoding='utf-8')); print('docs.json OK')"
+
+      - name: 跑中文化审计（结构回归 / 导航死链 / 术语表违规 / 混排残留）
+        run: |
+          python tools/i18n_audit.py \
+            --strict \
+            --baseline tools/structure-baseline.json \
+            --json i18n-report.json
+
+      - name: 审计摘要写进 Job Summary
+        if: always()
+        run: |
+          python tools/i18n_audit.py \
+            --baseline tools/structure-baseline.json \
+            --max-list 30 > i18n-summary.txt || true
+          {
+            echo '## 中文化审计摘要'
+            echo ''
+            echo '```'
+            cat i18n-summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 上传审计报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-report
+          path: |
+            i18n-report.json
+            i18n-summary.txt
+          if-no-files-found: warn

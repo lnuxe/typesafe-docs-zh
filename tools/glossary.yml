@@ -1,0 +1,412 @@
+# TypeSafe 文档中文化术语表
+#
+# 由仓库真实内容提炼：zh 是本站既定译法（已译页面里出现过的一律沿用），
+# forbidden 里的写法在已翻译文件中出现即视为审计失败。
+# allow 是混排检测的白名单：这些行即使全是英文也属正常（产品名、SDK 名等）。
+version: 1
+terms:
+  - term: "state"
+    zh: "状态"
+    status: "沿用现有译法"
+    forbidden: ["状态机", "状态量"]
+    reason: "concepts/state.md 全篇作「状态（State）」，与 API 的 state 字段对应。"
+    examples:
+      - file: "_tsdoc/concepts/state.md"
+        line: 1
+        text: "# 状态（State）"
+  - term: "question"
+    zh: "问题"
+    status: "沿用现有译法"
+    forbidden: ["问句"]
+    reason: "原语即「问题」，问题 ID / 问题类型 / 问题键等搭配已在 primitives.md 固定。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 5
+        text: "对一个 `state` 依据一组类型化的 `questions` 进行评估，返回结构化的 `answers`，每个问题一个。如需引导式介绍，请从[原语](/primitives)开始。"
+  - term: "primitive"
+    zh: "原语"
+    status: "沿用现有译法"
+    forbidden: ["基元", "原函数"]
+    reason: "AI 原语对齐软件原语的说法，introduction.md 与 primitives.md 均用「原语」。"
+    examples:
+      - file: "_tsdoc/introduction.md"
+        line: 23
+        text: "## TypeSafe 原语"
+  - term: "answer"
+    zh: "答案"
+    status: "沿用现有译法"
+    forbidden: ["应答结果"]
+    reason: "问题与答案成对出现，primitives.md 用「答案」指返回值。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 28
+        text: "类型化 [Question](#question-types) 对象的映射。每个键由你选择；答案会以相同的键返回。"
+  - term: "confidence"
+    zh: "置信度"
+    status: "沿用现有译法"
+    forbidden: ["信心度", "把握度", "确信度"]
+    reason: "confidence.md 全篇译作「置信度」，并与「概率」明确区分。"
+    examples:
+      - file: "_tsdoc/confidence.md"
+        line: 143
+        text: "## 置信度由概率推导而来"
+  - term: "probabilities"
+    zh: "概率分布"
+    status: "沿用现有译法"
+    forbidden: ["概率值列表"]
+    reason: "响应字段 probabilities 保留英文，正文称「概率分布」。"
+    examples:
+      - file: "_tsdoc/confidence.md"
+        line: 139
+        text: "TypeSafe 的所有 Score 和 Choice 答案都包含一个 `probabilities` 属性，表示各选项（Choice）或各档位（Score）上的概率分布。这个分布的*形状*告诉你模型有多确定：集中在一个结果上意味着自信的答案，摊开则意味着不确定。"
+  - term: "probability"
+    zh: "概率"
+    status: "沿用现有译法"
+    forbidden: ["几率", "机率"]
+    reason: "概率是分布本身，置信度是其尖锐程度，两者不可互换。"
+    examples:
+      - file: "_tsdoc/models.md"
+        line: 44
+        text: "* 把宽泛的判断拆解为原子问题，并在代码中组合输出。见[复合评分](/patterns/composite-scoring)；用 Jev 的概率训练下游经典模型见 [AutoResearch cookbook](/cookbooks/autoresearch_feature_discovery)。"
+  - term: "criteria"
+    zh: "判据"
+    status: "沿用现有译法"
+    forbidden: ["条件列表", "标准列表"]
+    reason: "criteria 字段保留英文，正文用「判据」（concepts/state.md、api.md）。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 117
+        text: "模型应当决定什么。对象可以把问题放一个字段、所引用的数据放其他字段；见[结构化的指令与判据](/primitives/choice#structured-instructions-and-criteria)。"
+  - term: "instructions"
+    zh: "指令"
+    status: "沿用现有译法"
+    forbidden: ["指示语", "说明文本"]
+    reason: "问题里的 instructions 字段承载判断内容，正文称「指令」。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 117
+        text: "模型应当决定什么。对象可以把问题放一个字段、所引用的数据放其他字段；见[结构化的指令与判据](/primitives/choice#structured-instructions-and-criteria)。"
+  - term: "rubric"
+    zh: "量规"
+    status: "沿用现有译法"
+    forbidden: ["评分表", "评分标准"]
+    reason: "introduction.md、api.md 用「量规」指 Score 各档位的描述。"
+    examples:
+      - file: "_tsdoc/introduction.md"
+        line: 30
+        text: "| [Score](/primitives/score) | 按评分量规对状态打分 | `score`、`probabilities`、`confidence` |"
+  - term: "legend"
+    zh: "legend（字段名，不译）"
+    status: "保留英文"
+    forbidden: ["图例变量"]
+    reason: "Score 响应的 legend 是字段名，正文提到时保留反引号原样。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 287
+        text: "<ResponseField name=\"legend\" type=\"map<string, string>\" required>"
+  - term: "threshold"
+    zh: "阈值"
+    status: "沿用现有译法"
+    forbidden: ["门限", "临界值"]
+    reason: "confidence.md 的「阈值随风险伸缩」已是既定标题。"
+    examples:
+      - file: "_tsdoc/models.md"
+        line: 36
+        text: "别名会随着新版本发布而移动，因此它背后的答案可能在你没有改动的情况下变化。响应的 `model` 字段报告实际应答的带版本 ID，你可以据此记录每个结果由哪个模型产生。如果你已针对特定版本调好了置信度阈值，请固定该版本的 ID 而不是别名，并按你自己的节奏迁移到新版本。"
+  - term: "spectrum"
+    zh: "谱系"
+    status: "沿用现有译法"
+    forbidden: ["光谱", "区间带"]
+    reason: "primitives.md 用「答案落在一个谱系上」描述 Score。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 281
+        text: "* **Score** 适合答案落在一个谱系上、且你能描述谱系上每个点含义的情形：缺陷严重程度、客户沮丧程度、技能水平。档位由你定义，模型返回沿档位的位置。"
+  - term: "band"
+    zh: "档位"
+    status: "沿用现有译法"
+    forbidden: ["档级", "等级段"]
+    reason: "Score 的 criteria 是有序档位，primitives.md、confidence.md 用「档位」。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 150
+        text: "按你定义的量规对状态评分。返回你的档位上的概率加权值。"
+  - term: "option"
+    zh: "选项"
+    status: "沿用现有译法"
+    forbidden: ["选择项"]
+    reason: "Choice 的 criteria 是选项映射。"
+    examples:
+      - file: "_tsdoc/confidence.md"
+        line: 139
+        text: "TypeSafe 的所有 Score 和 Choice 答案都包含一个 `probabilities` 属性，表示各选项（Choice）或各档位（Score）上的概率分布。这个分布的*形状*告诉你模型有多确定：集中在一个结果上意味着自信的答案，摊开则意味着不确定。"
+  - term: "fan-out"
+    zh: "扇出"
+    status: "沿用现有译法"
+    forbidden: ["展开策略", "分发"]
+    reason: "推测性扇出（speculative fan-out）是 patterns/fan-out 的固定叫法。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 438
+        text: "把你代码可能需要的每个问题都问出来，包括那些答案只对部分输入有意义的问题，然后由代码决定使用哪些答案。如果工单最终不是缺陷报告，就忽略严重程度那个答案。我们把这种做法称为[推测性扇出](/patterns/fan-out)模式。[并行问题 cookbook](/cookbooks/parallel_questions) 展示了把 13 个"
+  - term: "routing"
+    zh: "路由"
+    status: "沿用现有译法"
+    forbidden: ["导向"]
+    reason: "confidence-routing 与 intent-routing 两个模式都以「路由」命名。"
+    examples:
+      - file: "_tsdoc/concepts/system-one.md"
+        line: 41
+        text: "3. 在代码中将答案与确定性检查相结合，然后将该案件路由到执行或审核。"
+  - term: "composite scoring"
+    zh: "复合评分"
+    status: "沿用现有译法"
+    forbidden: ["综合打分", "组合评分"]
+    reason: "models.md 已把 patterns/composite-scoring 译作「复合评分」。"
+    examples:
+      - file: "_tsdoc/models.md"
+        line: 44
+        text: "* 把宽泛的判断拆解为原子问题，并在代码中组合输出。见[复合评分](/patterns/composite-scoring)；用 Jev 的概率训练下游经典模型见 [AutoResearch cookbook](/cookbooks/autoresearch_feature_discovery)。"
+  - term: "guardrails"
+    zh: "护栏"
+    status: "沿用现有译法"
+    forbidden: ["防护栏", "守卫"]
+    reason: "coding-agents.md 用「护栏」指对模型输入输出的检查。"
+    examples:
+      - file: "_tsdoc/introduction/coding-agents.md"
+        line: 24
+        text: "| 在你正在构建的应用或智能体中使用 Jev——用于路由、分类、评分、护栏或任何结构化决策 | 从[快速开始](/introduction/quickstart)入手，然后阅读[如何用 TypeSafe 构建](/concepts/how-to-build-with-system-one)和[模式](/patterns)，了解[置信度路由"
+  - term: "calibration"
+    zh: "校准"
+    status: "沿用现有译法"
+    forbidden: ["标定"]
+    reason: "machine-learning-primer.md 用「校准概率」。"
+    examples:
+      - file: "_tsdoc/models.md"
+        line: 40
+        text: "Jev 不会用客户数据做微调或 LoRA 适配。它以 [RLCD](/introduction/machine-learning-primer) 训练以返回校准决策，同一套权重服务所有账户。你通过请求把它的答案塑形到你的领域，而不是通过按账户的权重："
+  - term: "agent"
+    zh: "智能体"
+    status: "沿用现有译法"
+    forbidden: ["代理程序"]
+    reason: "coding-agents.md 标题即「在编码智能体中使用 Jev」。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 441
+        text: "编码智能体比人更容易陷入\"每次调用只问一个问题\"的习惯。[TypeSafe 智能体技能](/agent-skill#installation)会告诉你的智能体在每次调用中放入大量问题，包括那些只对部分输入有意义的问题。"
+  - term: "prompt"
+    zh: "提示词"
+    status: "沿用现有译法"
+    forbidden: ["提示语", "指令文本"]
+    reason: "introduction.md 用「重写提示词」。"
+    examples:
+      - file: "_tsdoc/introduction.md"
+        line: 41
+        text: "例如，不要问\"给这个创业路演评分\"，而是分别询问市场规模、技术可行性和差异化。用你自己的公式组合这些分数。当优先级发生变化时，只需修改代码中的一个系数，而不是重写提示词。"
+  - term: "pattern"
+    zh: "模式"
+    status: "沿用现有译法"
+    forbidden: ["范式", "套路"]
+    reason: "docs.json 导航分组与 introduction.md 均用「模式」。"
+    examples:
+      - file: "_tsdoc/confidence.md"
+        line: 163
+        text: "一个有用的起步模式是把置信度分成三段，每段产生不同的系统行为："
+  - term: "cookbook"
+    zh: "cookbook（不译）"
+    status: "沿用现有译法"
+    forbidden: ["食谱", "手册集"]
+    reason: "confidence.md、primitives.md 直接保留 cookbook，如「并行问题 cookbook」。"
+    examples:
+      - file: "_tsdoc/agent-skill.md"
+        line: 71
+        text: "* Point your agent at a [specific cookbook](/cookbooks/consistency_noul_cookbook) that solves a problem you have in your codebase, or point it at the [cookbooks index](/c"
+  - term: "Playground"
+    zh: "Playground（不译）"
+    status: "保留英文"
+    forbidden: ["演练场", "试验台"]
+    reason: "控制台产品名，quickstart.md 保留 Playground。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 228
+        text: "Try it in the Playground →"
+  - term: "System One"
+    zh: "System One（不译）"
+    status: "保留英文"
+    forbidden: []
+    reason: "模型类别名，docs.json 与全部已译页面均保留英文。注意：卡尼曼心理学意义上的 System 1 / System 2 译作「系统 1 / 系统 2」，不在此列。"
+    examples:
+      - file: "_tsdoc/concepts/state.md"
+        line: 3
+        text: "> 什么是状态、如何组织它，以及如何为 System One 模型提供所需的上下文。"
+  - term: "jaggedness"
+    zh: "锯齿效应"
+    status: "新增译法"
+    forbidden: ["参差不齐度"]
+    reason: "指模型能力分布不均；正文首次出现写「锯齿效应（jaggedness）」，与 models.md 里「已知缺陷」的链接文案不冲突。"
+    examples:
+      - file: "_tsdoc/models.md"
+        line: 16
+        text: "* **上下文长度：** Jev 一次性接收 `state`，并对其并行评估每个问题。64k 预算覆盖 `state` 加所有问题之和；32k 预算适用于 `state` 加单个最长问题。把大量问题打包进一次请求的做法见[推测性扇出](/patterns/fan-out)，状态增长时准确率的变化见 [Jev 1.13 已知缺陷](/mod"
+  - term: "cascade"
+    zh: "级联"
+    status: "新增译法"
+    forbidden: ["串联链", "阶梯式"]
+    reason: "sde_cascade 指多阶段串联的抽取流水线，译为「级联」。"
+    examples:
+      - file: "_tsdoc/cookbooks.md"
+        line: 48
+        text: "| [SDE cascade](/cookbooks/sde_cascade) | Uses a 2-stage structured-data-extraction cascade (mini → verify → reasoning) to get most of the quality of a big reasoning mode"
+  - term: "rerank"
+    zh: "重排"
+    status: "新增译法"
+    forbidden: ["重排序", "二次排序"]
+    reason: "rerank_typesafe 指对候选列表重新排序，「重排」与 rerank 一一对应。"
+    examples:
+      - file: "_tsdoc/cookbooks.md"
+        line: 32
+        text: "| [Re-ranking](/cookbooks/rerank_typesafe) | Builds 30-passage BM25 shortlists for 40 CLERC legal queries, then uses one TypeSafe question per query-candidate pair to rai"
+  - term: "extraction"
+    zh: "抽取"
+    status: "新增译法"
+    forbidden: ["提取出", "摘取"]
+    reason: "全站统一用「抽取」（日期抽取、值抽取），与「提取」区分开。"
+    examples:
+      - file: "_tsdoc/concepts/how-to-build-with-system-one.md"
+        line: 752
+        text: "The [structured-data-extraction cascade cookbook](/cookbooks/sde_cascade) shows the shared-wording case, asking the same battery of questions about every field of an extr"
+  - term: "classification"
+    zh: "分类"
+    status: "沿用现有译法"
+    forbidden: ["归类化"]
+    reason: "cookbook 标题与正文统一用「分类」。"
+    examples:
+      - file: "_tsdoc/introduction/coding-agents.md"
+        line: 24
+        text: "| 在你正在构建的应用或智能体中使用 Jev——用于路由、分类、评分、护栏或任何结构化决策 | 从[快速开始](/introduction/quickstart)入手，然后阅读[如何用 TypeSafe 构建](/concepts/how-to-build-with-system-one)和[模式](/patterns)，了解[置信度路由"
+  - term: "hierarchical classification"
+    zh: "层级分类"
+    status: "沿用现有译法"
+    forbidden: ["分层归类"]
+    reason: "primitives.md 已用「层级分类」指代该 cookbook。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 454
+        text: "两次请求是例外而不是常态。如果第二次请求的问题本可以针对原始状态提出，就把它们放进第一次请求，让代码忽略不需要的答案。有三个 cookbook 是出于真实原因发起第二次请求的。[技能推荐](/cookbooks/skill_suggestion)在一次请求中对 182 个技能排序，然后获取前三名的完整文本，再基于这些更好的证据重新评判它们"
+  - term: "passage"
+    zh: "段落"
+    status: "新增译法"
+    forbidden: ["文段块"]
+    reason: "RAG cookbook 中指检索回来的文本片段。"
+    examples:
+      - file: "_tsdoc/concepts/use-case-map.md"
+        line: 44
+        text: "* Label passages in interview transcripts, open-ended survey responses, and field notes using predefined themes or categories."
+  - term: "shortlist"
+    zh: "候选列表"
+    status: "新增译法"
+    forbidden: ["短名单"]
+    reason: "检索里指初筛之后的候选集合。"
+    examples:
+      - file: "_tsdoc/cookbooks.md"
+        line: 32
+        text: "| [Re-ranking](/cookbooks/rerank_typesafe) | Builds 30-passage BM25 shortlists for 40 CLERC legal queries, then uses one TypeSafe question per query-candidate pair to rai"
+  - term: "abstention"
+    zh: "弃权"
+    status: "新增译法"
+    forbidden: ["放弃决策"]
+    reason: "自一致性 cookbook 中模型不给具体标签的情形。"
+    examples:
+      - file: "_tsdoc/cookbooks/consistency_choice_cookbook.md"
+        line: 37
+        text: "same threshold to LLM probability conditions, keeping abstentions and changes visible."
+  - term: "escalation"
+    zh: "上报人工"
+    status: "新增译法"
+    forbidden: ["升级处理"]
+    reason: "置信度偏低时把决策交回人的动作。"
+    examples:
+      - file: "_tsdoc/concepts/how-to-build-with-system-one.md"
+        line: 242
+        text: "* Use probabilities and confidence to act, ask for review, or escalate."
+  - term: "endpoint"
+    zh: "端点"
+    status: "沿用现有译法"
+    forbidden: ["接口地址", "终结点"]
+    reason: "api.md 用「评估端点」。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 3
+        text: "> TypeSafe 评估端点的完整 HTTP API 参考。"
+  - term: "speculative fan-out"
+    zh: "推测性扇出"
+    status: "沿用现有译法"
+    forbidden: ["猜测式展开"]
+    reason: "primitives.md 已用「推测性扇出」并链接到该模式。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 438
+        text: "把你代码可能需要的每个问题都问出来，包括那些答案只对部分输入有意义的问题，然后由代码决定使用哪些答案。如果工单最终不是缺陷报告，就忽略严重程度那个答案。我们把这种做法称为[推测性扇出](/patterns/fan-out)模式。[并行问题 cookbook](/cookbooks/parallel_questions) 展示了把 13 个"
+  - term: "self-consistency"
+    zh: "自一致性"
+    status: "新增译法"
+    forbidden: ["自我一致性检验"]
+    reason: "两个 consistency cookbook 的共同主题：重复采样、看一致性。"
+    examples:
+      - file: "_tsdoc/cookbooks.md"
+        line: 9
+        text: "## Self-consistency"
+  - term: "client SDK"
+    zh: "客户端 SDK"
+    status: "沿用现有译法"
+    forbidden: ["客户端开发包"]
+    reason: "primitives.md 用「客户端 SDK」，SDK 本身保留英文。"
+    examples:
+      - file: "_tsdoc/api.md"
+        line: 334
+        text: "收到 `429 Too Many Requests` 或 `529 Overloaded` 响应时，应以指数退避重试而非立即重试。我们的客户端 SDK 会自动处理，因此如果你使用我们的 SDK 及其默认重试策略，无需额外处理。"
+  - term: "model"
+    zh: "模型"
+    status: "沿用现有译法"
+    forbidden: ["模型体"]
+    reason: "models.md 与 api.md 统一用「模型」，模型名 Jev 不译。"
+    examples:
+      - file: "_tsdoc/confidence.md"
+        line: 139
+        text: "TypeSafe 的所有 Score 和 Choice 答案都包含一个 `probabilities` 属性，表示各选项（Choice）或各档位（Score）上的概率分布。这个分布的*形状*告诉你模型有多确定：集中在一个结果上意味着自信的答案，摊开则意味着不确定。"
+  - term: "candidate"
+    zh: "候选"
+    status: "新增译法"
+    forbidden: ["候选者", "待选项"]
+    reason: "检索与重排语境下指候选项本身；与 Choice 的「选项（option）」区分开。"
+    examples:
+      - file: "concepts/use-case-map.md"
+        line: 183
+        text: "| **检索** | 工作流需要最相关的上下文或记录 | RAG 上下文、证据检索、知识查询 |"
+allow:
+  - pattern: "^System One$"
+    reason: "模型类别名，保留英文"
+  - pattern: "^Noul$"
+    reason: "原语名，保留英文"
+  - pattern: "^Choice$"
+    reason: "原语名，保留英文"
+  - pattern: "^Score$"
+    reason: "原语名，保留英文"
+  - pattern: "^Playground$"
+    reason: "控制台产品名，保留英文"
+  - pattern: "^Cookbooks$"
+    reason: "导航标签沿用英文借词 cookbook"
+  - pattern: "^Python SDK$"
+    reason: "SDK 名称，保留英文"
+  - pattern: "^JavaScript SDK$"
+    reason: "SDK 名称，保留英文"
+  - pattern: "^Jev( 1\\.13)?$"
+    reason: "模型名，保留英文"
+  - pattern: "^Mermaid$"
+    reason: "图表语言名，保留英文"
+  - pattern: "^API( 参考)?$"
+    reason: "API 缩写，保留英文"
+  - pattern: "^SDK$"
+    reason: "SDK 缩写，保留英文"
+  - pattern: "^JSON$"
+    reason: "数据格式名，保留英文"
