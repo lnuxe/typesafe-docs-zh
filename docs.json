@@ -4,9 +4,9 @@
   "name": "TypeSafe AI",
   "description": "如何使用 TypeSafe 的 System One API",
   "colors": {
-    "primary": "#7C3AED",
-    "light": "#A78BFA",
-    "dark": "#6D28D9"
+    "primary": "#E551BA",
+    "light": "#E551BA",
+    "dark": "#E551BA"
   },
   "favicon": "/favicon.svg",
   "logo": {
