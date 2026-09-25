@@ -1,15 +1,15 @@
-# Usage
+# 用法
 
-> Guides and patterns for working with the TypeSafe Python SDK.
+> 使用 TypeSafe Python SDK 的指南与模式。
 
 <a id="usage" />
 
 <h2 id="calling-the-system-one-api">
-  Calling the System One API
+  调用 System One API
 </h2>
 
 <Tabs>
-  <Tab title="Async">
+  <Tab title="异步">
     ```python theme={null}
     import asyncio
 
@@ -43,7 +43,7 @@
     ```
   </Tab>
 
-  <Tab title="Sync">
+  <Tab title="同步">
     ```python theme={null}
     from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
 
@@ -69,10 +69,10 @@
 </Tabs>
 
 <h2 id="typed-system_one-responses">
-  Typed <code>system\_one</code> responses
+  带类型标注的 <code>system\_one</code> 响应
 </h2>
 
-It is possible to provide a response model to `system_one` to make using the response more *type-safe*:
+可以给 `system_one` 传入响应模型，让响应的使用更*类型安全*：
 
 ```python theme={null}
 from typesafe_sdk import Noul, NoulAnswer, SystemOneResponse, TypeSafeClient
@@ -94,10 +94,10 @@ with TypeSafeClient() as client:
 ```
 
 <h3 id="custom-response-types">
-  Custom response types
+  自定义响应类型
 </h3>
 
-It is also possible to define a completely new response model without inheriting from `SystemOneResponse`:
+也可以定义全新的响应模型，不从 `SystemOneResponse` 继承：
 
 ```python theme={null}
 from pydantic import BaseModel
@@ -122,10 +122,10 @@ assert 0 <= result.answers.billing.noul <= 1
 ```
 
 <h2 id="choosing-a-model">
-  Choosing a model
+  选择模型
 </h2>
 
-Inspect the available models:
+查看可用模型：
 
 ```python theme={null}
 from typesafe_sdk import TypeSafeClient
@@ -133,25 +133,25 @@ from typesafe_sdk import TypeSafeClient
 print(TypeSafeClient().models.list())
 ```
 
-Select the model when constructing a client:
+在构造客户端时选择模型：
 
 ```python theme={null}
 client = TypeSafeClient(model="jev")
 ```
 
-See the [Models resource reference](/sdk/python/api/clients/sync#models-resource) for details.
+详见[模型资源参考](/sdk/python/api/clients/sync#models-resource)。
 
 <h2 id="configuring-the-base-url">
-  Configuring the base URL
+  配置基础 URL
 </h2>
 
-In order to use the SDK with a different API url, set `base_url` on the client or the `TYPESAFE_BASE_URL` environment variable.
+要让 SDK 使用其他 API 地址，可以设置客户端上的 `base_url`，或设置 `TYPESAFE_BASE_URL` 环境变量。
 
-For example, connect through an AI gateway using its API key and model ID:
+例如，用 AI 网关的 API 密钥和模型 ID 连接：
 
 <Tabs>
   <Tab title="OpenRouter">
-    Use an OpenRouter API key and an [OpenRouter model ID](https://openrouter.ai/~typesafe/jev-latest/):
+    使用 OpenRouter API 密钥和 [OpenRouter 模型 ID](https://openrouter.ai/~typesafe/jev-latest/)：
 
     skip: next
 
@@ -174,7 +174,7 @@ For example, connect through an AI gateway using its API key and model ID:
   </Tab>
 
   <Tab title="Vercel AI Gateway">
-    [Vercel's TypeSafe-compatible API](https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe) can be used with the SDK:
+    [Vercel 的 TypeSafe 兼容 API](https://vercel.com/docs/ai-gateway/sdks-and-apis/typesafe) 可以和 SDK 一起使用：
 
     skip: next
 
@@ -197,16 +197,16 @@ For example, connect through an AI gateway using its API key and model ID:
   </Tab>
 </Tabs>
 
-This requires the alternative API to follow the [TypeSafe OpenAPI spec](https://api.typesafe.ai/docs/).
+这要求替代 API 遵循 [TypeSafe OpenAPI 规范](https://api.typesafe.ai/docs/)。
 
 <h2 id="retries">
-  Retries
+  重试
 </h2>
 
-Pass a custom [`RetryPolicy`](/sdk/python/api/retries) as `retry` on the client or per call. Invalid API keys raise `TypeSafeError` during client creation, before any request or retry.
+在客户端上或每次调用时，把自定义的 [`RetryPolicy`](/sdk/python/api/retries) 作为 `retry` 传入。API 密钥无效时会在创建客户端期间抛出 `TypeSafeError`，此时还没有发出任何请求或进行重试。
 
 <Tabs>
-  <Tab title="Client">
+  <Tab title="客户端">
     ```python theme={null}
     from typesafe_sdk import RetryPolicy, TypeSafeClient
 
@@ -214,7 +214,7 @@ Pass a custom [`RetryPolicy`](/sdk/python/api/retries) as `retry` on the client 
     ```
   </Tab>
 
-  <Tab title="Per-call">
+  <Tab title="每次调用">
     ```python theme={null}
     from typesafe_sdk import RetryPolicy
 
@@ -226,10 +226,10 @@ Pass a custom [`RetryPolicy`](/sdk/python/api/retries) as `retry` on the client 
 </Tabs>
 
 <h2 id="error-handling">
-  Error handling
+  错误处理
 </h2>
 
-Handle [exceptions](/sdk/python/api/exceptions) raised by the SDK:
+处理 SDK 抛出的[异常](/sdk/python/api/exceptions)：
 
 ```python theme={null}
 from typesafe_sdk import TypeSafeAPIError
@@ -241,10 +241,10 @@ except TypeSafeAPIError as error:
 ```
 
 <h2 id="logging">
-  Logging
+  日志
 </h2>
 
-The SDK logs to the `typesafe_sdk` logger. Configure it according to [standard logging](https://docs.python.org/3/library/logging.html) guide:
+SDK 会把日志写入 `typesafe_sdk` 日志器。可以按照[标准日志](https://docs.python.org/3/library/logging.html)指南进行配置：
 
 ```python theme={null}
 import logging
@@ -252,38 +252,38 @@ import logging
 logging.getLogger("typesafe_sdk").setLevel(logging.DEBUG)
 ```
 
-Or set `TYPESAFE_LOG_LEVEL` to one of `debug`, `info`, `warning`, `error`, or `off` before importing the SDK.
+也可以在导入 SDK 之前，把 `TYPESAFE_LOG_LEVEL` 设为 `debug`、`info`、`warning`、`error` 或 `off`。
 
-`info` logs one summary line per request; `debug` also logs request and response headers and bodies. Secret headers — authorization, API keys, cookies, and any header whose name contains `token` or `secret` — are redacted from log output. Request and response bodies are **not** redacted.
+`info` 会为每个请求记录一行摘要；`debug` 还会记录请求头、响应头以及请求体和响应体。敏感请求头——authorization、API 密钥、cookie，以及名称中含 `token` 或 `secret` 的请求头——会从日志输出中隐去。请求体和响应体**不会**隐去。
 
 <h2 id="environment-variables">
-  Environment variables
+  环境变量
 </h2>
 
-The SDK reads and uses the following environment variables:
+SDK 会读取并使用以下环境变量：
 
-| Variable                 | Configures                                          | Default                   |
+| 变量                     | 作用                                                | 默认值                    |
 | ------------------------ | --------------------------------------------------- | ------------------------- |
-| `TYPESAFE_API_KEY`       | API key (required)                                  | —                         |
-| `TYPESAFE_BASE_URL`      | API root URL                                        | `https://api.typesafe.ai` |
-| `TYPESAFE_DEFAULT_MODEL` | Default model                                       | `jev-latest`              |
-| `TYPESAFE_LOG_LEVEL`     | `typesafe_sdk` logger level, applied once at import | unset                     |
+| `TYPESAFE_API_KEY`       | API 密钥（必填）                                    | —                         |
+| `TYPESAFE_BASE_URL`      | API 根 URL                                          | `https://api.typesafe.ai` |
+| `TYPESAFE_DEFAULT_MODEL` | 默认模型                                            | `jev-latest`              |
+| `TYPESAFE_LOG_LEVEL`     | `typesafe_sdk` 日志器级别，仅在导入时应用一次       | 未设置                    |
 
-See the [constants reference](/sdk/python/api/constants) for SDK defaults.
+SDK 的默认值见[常量参考](/sdk/python/api/constants)。
 
-API keys supplied through `api_key` or `TYPESAFE_API_KEY` have leading and trailing whitespace stripped, including newlines from key files. Empty keys, internal whitespace, control characters, and non-ASCII characters are rejected before sending a request. An explicitly empty key does not fall back to the environment.
+通过 `api_key` 或 `TYPESAFE_API_KEY` 提供的 API 密钥会去掉首尾空白，包括密钥文件带来的换行。空密钥、中间空白、控制字符和非 ASCII 字符会在发出请求之前被拒绝。显式传入的空密钥不会回退到环境变量。
 
 <h2 id="forward-compatibility">
-  Forward compatibility
+  向前兼容
 </h2>
 
-The SDK keeps working as the TypeSafe API evolves, so you can adopt new API features before an SDK release adds first-class support for them.
+随着 TypeSafe API 演进，SDK 会继续可用，因此你可以在某个 SDK 版本正式支持之前，就先用上新的 API 特性。
 
 <h3 id="extra-request-fields">
-  Extra request fields
+  额外的请求字段
 </h3>
 
-Send additional API request fields with [`extra_body`](/sdk/python/api/clients/sync). The `beam_width` field below is illustrative; only send fields supported by the API.
+可以用 [`extra_body`](/sdk/python/api/clients/sync) 发送额外的 API 请求字段。下面的 `beam_width` 只是示例；请只发送 API 支持的字段。
 
 skip: next
 
@@ -299,7 +299,7 @@ with TypeSafeClient() as client:
 ```
 
 <h3 id="raw-question-dictionaries">
-  Raw question dictionaries
+  原始问题字典
 </h3>
 
 ```python theme={null}
@@ -313,16 +313,16 @@ with TypeSafeClient() as client:
 ```
 
 <Tip>
-  **Tip**
+  **提示**
 
-  Unknown fields are a forward-compatibility escape hatch. Ignore their type-checking errors and prefer upgrading the SDK instead.
+  未知字段是向前兼容的备用出口。可以忽略它们的类型检查错误，更好的做法是升级 SDK。
 </Tip>
 
 <h3 id="unknown-answer-kinds">
-  Unknown answer kinds
+  未知的答案类型
 </h3>
 
-The SDK logs a warning and skips unrecognized answer kinds. Use `raw_http_response` to inspect the complete API response, including those answers:
+SDK 会记录一条警告，并跳过无法识别的答案类型。用 `raw_http_response` 可以查看完整的 API 响应，包括这些答案：
 
 ```python theme={null}
 from typesafe_sdk import Noul, TypeSafeClient
@@ -335,7 +335,7 @@ raw_answers = result.raw_http_response.json()["answers"]
 ```
 
 <h3 id="unknown-response-fields">
-  Unknown response fields
+  未知的响应字段
 </h3>
 
-Unknown extra fields on recognized responses are ignored.
+可识别的响应上的未知额外字段会被忽略。

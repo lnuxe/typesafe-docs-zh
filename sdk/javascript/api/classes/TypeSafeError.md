@@ -1,28 +1,28 @@
-# Class: TypeSafeError
+# 类：TypeSafeError
 
-Base class for SDK errors.
+SDK 错误的基类。
 
-## Extends
+## 继承
 
 * `Error`
 
-## Extended by
+## 被继承
 
 * [`APIConnectionError`](/sdk/javascript/api/classes/APIConnectionError)
 * [`APIError`](/sdk/javascript/api/classes/APIError)
 * [`APIUserAbortError`](/sdk/javascript/api/classes/APIUserAbortError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new TypeSafeError(message, options?): TypeSafeError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message
 
@@ -32,11 +32,11 @@ new TypeSafeError(message, options?): TypeSafeError;
 
 `ErrorOptions`
 
-#### Returns
+#### 返回值
 
 `TypeSafeError`
 
-#### Overrides
+#### 覆盖
 
 ```ts theme={null}
 Error.constructor

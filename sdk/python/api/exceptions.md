@@ -1,6 +1,6 @@
-# Exceptions
+# 异常
 
-> Handle TypeSafe API errors, rate limits, connection failures, and timeouts.
+> 处理 TypeSafe API 错误、速率限制、连接失败与超时。
 
 export function SdkSignature({children}) {
   async function copy(event) {
@@ -32,28 +32,28 @@ export function SdkSignature({children}) {
 <a id="exceptions" />
 
 <h2 id="base-exception">
-  Base exception
+  基础异常
 </h2>
 
 <h2 id="typesafe_sdk.TypeSafeError">
   typesafe\_sdk.TypeSafeError
 </h2>
 
-Bases: <code><a href="https://docs.python.org/3/builtins/exceptions.html#Exception">Exception</a></code>
+基类：<code><a href="https://docs.python.org/3/builtins/exceptions.html#Exception">Exception</a></code>
 
-Base exception for SDK failures.
+SDK 失败的基类异常。
 
 <h2 id="http-errors">
-  HTTP errors
+  HTTP 错误
 </h2>
 
 <h2 id="typesafe_sdk.TypeSafeAPIError">
   typesafe\_sdk.TypeSafeAPIError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>
 
-An unsuccessful HTTP response with its body and request metadata.
+一次未成功的 HTTP 响应，附带响应体与请求元数据。
 
 <h3 id="typesafe_sdk.TypeSafeAPIError.status">
   status
@@ -65,7 +65,7 @@ An unsuccessful HTTP response with its body and request metadata.
 status = status
 ```
 
-HTTP response status code.
+HTTP 响应状态码。
 
 <h3 id="typesafe_sdk.TypeSafeAPIError.body">
   body
@@ -77,7 +77,7 @@ HTTP response status code.
 body = body
 ```
 
-The server's JSON error body, plain response text, or `None` for an empty body.
+服务端返回的 JSON 错误响应体、纯文本响应内容，响应体为空时为 `None`。
 
 <h3 id="typesafe_sdk.TypeSafeAPIError.headers">
   headers
@@ -89,7 +89,7 @@ The server's JSON error body, plain response text, or `None` for an empty body.
 headers = headers
 ```
 
-HTTP response headers.
+HTTP 响应头。
 
 <h3 id="typesafe_sdk.TypeSafeAPIError.endpoint">
   endpoint
@@ -101,7 +101,7 @@ HTTP response headers.
 endpoint = endpoint
 ```
 
-The request method and URL, without credentials, query parameters, or fragment, when available.
+请求方法与 URL，可用时不含凭据、查询参数与片段。
 
 <h3 id="typesafe_sdk.TypeSafeAPIError.request_id">
   request\_id
@@ -141,55 +141,55 @@ The request method and URL, without credentials, query parameters, or fragment, 
   {"\n"}
 </SdkSignature>
 
-The `x-typesafe-request-id` response header, or `None` if absent.
+`x-typesafe-request-id` 响应头，不存在时为 `None`。
 
 <h2 id="typesafe_sdk.TypeSafeBadRequestError">
   typesafe\_sdk.TypeSafeBadRequestError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-The request was invalid (400).
+请求无效（400）。
 
 <h2 id="typesafe_sdk.TypeSafeAuthenticationError">
   typesafe\_sdk.TypeSafeAuthenticationError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-Authentication failed (401).
+认证失败（401）。
 
 <h2 id="typesafe_sdk.TypeSafePermissionDeniedError">
   typesafe\_sdk.TypeSafePermissionDeniedError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-Access was denied (403).
+访问被拒绝（403）。
 
 <h2 id="typesafe_sdk.TypeSafeNotFoundError">
   typesafe\_sdk.TypeSafeNotFoundError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-The resource was not found (404).
+资源未找到（404）。
 
 <h2 id="typesafe_sdk.TypeSafeUnprocessableEntityError">
   typesafe\_sdk.TypeSafeUnprocessableEntityError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-The request failed server validation (422).
+请求未通过服务端校验（422）。
 
 <h2 id="typesafe_sdk.TypeSafeRateLimitError">
   typesafe\_sdk.TypeSafeRateLimitError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-The rate limit was exceeded (429).
+超出速率限制（429）。
 
 <h3 id="typesafe_sdk.TypeSafeRateLimitError.retry_after_ms">
   retry\_after\_ms
@@ -201,35 +201,35 @@ The rate limit was exceeded (429).
 retry_after_ms = parse_retry_after(headers)
 ```
 
-The server's requested wait in milliseconds, or `None` if unavailable.
+服务端要求等待的毫秒数，无法获取时为 `None`。
 
 <h2 id="typesafe_sdk.TypeSafeInternalServerError">
   typesafe\_sdk.TypeSafeInternalServerError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-The server failed to process the request (5xx).
+服务端处理请求失败（5xx）。
 
 <h2 id="connection-errors">
-  Connection errors
+  连接错误
 </h2>
 
 <h2 id="typesafe_sdk.TypeSafeAPIConnectionError">
   typesafe\_sdk.TypeSafeAPIConnectionError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>, <code><a href="https://docs.python.org/3/builtins/exceptions.html#ConnectionError">ConnectionError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>, <code><a href="https://docs.python.org/3/builtins/exceptions.html#ConnectionError">ConnectionError</a></code>
 
-A request failed without an HTTP response.
+请求失败，且没有收到 HTTP 响应。
 
 <h2 id="typesafe_sdk.TypeSafeAPITimeoutError">
   typesafe\_sdk.TypeSafeAPITimeoutError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIConnectionError">TypeSafeAPIConnectionError</a></code>, <code><a href="https://docs.python.org/3/builtins/exceptions.html#TimeoutError">TimeoutError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIConnectionError">TypeSafeAPIConnectionError</a></code>, <code><a href="https://docs.python.org/3/builtins/exceptions.html#TimeoutError">TimeoutError</a></code>
 
-A request exceeded its configured timeout.
+请求超出了配置的超时时间。
 
 <h3 id="typesafe_sdk.TypeSafeAPITimeoutError.timeout">
   timeout
@@ -241,19 +241,19 @@ A request exceeded its configured timeout.
 timeout = timeout
 ```
 
-The timeout setting used for the request, in seconds or as an `httpx2.Timeout`.
+该请求使用的超时设置，可以是秒数，也可以是 `httpx2.Timeout`。
 
 <h2 id="response-validation">
-  Response validation
+  响应校验
 </h2>
 
 <h2 id="typesafe_sdk.TypeSafeAPIResponseValidationError">
   typesafe\_sdk.TypeSafeAPIResponseValidationError
 </h2>
 
-Bases: <code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
+基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
-A successful HTTP response whose body was missing or structurally invalid required data.
+HTTP 响应成功，但响应体缺少必需数据或结构不合法。
 
 <h3 id="typesafe_sdk.TypeSafeAPIResponseValidationError.field_path">
   field\_path
@@ -265,7 +265,7 @@ A successful HTTP response whose body was missing or structurally invalid requir
 field_path = field_path
 ```
 
-Dotted path to the offending field, such as `answers.tone.confidence`.
+出错字段的点分路径，例如 `answers.tone.confidence`。
 
 <h3 id="typesafe_sdk.TypeSafeAPIResponseValidationError.args">
   args

@@ -1,14 +1,14 @@
-# Interface: ScoreQuestion\<T\>
+# 接口：ScoreQuestion\<T\>
 
-A question that assigns a score using an ordered rubric.
+按有序量规给出分数的问题。
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T` *extends* [`ScoreCriteria`](/sdk/javascript/api/type-aliases/ScoreCriteria) = [`ScoreCriteria`](/sdk/javascript/api/type-aliases/ScoreCriteria)
 
-## Properties
+## 属性
 
 <a id="sdk-criteria" />
 
@@ -18,7 +18,7 @@ A question that assigns a score using an ordered rubric.
 criteria: T;
 ```
 
-Descriptions of the available outcomes.
+对各个可能结果的描述。
 
 ***
 
@@ -30,7 +30,7 @@ Descriptions of the available outcomes.
 optional instructions?: EntryType;
 ```
 
-The question as text, a JSON object, or an array; optional or `null`.
+问题本身，可以是文本、JSON 对象或数组；可选，也可以为 `null`。
 
 ***
 

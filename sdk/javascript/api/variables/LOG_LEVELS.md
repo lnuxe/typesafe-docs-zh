@@ -1,7 +1,7 @@
-# Variable: LOG_LEVELS
+# 变量：LOG_LEVELS
 
 ```ts theme={null}
 const LOG_LEVELS: readonly LogLevel[];
 ```
 
-Supported log levels, from most to least verbose.
+支持的日志级别，从最详细到最简略。

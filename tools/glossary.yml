@@ -420,6 +420,177 @@ terms:
         line: 454
         text: "两次请求是例外而不是常态。如果第二次请求的问题本可以针对原始状态提出，就把它们放进第一次请求，让代码忽略不需要的答案。有三个 cookbook 是出于真实原因发起第二次请求的。[技能推荐](/cookbooks/skill_suggestion)在一次请求中对 182 个技能排序，然后获取前三名的完整文本，再基于这些更好的证据重新评判它们。[结构恢复](/cookbooks/autoformat)先询问每个换行是否截断了句子，根据答案把行合并成块，再对这些块分类——而这些块在第一次请求应答之前根本不存在。[层级分类](/cookbooks/hierarchical_classification)用每个 Choice 的答案决定下一次请求提供哪些选项。"
 
+  - term: "retry policy"
+    zh: "重试策略"
+    status: "沿用现有译法"
+    forbidden: ["重试政策"]
+    reason: "api.md 已用「默认重试策略」，SDK 的 RetryPolicy 配置页沿用同一说法。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/clients/async.md"
+        line: 194
+        text: "可选的重试策略，仅覆盖本次调用的客户端级配置。"
+  - term: "retry"
+    zh: "重试"
+    status: "沿用现有译法"
+    forbidden: ["重新尝试"]
+    reason: "api.md 的「退避一会儿再重试」已定下「重试」，SDK 页的 maxRetries、retryable 说明一律沿用。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/RateLimitError.md"
+        line: 108
+        text: "服务端给出的重试延迟，单位毫秒；缺失或无效时为 `undefined`。"
+  - term: "backoff"
+    zh: "退避"
+    status: "沿用现有译法"
+    forbidden: ["反压"]
+    reason: "api.md 的「指数退避」已定下「退避」，SDK 的 backoffInitialMs / backoffMaxMs 等字段沿用。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/interfaces/RetryPolicy.md"
+        line: 39
+        text: "首次退避延迟，单位为毫秒，逐次翻倍直至 `backoffMaxMs`。默认：500。"
+  - term: "retry budget"
+    zh: "重试预算"
+    status: "新增译法"
+    forbidden: ["重试额度"]
+    reason: "RetryPolicy.timeout 是一次 SDK 调用的总时长上限（含初次尝试与各次退避），译为「重试预算」。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/retries.md"
+        line: 424
+        text: "每次 SDK 调用的总重试预算，单位为秒，包含初次尝试与各次延迟；`None` 表示不设上限。"
+  - term: "attempt"
+    zh: "尝试"
+    status: "新增译法"
+    forbidden: ["试跑"]
+    reason: "重试语境下 attempt 指一次调用：初次那次叫「初次尝试」，`0` 表示禁用重试。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/retries.md"
+        line: 96
+        text: "初次尝试之后的最大重试次数；`0` 表示禁用重试。"
+  - term: "timeout"
+    zh: "超时"
+    status: "新增译法"
+    forbidden: ["逾时"]
+    reason: "SDK 配置里的 timeout 是每次 HTTP 调用的时限，正文统一称「超时」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/TypeSafeClient.md"
+        line: 140
+        text: "每次尝试的超时时间，单位为毫秒。"
+  - term: "exception"
+    zh: "异常"
+    status: "新增译法"
+    forbidden: ["例外项"]
+    reason: "Python SDK 的 exceptions 页与 TypeSafeError 都指异常对象，正文称「异常」，动词用「抛出」。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/exceptions.md"
+        line: 44
+        text: "SDK 失败的基类异常。"
+  - term: "rate limit"
+    zh: "速率限制"
+    status: "沿用现有译法"
+    forbidden: ["频率限制"]
+    reason: "api.md 的错误表已用「超出速率限制」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/RateLimitError.md"
+        line: 3
+        text: "HTTP 429：超出速率限制。"
+  - term: "status code"
+    zh: "状态码"
+    status: "沿用现有译法"
+    forbidden: ["状态编码"]
+    reason: "api.md 的错误表用「状态码」，SDK 页 httpStatuses 的说明沿用。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/APIError.md"
+        line: 106
+        text: "HTTP 响应状态码。"
+  - term: "request header"
+    zh: "请求头"
+    status: "新增译法"
+    forbidden: ["请求头部"]
+    reason: "SDK 配置里的 header 指 HTTP 头，正文按方向称「请求头」「响应头」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/TypeSafeClient.md"
+        line: 56
+        text: "随每个请求发送的额外请求头。"
+  - term: "constructor"
+    zh: "构造函数"
+    status: "新增译法"
+    forbidden: ["构造器"]
+    reason: "生成式 API 参考页的 Constructors / Constructor 小节统一译作「构造函数」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/APIConnectionError.md"
+        line: 13
+        text: "## 构造函数"
+  - term: "async client"
+    zh: "异步客户端"
+    status: "新增译法"
+    forbidden: ["非同步客户端"]
+    reason: "Python SDK 的 AsyncTypeSafeClient 页面标题即「异步客户端」。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/clients/async.md"
+        line: 1
+        text: "# 异步客户端"
+  - term: "sync client"
+    zh: "同步客户端"
+    status: "新增译法"
+    forbidden: ["阻塞式客户端"]
+    reason: "Python SDK 的 TypeSafeClient 页面标题即「同步客户端」。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/clients/sync.md"
+        line: 1
+        text: "# 同步客户端"
+  - term: "environment variable"
+    zh: "环境变量"
+    status: "新增译法"
+    forbidden: ["环境变数"]
+    reason: "SDK 的每个配置项都标注对应的环境变量名，正文用「环境变量」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/TypeSafeClient.md"
+        line: 17
+        text: "显式传入的选项优先于环境变量，环境变量优先于 SDK 默认值。"
+  - term: "base URL"
+    zh: "基础 URL"
+    status: "新增译法"
+    forbidden: ["根地址"]
+    reason: "客户端配置的 baseURL 是 API 的根地址，正文称「基础 URL」。"
+    examples:
+      - file: "_tsdoc/sdk/python/api/constants.md"
+        line: 35
+        text: "API 基础 URL 的环境变量。"
+  - term: "log level"
+    zh: "日志级别"
+    status: "新增译法"
+    forbidden: ["日志等级"]
+    reason: "logLevel 配置项与 Constants 页的日志级别常量，正文称「日志级别」。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/interfaces/TypeSafeClientConfig.md"
+        line: 99
+        text: "日志级别；未提供时回退到 `TYPESAFE_LOG_LEVEL`，再回退到 `warn`。"
+  - term: "token usage"
+    zh: "token 用量"
+    status: "沿用现有译法"
+    forbidden: ["词元消耗"]
+    reason: "api.md 的 usage 字段已译作「token 用量」，SDK 响应的 usage 沿用。"
+    examples:
+      - file: "_tsdoc/sdk/javascript/api/classes/TypeSafeClient.md"
+        line: 178
+        text: "按问题名与判据类型化的答案，附带模型与 token 用量。"
+  - term: "serialization"
+    zh: "序列化"
+    status: "新增译法"
+    forbidden: ["串行化"]
+    reason: "Python SDK 更新日志里的 ser/de 指序列化与反序列化。"
+    examples:
+      - file: "_tsdoc/sdk/python/changelog.md"
+        line: 31
+        text: "* 序列化/反序列化库从 `msgspec` 改为 `pydantic`"
+  - term: "type safety"
+    zh: "类型安全"
+    status: "新增译法"
+    forbidden: ["类型安全性"]
+    reason: "SDK 的卖点：答案类型由 questions 推导；正文称「类型安全」。"
+    examples:
+      - file: "_tsdoc/sdk/python/changelog.md"
+        line: 43
+        text: "* `system_one` 方法新增 `response_model` 参数，可设为你需要的 `pydantic` 模型，以获得额外的*类型安全*"
 allow:
   - pattern: "^System One$"
     reason: "模型类别名，保留英文"
@@ -447,3 +618,17 @@ allow:
     reason: "SDK 缩写，保留英文"
   - pattern: "^JSON$"
     reason: "数据格式名，保留英文"
+  - pattern: '^#{1,6}\s+[a-z][A-Za-z0-9_$\\]*\??$'
+    reason: "typedoc/pdoc 生成的属性名、参数名小标题（如 `### timeout?`、`##### message`），本身是标识符，必须保留英文"
+  - pattern: '^#{1,6}\s+[A-Za-z][A-Za-z0-9_$\\]*[A-Z][A-Za-z0-9_$\\]*\??$'
+    reason: "同上，驼峰标识符小标题（如 `### baseURL`、`### maxRetries`）"
+  - pattern: '^#{1,6}\s+[A-Z]\??$'
+    reason: "类型参数小标题（如 `### T`、`### Q`）"
+  - pattern: '^#{1,6}\s+[A-Za-z_$][A-Za-z0-9_$\\]*\(\)$'
+    reason: "方法名小标题（如 `### systemOne()`、`#### asResponse()`），是标识符"
+  - pattern: '^#{1,6}\s+[A-Za-z][A-Za-z0-9]*(\\_[A-Za-z0-9]+)+\??$'
+    reason: "转义下划线写法的字段名小标题（如 `### input\\_tokens`），是标识符"
+  - pattern: '^TypeSafe Python SDK$'
+    reason: "SDK 全名，与既有的 ^Python SDK$ 同类，保留英文"
+  - pattern: '^[*+-]\s+<code>'
+    reason: "pdoc 生成的字段清单行（形如 `* <code><a href=…>legend</a></code> (<code>dict[int, str]</code>)`），内容全是类型签名与链接，没有散文"

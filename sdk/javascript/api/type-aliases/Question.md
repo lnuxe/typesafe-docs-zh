@@ -1,4 +1,4 @@
-# Type Alias: Question
+# 类型别名：Question
 
 ```ts theme={null}
 type Question = 
@@ -7,4 +7,4 @@ type Question =
   | ChoiceQuestion;
 ```
 
-A question identified by its `type` field.
+由 `type` 字段标识的问题。

@@ -5,7 +5,8 @@
 功能
 ----
 1. 逐文件统计 CJK 占比与词数，分类为 未翻译 / 部分翻译 / 已翻译（阈值可配）；
-   自动生成内容（sdk/** 等）单独归类为 generated，不计入人工翻译范围。
+   只有 head 里明写「自动生成」标记的文件才归类为 generated，不计入人工翻译范围。
+   sdk/** 过去按目录前缀整体豁免，现已纳入人工翻译覆盖率统计。
 2. 混排检测：在中文文件里找出残留的英文段落，输出 文件 + 行号 + 原文。
 3. 结构保真：围栏代码块（含逐字节内容指纹）、行内代码、链接目标、图片、
    Mermaid 块、MDX/JSX 组件、标题层级、锚点、表格。
@@ -74,7 +75,9 @@ GENERATED_MARKERS = (
 )
 
 DEFAULT_EXCLUDES = (".git", "node_modules", ".mintlify", "tools", ".github", ".vercel", "dist", "build")
-GENERATED_PREFIXES = ("sdk/",)
+# sdk/** 曾经按「上游自动生成、不在人工翻译范围」整体豁免。站主要求这批页面中文化，
+# 所以不再有按目录前缀豁免的路径：要判成 generated，必须在文件 head 里写明 GENERATED_MARKERS。
+GENERATED_PREFIXES = ()
 # 仓库自身的说明文档，不是站点页面：不参与覆盖率统计，混排问题降级为 warning。
 META_FILES = ("README.md", "TRANSLATING.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md")
 
@@ -937,11 +940,10 @@ def print_report(report, max_list):
     out.append("   docs.json 引用页面：%d 个；死链：%d 个" % (nav["pages"], len(nav["missing"])))
     for m in nav["missing"]:
         out.append("   死链 %s" % m)
-    out.append("   导航条目未翻译：%d 个（另有自动生成的 SDK 参考页 %d 个，不在人工翻译范围）" % (
+    out.append("   导航条目未翻译：%d 个（另有自动生成的页面 %d 个，不在人工翻译范围）" % (
         len(nav["untranslated"]), len(nav["generated"])))
     for u in nav["untranslated"][:max_list]:
-        if not u["file"].startswith("sdk/"):
-            out.append("   [%s] %s" % (u["category"], u["page"]))
+        out.append("   [%s] %s" % (u["category"], u["page"]))
     if nav["labels_untranslated"]:
         out.append("   导航标签仍是英文：%s" % ", ".join(nav["labels_untranslated"]))
 
@@ -1007,7 +1009,7 @@ def main(argv=None):
         snap_files = {}
         for k, v in report["files"].items():
             if v["category"] == "generated":
-                # 自动生成内容（sdk/**）由上游重新生成，不纳入结构回归保护。
+                # 带「自动生成」标记的文件由上游重新生成，不纳入结构回归保护。
                 continue
             st = dict(v["structure"])
             st["headings"] = [{"level": x["level"]} for x in st.get("headings") or []]

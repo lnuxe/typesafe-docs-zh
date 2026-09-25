@@ -1,14 +1,14 @@
-# Interface: SystemOneResult\<Q\>
+# 接口：SystemOneResult\<Q\>
 
-Answers keyed by question name, with model and usage metadata.
+以问题名称为键的答案，附带模型与用量元数据。
 
-## Type Parameters
+## 类型参数
 
 ### Q
 
 `Q` *extends* [`Questions`](/sdk/javascript/api/interfaces/Questions)
 
-## Properties
+## 属性
 
 <a id="sdk-answers" />
 
@@ -18,7 +18,7 @@ Answers keyed by question name, with model and usage metadata.
 readonly answers: { readonly [K in string | number | symbol]: ResultFor<Q[K]> };
 ```
 
-Answers with types inferred from the supplied questions.
+答案，其类型由传入的问题推导而来。
 
 ***
 
@@ -30,7 +30,7 @@ Answers with types inferred from the supplied questions.
 readonly model: string;
 ```
 
-The model used to answer the request.
+用于应答该请求的模型。
 
 ***
 
@@ -42,4 +42,4 @@ The model used to answer the request.
 readonly usage: Usage;
 ```
 
-Token usage for the request.
+该请求的 token 用量。

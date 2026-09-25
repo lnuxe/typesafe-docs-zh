@@ -1,14 +1,14 @@
-# Interface: ChoiceResponse\<T\>
+# 接口：ChoiceResponse\<T\>
 
-A selected label and its probabilities.
+选中的标签及其概率分布。
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T` *extends* [`ChoiceCriteria`](/sdk/javascript/api/type-aliases/ChoiceCriteria) = [`ChoiceCriteria`](/sdk/javascript/api/type-aliases/ChoiceCriteria)
 
-## Properties
+## 属性
 
 <a id="sdk-choice" />
 
@@ -18,7 +18,7 @@ A selected label and its probabilities.
 readonly choice: keyof T & string;
 ```
 
-The selected label.
+选中的标签。
 
 ***
 
@@ -30,7 +30,7 @@ The selected label.
 readonly confidence: number;
 ```
 
-Reported confidence in the selected label.
+对所选标签给出的置信度。
 
 ***
 
@@ -42,7 +42,7 @@ Reported confidence in the selected label.
 readonly probabilities: { readonly [label in string | number | symbol]: number };
 ```
 
-Probabilities keyed by label.
+以标签为键的概率分布。
 
 ***
 

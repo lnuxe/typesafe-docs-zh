@@ -1,4 +1,4 @@
-# Type Alias: JsonValue
+# 类型别名：JsonValue
 
 ```ts theme={null}
 type JsonValue = 
@@ -12,4 +12,4 @@ type JsonValue =
 };
 ```
 
-A JSON-compatible value.
+JSON 兼容的值。

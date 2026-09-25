@@ -1,18 +1,18 @@
-# Function: noul()
+# 函数：noul()
 
 ```ts theme={null}
 function noul(instructions?, criteria?): NoulQuestion;
 ```
 
-Create a yes/no question with optional descriptions for either outcome.
+创建一个是/否问题，可为两种结果分别提供可选描述。
 
-## Parameters
+## 参数
 
 ### instructions?
 
 [`EntryType`](/sdk/javascript/api/type-aliases/EntryType) = `null`
 
-The question as text, a JSON object or array; defaults to `null`.
+以文本、JSON 对象或数组形式给出的问题；默认为 `null`。
 
 ### criteria?
 
@@ -22,33 +22,33 @@ The question as text, a JSON object or array; defaults to `null`.
 }
 \| `null`
 
-Optional descriptions of the yes and no outcomes.
+对「是」和「否」两种结果的可选描述。
 
-#### Type Literal
+#### 类型字面量
 
 \{
 `false?`: [`EntryType`](/sdk/javascript/api/type-aliases/EntryType);
 `true?`: [`EntryType`](/sdk/javascript/api/type-aliases/EntryType);
 }
 
-Optional descriptions of the yes and no outcomes.
+对「是」和「否」两种结果的可选描述。
 
 ##### false?
 
 [`EntryType`](/sdk/javascript/api/type-aliases/EntryType)
 
-Description of the no outcome.
+「否」结果的描述。
 
 ##### true?
 
 [`EntryType`](/sdk/javascript/api/type-aliases/EntryType)
 
-Description of the yes outcome.
+「是」结果的描述。
 
 ***
 
 `null`
 
-## Returns
+## 返回值
 
 [`NoulQuestion`](/sdk/javascript/api/interfaces/NoulQuestion)

@@ -1,6 +1,6 @@
-# API reference
+# API 参考
 
-## Classes
+## 类
 
 * [APIConnectionError](/sdk/javascript/api/classes/APIConnectionError)
 * [APIError](/sdk/javascript/api/classes/APIError)
@@ -17,7 +17,7 @@
 * [TypeSafeError](/sdk/javascript/api/classes/TypeSafeError)
 * [UnprocessableEntityError](/sdk/javascript/api/classes/UnprocessableEntityError)
 
-## Interfaces
+## 接口
 
 * [ChoiceQuestion](/sdk/javascript/api/interfaces/ChoiceQuestion)
 * [ChoiceResponse](/sdk/javascript/api/interfaces/ChoiceResponse)
@@ -38,7 +38,7 @@
 * [Usage](/sdk/javascript/api/interfaces/Usage)
 * [WithResponse](/sdk/javascript/api/interfaces/WithResponse)
 
-## Type Aliases
+## 类型别名
 
 * [ChoiceCriteria](/sdk/javascript/api/type-aliases/ChoiceCriteria)
 * [Description](/sdk/javascript/api/type-aliases/Description)
@@ -53,13 +53,13 @@
 * [ScoreLegend](/sdk/javascript/api/type-aliases/ScoreLegend)
 * [ScoreOf](/sdk/javascript/api/type-aliases/ScoreOf)
 
-## Variables
+## 变量
 
 * [ENV](/sdk/javascript/api/variables/ENV)
 * [LOG\_LEVELS](/sdk/javascript/api/variables/LOG_LEVELS)
 * [VERSION](/sdk/javascript/api/variables/VERSION)
 
-## Functions
+## 函数
 
 * [choice](/sdk/javascript/api/functions/choice)
 * [noul](/sdk/javascript/api/functions/noul)

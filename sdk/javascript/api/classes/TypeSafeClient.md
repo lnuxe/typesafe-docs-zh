@@ -1,37 +1,37 @@
-# Class: TypeSafeClient
+# 类：TypeSafeClient
 
-Client for the TypeSafe AI API.
+TypeSafe AI API 的客户端。
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new TypeSafeClient(config?): TypeSafeClient;
 ```
 
-Create a client for the TypeSafe AI API.
+创建 TypeSafe AI API 的客户端。
 
-Explicit options take precedence over environment variables, then SDK defaults.
-Empty or whitespace-only environment values are ignored.
+显式传入的选项优先于环境变量，环境变量优先于 SDK 默认值。
+空值或只含空白字符的环境变量会被忽略。
 
-#### Parameters
+#### 参数
 
 ##### config?
 
 [`TypeSafeClientConfig`](/sdk/javascript/api/interfaces/TypeSafeClientConfig) = `{}`
 
-#### Returns
+#### 返回值
 
 `TypeSafeClient`
 
-#### Throws
+#### 抛出
 
-The API key is missing, configuration is invalid, or the runtime is unsupported.
+API 密钥缺失、配置无效，或运行环境不受支持。
 
-## Properties
+## 属性
 
 <a id="sdk-baseurl" />
 
@@ -41,7 +41,7 @@ The API key is missing, configuration is invalid, or the runtime is unsupported.
 readonly baseURL: string;
 ```
 
-API root with trailing slashes removed.
+移除末尾斜杠后的 API 基础 URL。
 
 ***
 
@@ -53,7 +53,7 @@ API root with trailing slashes removed.
 readonly defaultHeaders: Readonly<Record<string, string>>;
 ```
 
-Additional headers sent with each request.
+随每个请求发送的额外请求头。
 
 ***
 
@@ -65,7 +65,7 @@ Additional headers sent with each request.
 readonly defaultModel: string;
 ```
 
-Model used when a request omits `model`.
+请求省略 `model` 时使用的模型。
 
 ***
 
@@ -77,7 +77,7 @@ Model used when a request omits `model`.
 readonly fetch: Fetch;
 ```
 
-HTTP fetch implementation.
+HTTP fetch 实现。
 
 ***
 
@@ -89,7 +89,7 @@ HTTP fetch implementation.
 readonly logger: Logger;
 ```
 
-The configured logger, filtered to `logLevel`.
+已配置的日志器，按 `logLevel` 过滤。
 
 ***
 
@@ -101,7 +101,7 @@ The configured logger, filtered to `logLevel`.
 readonly logLevel: LogLevel;
 ```
 
-Configured log verbosity.
+已配置的日志详细程度。
 
 ***
 
@@ -113,7 +113,7 @@ Configured log verbosity.
 readonly models: Models;
 ```
 
-The models available to the account.
+该账户可用的模型。
 
 ***
 
@@ -125,7 +125,7 @@ The models available to the account.
 readonly retry: RetryPolicy;
 ```
 
-Retry settings with constructor overrides applied.
+已应用构造函数覆盖项的重试设置。
 
 ***
 
@@ -137,9 +137,9 @@ Retry settings with constructor overrides applied.
 readonly timeout: number;
 ```
 
-Timeout per attempt in milliseconds.
+每次尝试的超时时间，单位为毫秒。
 
-## Methods
+## 方法
 
 <a id="sdk-systemone" />
 
@@ -149,51 +149,51 @@ Timeout per attempt in milliseconds.
 systemOne<Q>(request, options?): APIPromise<SystemOneResult<Q>>;
 ```
 
-Answer named questions about text or structured state.
+对文本或结构化状态回答具名问题。
 
-#### Type Parameters
+#### 类型参数
 
 ##### Q
 
 `Q` *extends* [`Questions`](/sdk/javascript/api/interfaces/Questions)
 
-#### Parameters
+#### 参数
 
 ##### request
 
 [`SystemOneRequest`](/sdk/javascript/api/interfaces/SystemOneRequest)\<`Q`>
 
-State, questions, and an optional model override.
+状态、问题，以及可选的模型覆盖项。
 
 ##### options?
 
 [`RequestOptions`](/sdk/javascript/api/interfaces/RequestOptions) = `{}`
 
-Per-call timeout, retry, headers, and cancellation settings.
+单次调用的超时、重试、请求头与取消设置。
 
-#### Returns
+#### 返回值
 
 [`APIPromise`](/sdk/javascript/api/classes/APIPromise)\<[`SystemOneResult`](/sdk/javascript/api/interfaces/SystemOneResult)\<`Q`>>
 
-Answers typed by question name and criteria, with model and token usage.
+按问题名与判据类型化的答案，附带模型与 token 用量。
 
-#### Throws
+#### 抛出
 
-Questions are empty, or score criteria are not a list of at least two entries.
+问题为空，或 Score 的判据不是至少包含两项的列表。
 
-#### Throws
+#### 抛出
 
-The server returns a non-2xx response after retries.
+重试之后服务器仍返回非 2xx 响应。
 
-#### Throws
+#### 抛出
 
-The request cannot connect or times out after retries.
+重试之后请求仍无法连接或超时。
 
-#### Throws
+#### 抛出
 
-The caller aborts the request.
+调用方中止了请求。
 
-#### Example
+#### 示例
 
 ```ts theme={null}
 const { answers } = await client.systemOne({

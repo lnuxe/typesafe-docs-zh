@@ -1,18 +1,18 @@
 # TypeSafe Python SDK
 
-> Install the TypeSafe Python SDK and get started with asynchronous or synchronous API calls.
+> 安装 TypeSafe Python SDK，开始使用异步或同步 API 调用。
 
 <a id="typesafe-python-sdk" />
 
-Browse the [Python SDK source on GitHub](https://github.com/typesafe-ai/typesafe-sdk-python).
+在 GitHub 上浏览 [Python SDK 源码](https://github.com/typesafe-ai/typesafe-sdk-python)。
 
-Asynchronous and synchronous Python clients for the [TypeSafe](https://typesafe.ai) API. Learn how to use TypeSafe [here](https://docs.typesafe.ai/).
+用于 [TypeSafe](https://typesafe.ai) API 的异步与同步 Python 客户端。TypeSafe 的用法见[这里](https://docs.typesafe.ai/)。
 
 <h2 id="quickstart">
-  Quickstart
+  快速开始
 </h2>
 
-1. Install the SDK:
+1. 安装 SDK：
 
    <Tabs>
      <Tab title="uv">
@@ -27,12 +27,12 @@ Asynchronous and synchronous Python clients for the [TypeSafe](https://typesafe.
        ```
      </Tab>
    </Tabs>
-2. Set `TYPESAFE_API_KEY` in your environment (create it [here](https://console.typesafe.ai/))
-3. Call the System One API:
+2. 在环境中设置 `TYPESAFE_API_KEY`（在[这里](https://console.typesafe.ai/)创建）
+3. 调用 System One API：
 
    <Tabs>
-     <Tab title="Async">
-       With [AsyncTypeSafeClient](/sdk/python/api/clients/async):
+     <Tab title="异步">
+       使用 [AsyncTypeSafeClient](/sdk/python/api/clients/async)：
 
        ```python theme={null}
        from typesafe_sdk import AsyncTypeSafeClient, Choice, Noul, Score
@@ -61,8 +61,8 @@ Asynchronous and synchronous Python clients for the [TypeSafe](https://typesafe.
        ```
      </Tab>
 
-     <Tab title="Sync">
-       With [TypeSafeClient](/sdk/python/api/clients/sync):
+     <Tab title="同步">
+       使用 [TypeSafeClient](/sdk/python/api/clients/sync)：
 
        ```python theme={null}
        from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
@@ -91,7 +91,7 @@ Asynchronous and synchronous Python clients for the [TypeSafe](https://typesafe.
    </Tabs>
 
 <h2 id="usage">
-  Usage
+  用法
 </h2>
 
-Learn more in the [Usage guide](/sdk/python/usage).
+更多内容见[用法指南](/sdk/python/usage)。

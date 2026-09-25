@@ -1,14 +1,14 @@
-# Interface: WithResponse\<T\>
+# 接口：WithResponse\<T\>
 
-Parsed data with its HTTP response and request ID.
+解析后的数据，连同它的 HTTP 响应与请求 ID。
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T`
 
-## Properties
+## 属性
 
 <a id="sdk-data" />
 
@@ -18,7 +18,7 @@ Parsed data with its HTTP response and request ID.
 data: T;
 ```
 
-The parsed response body.
+解析后的响应体。
 
 ***
 
@@ -30,7 +30,7 @@ The parsed response body.
 requestId: string | undefined;
 ```
 
-Request ID from `x-typesafe-request-id`, or `undefined` when absent.
+来自 `x-typesafe-request-id` 的请求 ID；不存在时为 `undefined`。
 
 ***
 
@@ -42,4 +42,4 @@ Request ID from `x-typesafe-request-id`, or `undefined` when absent.
 response: Response;
 ```
 
-The HTTP response, with its body consumed by parsing.
+HTTP 响应，其响应体已被解析过程消费。

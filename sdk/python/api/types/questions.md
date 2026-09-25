@@ -1,6 +1,6 @@
-# Questions
+# 问题类型
 
-> Provide state and ask yes/no, choice, and score questions using objects or dictionaries.
+> 提供状态，用对象或字典提出是/否、Choice 和 Score 问题。
 
 export function SdkSignature({children}) {
   async function copy(event) {
@@ -32,26 +32,26 @@ export function SdkSignature({children}) {
 <a id="questions" />
 
 <h2 id="state">
-  State
+  状态
 </h2>
 
-`state` is the text or JSON object you want to ask questions about. It cannot be `None`, but values inside an object may be `None`.
+`state` 是你要针对其提问的文本或 JSON 对象。它不能是 `None`，但对象内部的各个值可以是 `None`。
 
 <h2 id="question-objects">
-  Question objects
+  问题对象
 </h2>
 
-Use `Noul`, `Choice`, and `Score` to define questions with named arguments.
+用 `Noul`、`Choice` 和 `Score` 以具名参数定义问题。
 
 <h2 id="typesafe_sdk.NoulCriteria">
   typesafe\_sdk.NoulCriteria
 </h2>
 
-Bases: <code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
+基类：<code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
 
-Optional descriptions of the yes and no outcomes.
+对「是」和「否」两种结果的可选描述。
 
-See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
+详见 [noul 原语](https://docs.typesafe.ai/primitives/noul)。
 
 <h3 id="typesafe_sdk.NoulCriteria.true">
   true
@@ -91,7 +91,7 @@ See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
   {"\n"}
 </SdkSignature>
 
-Description of the yes outcome as text, a JSON object, or an array; `None` leaves it undescribed.
+以文本、JSON 对象或数组给出的「是」结果描述；为 `None` 时不加描述。
 
 <h3 id="typesafe_sdk.NoulCriteria.false">
   false
@@ -131,7 +131,7 @@ Description of the yes outcome as text, a JSON object, or an array; `None` leave
   {"\n"}
 </SdkSignature>
 
-Description of the no outcome as text, a JSON object, or an array; `None` leaves it undescribed.
+以文本、JSON 对象或数组给出的「否」结果描述；为 `None` 时不加描述。
 
 <h2 id="typesafe_sdk.Noul">
   typesafe\_sdk.Noul
@@ -139,16 +139,16 @@ Description of the no outcome as text, a JSON object, or an array; `None` leaves
 
 `pydantic-model`
 
-Bases: `_Question`, `wire.NoulQuestion`
+基类：`_Question`, `wire.NoulQuestion`
 
-A yes/no question with optional descriptions for either outcome.
+一个是/否问题，可为任一结果提供可选描述。
 
-See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
+详见 [noul 原语](https://docs.typesafe.ai/primitives/noul)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-1">
+  <Accordion title="详细信息" id="sdk-disclosure-1">
     ```json theme={null}
     {
       "$defs": {
@@ -295,7 +295,7 @@ See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
   </Accordion>
 </Note>
 
-Fields:
+字段：
 
 * `type` (<code><a href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>\['noul']</code>)
 * <code><a href="/sdk/python/api/types/questions#typesafe_sdk.Noul.instructions">instructions</a></code> (<code><a href="/sdk/python/api/types/common#typesafe_sdk.JSONContent">JSONContent</a> | None</code>)
@@ -351,7 +351,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h3 id="typesafe_sdk.Noul.criteria">
   criteria
@@ -403,7 +403,7 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
   {"\n"}
 </SdkSignature>
 
-Optional descriptions of the yes and no outcomes.
+对「是」和「否」两种结果的可选描述。
 
 <h2 id="typesafe_sdk.Choice">
   typesafe\_sdk.Choice
@@ -411,16 +411,16 @@ Optional descriptions of the yes and no outcomes.
 
 `pydantic-model`
 
-Bases: `_Question`, `wire.ChoiceQuestion`
+基类：`_Question`, `wire.ChoiceQuestion`
 
-A question that selects between named alternatives.
+在具名选项之间做出选择的问题。
 
-See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for details.
+详见 [choice 原语](https://docs.typesafe.ai/primitives/choice)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-2">
+  <Accordion title="详细信息" id="sdk-disclosure-2">
     ```json theme={null}
     {
       "$defs": {
@@ -545,7 +545,7 @@ See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for detai
   </Accordion>
 </Note>
 
-Fields:
+字段：
 
 * `type` (<code><a href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>\['choice']</code>)
 * <code><a href="/sdk/python/api/types/questions#typesafe_sdk.Choice.criteria">criteria</a></code> (<code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Mapping">Mapping</a>\[<a href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a>, <a href="/sdk/python/api/types/common#typesafe_sdk.JSONContent">JSONContent</a> | None]</code>)
@@ -615,7 +615,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-Labels mapped to text, object, or array descriptions, or `None` for undescribed labels.
+标签到文本、对象或数组描述的映射；未提供描述的标签用 `None`。
 
 <h3 id="typesafe_sdk.Choice.instructions">
   instructions
@@ -667,7 +667,7 @@ Labels mapped to text, object, or array descriptions, or `None` for undescribed 
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h2 id="typesafe_sdk.Score">
   typesafe\_sdk.Score
@@ -675,16 +675,16 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
 
 `pydantic-model`
 
-Bases: `_Question`, `wire.ScoreQuestion`
+基类：`_Question`, `wire.ScoreQuestion`
 
-A question that assigns a score using an ordered rubric.
+按有序量规给出分数的问题。
 
-See the [score primitive](https://docs.typesafe.ai/primitives/score) for details.
+详见 [score 原语](https://docs.typesafe.ai/primitives/score)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-3">
+  <Accordion title="详细信息" id="sdk-disclosure-3">
     ```json theme={null}
     {
       "$defs": {
@@ -802,7 +802,7 @@ See the [score primitive](https://docs.typesafe.ai/primitives/score) for details
   </Accordion>
 </Note>
 
-Fields:
+字段：
 
 * `type` (<code><a href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>\['score']</code>)
 * <code><a href="/sdk/python/api/types/questions#typesafe_sdk.Score.criteria">criteria</a></code> (<code><a href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence">Sequence</a>\[<a href="/sdk/python/api/types/common#typesafe_sdk.JSONContent">JSONContent</a>]</code>)
@@ -848,7 +848,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-A nonempty, ordered list of text, object, or array descriptions, one per score from zero.
+非空且有序的描述列表，从 0 开始按分数索引，每项为文本、对象或数组。
 
 <h3 id="typesafe_sdk.Score.instructions">
   instructions
@@ -900,7 +900,7 @@ A nonempty, ordered list of text, object, or array descriptions, one per score f
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h2 id="typesafe_sdk.Question">
   typesafe\_sdk.Question
@@ -912,7 +912,7 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
   <span className="n">{"Question"}</span><span className="p">{":"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">{"TypeAlias"}</a></span>{" "}<span className="o">{"="}</span>{" "}<span className="p">{"("}</span>{"\n"}{"    "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.Noul">{"Noul"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.Choice">{"Choice"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.Score">{"Score"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.QuestionModel">{"QuestionModel"}</a></span>{"\n"}<span className="p">{")"}</span>{"\n"}
 </SdkSignature>
 
-A question object or question dictionary.
+问题对象或问题字典。
 
 <h2 id="typesafe_sdk.Questions">
   typesafe\_sdk.Questions
@@ -980,23 +980,23 @@ A question object or question dictionary.
   {"\n"}
 </SdkSignature>
 
-Question inputs keyed by the names used to identify their answers.
+以用于标识答案的名称为键的问题输入。
 
 <h2 id="question-dictionaries">
-  Question dictionaries
+  问题字典
 </h2>
 
-Question dictionaries include a `type` key: `"noul"`, `"choice"`, or `"score"`. You can mix dictionaries and question objects in the same request.
+问题字典包含一个 `type` 键：`"noul"`、`"choice"` 或 `"score"`。你可以在同一个请求中混用字典和问题对象。
 
 <h2 id="typesafe_sdk.NoulModel">
   typesafe\_sdk.NoulModel
 </h2>
 
-Bases: <code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
+基类：<code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
 
-A yes/no question dictionary with `type="noul"`.
+`type="noul"` 的是/否问题字典。
 
-See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
+详见 [noul 原语](https://docs.typesafe.ai/primitives/noul)。
 
 <h3 id="typesafe_sdk.NoulModel.type">
   type
@@ -1088,7 +1088,7 @@ See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h3 id="typesafe_sdk.NoulModel.criteria">
   criteria
@@ -1142,17 +1142,17 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
   {"\n"}
 </SdkSignature>
 
-Optional descriptions of the yes and no outcomes.
+对「是」和「否」两种结果的可选描述。
 
 <h2 id="typesafe_sdk.ChoiceModel">
   typesafe\_sdk.ChoiceModel
 </h2>
 
-Bases: <code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
+基类：<code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
 
-A choice question dictionary with `type="choice"`.
+`type="choice"` 的 Choice 问题字典。
 
-See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for details.
+详见 [choice 原语](https://docs.typesafe.ai/primitives/choice)。
 
 <h3 id="typesafe_sdk.ChoiceModel.type">
   type
@@ -1244,7 +1244,7 @@ See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for detai
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h3 id="typesafe_sdk.ChoiceModel.criteria">
   criteria
@@ -1310,17 +1310,17 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
   {"\n"}
 </SdkSignature>
 
-Labels mapped to text, object, or array descriptions, or `None` for undescribed labels.
+标签到文本、对象或数组描述的映射；未提供描述的标签用 `None`。
 
 <h2 id="typesafe_sdk.ScoreModel">
   typesafe\_sdk.ScoreModel
 </h2>
 
-Bases: <code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
+基类：<code><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypedDict">TypedDict</a></code>
 
-A score question dictionary with `type="score"`.
+`type="score"` 的 Score 问题字典。
 
-See the [score primitive](https://docs.typesafe.ai/primitives/score) for details.
+详见 [score 原语](https://docs.typesafe.ai/primitives/score)。
 
 <h3 id="typesafe_sdk.ScoreModel.type">
   type
@@ -1412,7 +1412,7 @@ See the [score primitive](https://docs.typesafe.ai/primitives/score) for details
   {"\n"}
 </SdkSignature>
 
-The question to ask, expressed as text, a JSON object, or an array; optional.
+要提出的问题，以文本、JSON 对象或数组表示；可选。
 
 <h3 id="typesafe_sdk.ScoreModel.criteria">
   criteria
@@ -1454,7 +1454,7 @@ The question to ask, expressed as text, a JSON object, or an array; optional.
   {"\n"}
 </SdkSignature>
 
-A nonempty, ordered list of text, object, or array descriptions, one per score from zero.
+非空且有序的描述列表，从 0 开始按分数索引，每项为文本、对象或数组。
 
 <h2 id="typesafe_sdk.QuestionModel">
   typesafe\_sdk.QuestionModel
@@ -1466,4 +1466,4 @@ A nonempty, ordered list of text, object, or array descriptions, one per score f
   <span className="n">{"QuestionModel"}</span><span className="p">{":"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">{"TypeAlias"}</a></span>{" "}<span className="o">{"="}</span>{" "}<span className="p">{"("}</span>{"\n"}{"    "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.NoulModel">{"NoulModel"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.ChoiceModel">{"ChoiceModel"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/questions#typesafe_sdk.ScoreModel">{"ScoreModel"}</a></span>{"\n"}<span className="p">{")"}</span>{"\n"}
 </SdkSignature>
 
-A question dictionary identified by its `type` key.
+由 `type` 键标识的问题字典。

@@ -1,26 +1,26 @@
-# Class: APIConnectionError
+# 类：APIConnectionError
 
-The request or response-body delivery failed (DNS, TLS, connection closed, etc.).
+请求或响应体的传输失败（DNS、TLS、连接被关闭等）。
 
-## Extends
+## 继承
 
 * [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError)
 
-## Extended by
+## 被继承
 
 * [`APITimeoutError`](/sdk/javascript/api/classes/APITimeoutError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new APIConnectionError(message?, options?): APIConnectionError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message?
 
@@ -30,10 +30,10 @@ new APIConnectionError(message?, options?): APIConnectionError;
 
 `ErrorOptions`
 
-#### Returns
+#### 返回值
 
 `APIConnectionError`
 
-#### Overrides
+#### 覆盖
 
 [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError).[`constructor`](/sdk/javascript/api/classes/TypeSafeError#sdk-constructor)

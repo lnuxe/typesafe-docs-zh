@@ -1,12 +1,12 @@
-# Class: APIError
+# 类：APIError
 
-An unsuccessful HTTP response from the API.
+来自 API 的失败 HTTP 响应。
 
-## Extends
+## 继承
 
 * [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError)
 
-## Extended by
+## 被继承
 
 * [`AuthenticationError`](/sdk/javascript/api/classes/AuthenticationError)
 * [`BadRequestError`](/sdk/javascript/api/classes/BadRequestError)
@@ -16,11 +16,11 @@ An unsuccessful HTTP response from the API.
 * [`RateLimitError`](/sdk/javascript/api/classes/RateLimitError)
 * [`UnprocessableEntityError`](/sdk/javascript/api/classes/UnprocessableEntityError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new APIError(
@@ -31,7 +31,7 @@ new APIError(
 ): APIError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### status
 
@@ -49,15 +49,15 @@ new APIError(
 
 `string`
 
-#### Returns
+#### 返回值
 
 `APIError`
 
-#### Overrides
+#### 覆盖
 
 [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError).[`constructor`](/sdk/javascript/api/classes/TypeSafeError#sdk-constructor)
 
-## Properties
+## 属性
 
 <a id="sdk-body" />
 
@@ -67,7 +67,7 @@ new APIError(
 readonly body: unknown;
 ```
 
-Parsed JSON, response text, or `undefined` for an empty body.
+解析后的 JSON、响应文本；响应体为空时为 `undefined`。
 
 ***
 
@@ -79,7 +79,7 @@ Parsed JSON, response text, or `undefined` for an empty body.
 readonly headers: Headers;
 ```
 
-HTTP response headers.
+HTTP 响应头。
 
 ***
 
@@ -91,7 +91,7 @@ HTTP response headers.
 readonly requestId: string | undefined;
 ```
 
-Request ID from `x-typesafe-request-id`, or `undefined` when absent.
+来自 `x-typesafe-request-id` 的请求 ID；未提供时为 `undefined`。
 
 ***
 
@@ -103,9 +103,9 @@ Request ID from `x-typesafe-request-id`, or `undefined` when absent.
 readonly status: number;
 ```
 
-HTTP response status code.
+HTTP 响应状态码。
 
-## Methods
+## 方法
 
 <a id="sdk-fromresponse" />
 
@@ -119,9 +119,9 @@ static fromResponse(
 ): APIError;
 ```
 
-Create the error subclass for an HTTP status code.
+为某个 HTTP 状态码创建对应的错误子类。
 
-#### Parameters
+#### 参数
 
 ##### status
 
@@ -135,6 +135,6 @@ Create the error subclass for an HTTP status code.
 
 `Headers`
 
-#### Returns
+#### 返回值
 
 `APIError`

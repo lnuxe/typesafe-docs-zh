@@ -1,6 +1,6 @@
-# Changelog
+# 更新日志
 
-> Python clients for the TypeSafe AI API
+> TypeSafe AI API 的 Python 客户端
 
 <a id="changelog" />
 
@@ -9,71 +9,71 @@
 </h2>
 
 <h3 id="bug-fixes">
-  Bug fixes
+  问题修复
 </h3>
 
-* validate the API key early and exclude the value from logged exceptions
+* 提前校验 API 密钥，并让记录到日志的异常不包含密钥值
 
 <h3 id="documentation">
-  Documentation
+  文档
 </h3>
 
-* add examples for usage with AI gateways
+* 增加与 AI 网关配合使用的示例
 
 <h2 id="v070-2026-09-18">
   v0.7.0 (2026-09-18)
 </h2>
 
 <h3 id="breaking-changes">
-  Breaking Changes
+  破坏性变更
 </h3>
 
-* ser/de library has been changed from `msgspec` to `pydantic`
+* 序列化/反序列化库从 `msgspec` 改为 `pydantic`
 
 <h3 id="bug-fixes_1">
-  Bug fixes
+  问题修复
 </h3>
 
-* `str` subclasses are now correctly serialized as strings instead of lists of characters
+* `str` 子类现在会正确地序列化为字符串，而不是字符列表
 
 <h3 id="features">
-  Features
+  新功能
 </h3>
 
-* the `system_one` method now accepts a new `response_model` argument that can be set to a desired `pydantic` model for additional *type-safety*
+* `system_one` 方法新增 `response_model` 参数，可设为你需要的 `pydantic` 模型，以获得额外的*类型安全*
 
 <h2 id="v060-2026-09-15">
   v0.6.0 (2026-09-15)
 </h2>
 
 <h3 id="breaking-changes_1">
-  Breaking Changes
+  破坏性变更
 </h3>
 
-* accept `Score.criteria` as an ordered sequence instead of a dictionary keyed by integers
+* `Score.criteria` 现在接受有序序列，而不再是以整数为键的字典
 
 <h3 id="features_1">
-  Features
+  新功能
 </h3>
 
-* improve type annotations on SDK inputs to accept abstract types like `Mapping` and `Sequence`
-* improve error messages to include http details and metadata
+* 改进 SDK 输入的类型标注，使其接受 `Mapping`、`Sequence` 这类抽象类型
+* 改进错误信息，加入 http 详情和元数据
 
 <h3 id="bug-fixes_2">
-  Bug fixes
+  问题修复
 </h3>
 
-* handle invalid values in `RetryPolicy`
-* make exceptions and responses picklable
+* 处理 `RetryPolicy` 中的非法值
+* 让异常和响应可以被 pickle
 
 <h3 id="documentation_1">
-  Documentation
+  文档
 </h3>
 
-* link more concepts from main [docs](https://docs.typesafe.ai/)
+* 从主[文档](https://docs.typesafe.ai/)链接更多概念
 
 <h2 id="v057-2026-09-14">
   v0.5.7 (2026-09-14)
 </h2>
 
-This is the initial public release of TypeSafe Python SDK. Learn more in the [documentation](https://docs.typesafe.ai/sdk/python).
+这是 TypeSafe Python SDK 的首个公开发布版本。更多内容见[文档](https://docs.typesafe.ai/sdk/python)。

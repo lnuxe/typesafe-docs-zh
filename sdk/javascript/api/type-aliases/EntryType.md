@@ -1,4 +1,4 @@
-# Type Alias: EntryType
+# 类型别名：EntryType
 
 ```ts theme={null}
 type EntryType = 
@@ -10,4 +10,4 @@ type EntryType =
   | null;
 ```
 
-Text, a JSON object or array, or `null` for state, instructions, and criteria.
+文本、JSON 对象或数组；state、instructions 和 criteria 用 `null`。

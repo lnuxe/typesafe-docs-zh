@@ -1,8 +1,8 @@
-# Interface: ModelCard
+# 接口：ModelCard
 
-Metadata for an available model.
+某个可用模型的元数据。
 
-## Properties
+## 属性
 
 <a id="sdk-description" />
 

@@ -138,7 +138,6 @@ def main():
     targets = sys.argv[1:] or sorted(
         str(p.relative_to(EN)).replace("\\", "/")
         for p in EN.rglob("*.md")
-        if not str(p.relative_to(EN)).replace("\\", "/").startswith("sdk/")
     )
     bad = 0
     for rel in targets:

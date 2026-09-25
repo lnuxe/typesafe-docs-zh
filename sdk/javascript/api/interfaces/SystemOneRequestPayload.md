@@ -1,12 +1,12 @@
-# Interface: SystemOneRequestPayload
+# 接口：SystemOneRequestPayload
 
-Request body for `POST /v1/systemone`, with the model resolved.
+`POST /v1/systemone` 的请求体，其中模型已解析完成。
 
-## Extends
+## 继承
 
 * [`SystemOneRequest`](/sdk/javascript/api/interfaces/SystemOneRequest)
 
-## Properties
+## 属性
 
 <a id="sdk-model" />
 
@@ -16,9 +16,9 @@ Request body for `POST /v1/systemone`, with the model resolved.
 model: string;
 ```
 
-Model override; omitted values inherit `defaultModel`.
+模型覆盖项；未提供的值沿用 `defaultModel`。
 
-#### Overrides
+#### 覆盖
 
 [`SystemOneRequest`](/sdk/javascript/api/interfaces/SystemOneRequest).[`model`](/sdk/javascript/api/interfaces/SystemOneRequest#sdk-model)
 
@@ -32,9 +32,9 @@ Model override; omitted values inherit `defaultModel`.
 questions: Questions;
 ```
 
-Nonempty questions keyed by the names used to identify their answers.
+非空的问题集合，以用于标识其答案的名称为键。
 
-#### Inherited from
+#### 继承自
 
 [`SystemOneRequest`](/sdk/javascript/api/interfaces/SystemOneRequest).[`questions`](/sdk/javascript/api/interfaces/SystemOneRequest#sdk-questions)
 
@@ -48,8 +48,8 @@ Nonempty questions keyed by the names used to identify their answers.
 state: EntryType;
 ```
 
-Text, a JSON object or array, or `null` to evaluate.
+待评估的文本、JSON 对象或数组，也可以为 `null`。
 
-#### Inherited from
+#### 继承自
 
 [`SystemOneRequest`](/sdk/javascript/api/interfaces/SystemOneRequest).[`state`](/sdk/javascript/api/interfaces/SystemOneRequest#sdk-state)

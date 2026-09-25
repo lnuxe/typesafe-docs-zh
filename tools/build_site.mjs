@@ -826,6 +826,367 @@ function unwrapParagraph(html) {
   return m ? m[1].trim() : s;
 }
 
+/* ==================================================================== *
+ *  交互式演示：ScoreExplorer / ConfidenceExplorer
+ *  ------------------------------------------------------------------
+ *  这两个组件的定义（连数据）内联在 primitives/score.md 与 confidence.md 里，
+ *  是上游唯一的真源，所以构建期**从 md 源码解析**，不在生成器里另抄一份：
+ *    · ScoreExplorer      —— `const examples = [...]`（合法 JSON）
+ *    · ConfidenceExplorer —— `const options = [...]`、useState 初值、
+ *                            以及预设按钮的 setProbabilities([...]) 数值
+ *  解析失败 → 退回原来的说明块并给出警告（见 renderComponent）。
+ *
+ *  渲染策略（无 JS 也不能是空白）：
+ *    · 第一个示例 / 默认分布在构建期直接渲染成静态标记 —— 这就是无 JS 的降级版本
+ *    · 其余示例写进 <template>，由 assets/app.js 在点击时整块换进 DOM
+ *  这样 HTML 里没有重复数据，运行时只做 DOM 交换和算术。
+ * ==================================================================== */
+
+/* --------------------------------------------- 从 md 源码里解析组件数据 */
+
+/** 取 src[i]（开括号）起的配对括号片段（含两端括号），忽略字符串里的括号 */
+function readBalanced(src, i, open, close) {
+  if (src[i] !== open) return null;
+  let depth = 0, quote = null;
+  for (let j = i; j < src.length; j++) {
+    const c = src[j];
+    if (quote) {
+      if (c === '\\') { j++; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '\u0060') { quote = c; continue; }
+    if (c === open) depth++;
+    else if (c === close) { depth--; if (depth === 0) return src.slice(i, j + 1); }
+  }
+  return null;
+}
+
+/**
+ * 取出 `export function 名称(...)` 开头的那一段组件源码（切到下一个 export function 为止）。
+ * 这里**不做花括号配对**：组件体里是 JSX，文本节点里会出现英文撇号（option's），
+ * 还会有嵌套插值的模板串，任何简易的括号扫描器都会跑偏。
+ * 我们只需要在这段范围里定位 const 数组字面量，所以按 export 边界切片就够了。
+ */
+function exportedFunctionRegion(md, name) {
+  const m = new RegExp('export\\s+function\\s+' + name + '\\s*\\(').exec(md);
+  if (!m) return null;
+  const rest = md.slice(m.index + 1);
+  const next = /export\s+function\s+/.exec(rest);
+  return md.slice(m.index, next ? m.index + 1 + next.index : md.length);
+}
+
+/** 取 `const 名称 = [ … ]` 的数组字面量文本 */
+function findConstArrayLiteral(src, name) {
+  const m = new RegExp('const\\s+' + name + '\\s*=\\s*\\[').exec(src);
+  if (!m) return null;
+  return readBalanced(src, src.indexOf('[', m.index), '[', ']');
+}
+
+/** 只做四则运算的极简求值：md 里写的是 100 / 3 这类表达式 */
+function evalNumericExpr(text) {
+  const s = String(text).trim();
+  if (!s || !/^[-+*/().\d\s]+$/.test(s)) return null;
+  let value;
+  try { value = new Function('return (' + s + ');')(); } catch (e) { return null; }
+  return typeof value === 'number' && isFinite(value) ? value : null;
+}
+
+/** 解析 [90, 6, 4] / [100 / 3, 100 / 3, 100 / 3] 这类数值数组 */
+function parseNumberArrayLiteral(src, at) {
+  const lit = readBalanced(src, at, '[', ']');
+  if (!lit) return null;
+  const inner = lit.slice(1, -1).trim();
+  if (!inner) return [];
+  const out = [];
+  for (const part of splitTopLevel(inner, ',')) {
+    const v = evalNumericExpr(part);
+    if (v === null) return null;
+    out.push(v);
+  }
+  return out;
+}
+
+/** ScoreExplorer 的数据 = primitives/score.md 里的 const examples = [...]（合法 JSON） */
+function parseScoreExplorer(md) {
+  const body = exportedFunctionRegion(md, 'ScoreExplorer');
+  if (!body) return null;
+  const lit = findConstArrayLiteral(body, 'examples');
+  if (!lit) return null;
+  let list = null;
+  try { list = JSON.parse(lit); } catch (e) { return null; }
+  if (!Array.isArray(list) || !list.length) return null;
+  for (const ex of list) {
+    if (!ex || typeof ex !== 'object') return null;
+    if (typeof ex.label !== 'string' || typeof ex.question !== 'string' || typeof ex.state !== 'string') return null;
+    if (!Array.isArray(ex.levels) || ex.levels.length < 2) return null;
+    if (!ex.levels.every((l) => typeof l === 'string')) return null;
+    if (!Array.isArray(ex.shortLevels) || ex.shortLevels.length !== ex.levels.length) return null;
+    if (!ex.shortLevels.every((l) => typeof l === 'string')) return null;
+    const a = ex.answer;
+    if (!a || typeof a.score !== 'number' || typeof a.confidence !== 'number' || !a.probabilities) return null;
+    for (let level = 0; level < ex.levels.length; level++) {
+      if (typeof a.probabilities[String(level)] !== 'number') return null;
+    }
+  }
+  return list;
+}
+
+/** ConfidenceExplorer 的数据 = confidence.md 里的 options / useState 初值 / 预设按钮 */
+function parseConfidenceExplorer(md) {
+  const body = exportedFunctionRegion(md, 'ConfidenceExplorer');
+  if (!body) return null;
+  const optLit = findConstArrayLiteral(body, 'options');
+  if (!optLit) return null;
+  let options = null;
+  try { options = JSON.parse(optLit); } catch (e) { return null; }
+  if (!Array.isArray(options) || options.length < 3) return null;
+  if (!options.every((o) => typeof o === 'string' && o)) return null;
+  const um = /const\s*\[\s*probabilities\s*,\s*setProbabilities\s*\]\s*=\s*useState\s*\(/.exec(body);
+  if (!um) return null;
+  const initial = parseNumberArrayLiteral(body, body.indexOf('[', um.index + um[0].length));
+  if (!initial || initial.length !== options.length || !initial.every((v) => v >= 0 && v <= 100)) return null;
+  const presets = [];
+  const re = /setProbabilities\s*\(\s*\[/g;
+  let pm;
+  while ((pm = re.exec(body))) {
+    const values = parseNumberArrayLiteral(body, body.indexOf('[', pm.index + pm[0].length - 1));
+    if (!values || values.length !== options.length) continue;
+    const after = body.slice(body.indexOf('[', pm.index + pm[0].length - 1));
+    const tagEnd = after.indexOf('>');
+    const btnEnd = after.indexOf('</button>');
+    if (tagEnd < 0 || btnEnd < tagEnd) continue;
+    const label = collapseWs(after.slice(tagEnd + 1, btnEnd));
+    if (!label) continue;
+    presets.push({ label: label, values: values });
+  }
+  if (!presets.length) return null;
+  return { options: options, initial: initial, presets: presets };
+}
+
+/** 页面级预解析：把 md 里内联定义的组件数据挂到 ctx（缺失/解析失败 = null） */
+function attachExplorerData(md, ctx) {
+  const has = (name) => new RegExp('export\\s+function\\s+' + name + '\\s*\\(').test(md);
+  ctx.explorers = {
+    ScoreExplorer: has('ScoreExplorer') ? parseScoreExplorer(md) : null,
+    ConfidenceExplorer: has('ConfidenceExplorer') ? parseConfidenceExplorer(md) : null,
+  };
+}
+
+/* -------------------------------------------------- ScoreExplorer 渲染 */
+
+/** 每个示例的派生量：最高档位、各档位概率/百分比、柱状图 aria-label */
+function scoreExampleStats(ex) {
+  const topLevel = ex.levels.length - 1;
+  const probabilities = ex.levels.map((_, level) => ex.answer.probabilities[String(level)]);
+  const percents = probabilities.map((p) => Number((p * 100).toFixed(2)));
+  const summary = ex.levels.map((_, level) =>
+    'level ' + level + ', ' + ex.shortLevels[level] + ': ' + percents[level] + '%').join('; ');
+  return {
+    topLevel: topLevel,
+    probabilities: probabilities,
+    percents: percents,
+    score: ex.answer.score,
+    confidence: ex.answer.confidence,
+    chartLabel: 'Probability of each level: ' + summary + '. Score ' + ex.answer.score.toFixed(2),
+  };
+}
+
+const scorePosition = (value, topLevel) => (value / topLevel) * 100 + '%';
+
+/** 档位名的定位：两端贴边、中间居中（原组件的 tickNameStyle） */
+function tickNameStyle(level, topLevel) {
+  if (level === 0) return 'left:0;text-align:left;max-width:calc(50% - 8px)';
+  if (level === topLevel) return 'right:0;text-align:right;max-width:calc(50% - 8px)';
+  return 'left:' + (level / topLevel * 100) + '%;transform:translateX(-50%);text-align:center;max-width:calc(' +
+    (100 / topLevel) + '% - 8px)';
+}
+
+/** 问题 + 档位清单 + State 框（示例间会变的部分之一） */
+function scorePanelTopHtml(ex) {
+  let levels = '';
+  ex.levels.forEach((description, level) => {
+    levels += '<div class="ex-level" role="listitem">' +
+      '<span class="ex-level-num">' + level + '</span> ' + esc(description) + '</div>';
+  });
+  return '<div class="ex-qblock">' +
+    '<div class="ex-q">' + esc(ex.question) + '</div>' +
+    '<div class="ex-levels" role="list" aria-label="Levels">' + levels + '</div>' +
+    '</div>' +
+    '<div class="ex-state" role="region" aria-label="Example state" tabindex="0">' +
+    '<div class="ex-eyebrow">State (content to evaluate)</div>' +
+    '<p class="ex-state-text">' + esc(ex.state) + '</p>' +
+    '</div>';
+}
+
+/** 柱状图 + 口径说明（示例间会变的部分之二） */
+function scorePanelRestHtml(ex, d) {
+  const pos = (value) => scorePosition(value, d.topLevel);
+  let grid = '';
+  for (const tick of [50, 100]) {
+    grid += '<div class="ex-gridline" style="bottom:' + tick + '%"></div>';
+  }
+  let bars = '';
+  ex.levels.forEach((_, level) => {
+    bars += '<div class="ex-bar" style="left:' + pos(level) + ';height:' + d.percents[level] + '%">' +
+      '<span class="ex-bar-val">' + d.percents[level] + '%</span></div>';
+  });
+  let ticks = '', numbers = '', names = '';
+  ex.levels.forEach((_, level) => {
+    const left = pos(level);
+    ticks += '<div class="ex-tick" style="left:' + left + '"></div>';
+    numbers += '<div class="ex-ticknum" style="left:' + left + '">' + level + '</div>';
+    const end = level === 0 || level === d.topLevel;
+    names += '<div class="ex-tickname' + (end ? '' : ' ex-tickname-mid') + '" style="' +
+      tickNameStyle(level, d.topLevel) + '">' + esc(ex.shortLevels[level]) + '</div>';
+  });
+  const formula = d.probabilities.map((p, level) => level + ' \u00d7 ' + p).join(' + ') +
+    ' \u2248 ' + d.score.toFixed(2);
+  return '<div class="ex-chart" role="img" aria-label="' + esc(d.chartLabel) + '">' +
+    '<div class="ex-plot" aria-hidden="true">' + grid + bars + '</div>' +
+    '<div class="ex-axis" aria-hidden="true">' +
+    '<div class="ex-axis-line"></div>' + ticks + numbers + names +
+    '<div class="ex-score-pin" style="left:' + pos(d.score) + '"></div>' +
+    '</div></div>' +
+    '<details class="ex-details">' +
+    '<summary>How the score and confidence are calculated</summary>' +
+    '<div class="ex-details-h">Score:</div>' +
+    '<p class="ex-details-p">Multiply each level number by its probability, then add the results:</p>' +
+    '<div class="ex-details-formula">' + esc(formula) + '</div>' +
+    '<div class="ex-details-h">Confidence:</div>' +
+    '<p class="ex-details-p">TypeSafe computes this from how the probability is spread across the levels. ' +
+    'All of it on one level gives 1.0; the more evenly it spreads, the lower the confidence.</p>' +
+    '</details>';
+}
+
+function scoreExplorerHtml(examples) {
+  const stats = examples.map(scoreExampleStats);
+  let buttons = '';
+  examples.forEach((ex, index) => {
+    buttons += '<button class="ex-tab" type="button" data-ex-index="' + index + '" aria-pressed="' +
+      (index === 0 ? 'true' : 'false') + '" data-ex-confidence="' + stats[index].confidence.toFixed(2) +
+      '" data-ex-score="' + stats[index].score.toFixed(2) + '">' + esc(ex.label) + '</button>';
+  });
+  let templates = '';
+  examples.forEach((ex, index) => {
+    if (index === 0) return; // 第一个示例直接内联 = 无 JS 时的静态版本
+    templates += '<template data-ex-top="' + index + '">' + scorePanelTopHtml(ex) + '</template>' +
+      '<template data-ex-rest="' + index + '">' + scorePanelRestHtml(ex, stats[index]) + '</template>';
+  });
+  return '<section class="ex-section" aria-label="Explore Score examples" data-ex-score-explorer>' +
+    '<div class="ex-eyebrow">Example Score question</div>' +
+    '<div class="ex-tabs" role="group" aria-label="Example questions">' + buttons + '</div>' +
+    '<p class="ex-nojs">这个演示需要 JavaScript 才能切换示例，下面显示的是第一个示例的静态结果。</p>' +
+    '<div data-ex-top-host>' + scorePanelTopHtml(examples[0]) + '</div>' +
+    '<div class="ex-answer">' +
+    '<div class="ex-answer-head">' +
+    '<div><div class="ex-eyebrow">Answer</div>' +
+    '<div class="ex-answer-sub">Probability of each level</div></div>' +
+    '<div class="ex-status" role="status" aria-live="polite" aria-atomic="true">' +
+    '<div class="ex-status-label">Confidence</div>' +
+    '<output class="ex-confidence" aria-label="Confidence">' + stats[0].confidence.toFixed(2) + '</output>' +
+    '</div></div>' +
+    '<div class="ex-score-row" aria-live="polite">' +
+    '<span class="ex-diamond" aria-hidden="true"></span>score ' +
+    '<span data-ex-score-value>' + stats[0].score.toFixed(2) + '</span></div>' +
+    '<div data-ex-rest-host>' + scorePanelRestHtml(examples[0], stats[0]) + '</div>' +
+    '</div>' +
+    templates +
+    '</section>';
+}
+
+/* --------------------------------------------- ConfidenceExplorer 渲染 */
+
+/** 与原组件一致：confidence = (n × 最大概率占比 − 1) / (n − 1) */
+function choiceConfidence(values) {
+  const count = values.length;
+  const peak = Math.max.apply(null, values) / 100;
+  return Math.max(0, Math.min(1, (count * peak - 1) / (count - 1)));
+}
+
+function formatProbability(value) {
+  if (Math.abs(value - 100 / 3) < 0.000001) return '33\u2153%';
+  return Number(value.toFixed(1)) + '%';
+}
+
+function probabilityWinners(options, values) {
+  const maximum = Math.max.apply(null, values);
+  return options.filter((_, i) => Math.abs(values[i] - maximum) < 0.000001);
+}
+
+function probabilitySelection(options, values) {
+  const winners = probabilityWinners(options, values);
+  return winners.length === 1 ? 'Option ' + winners[0] : 'Tie: ' + winners.join(', ');
+}
+
+/** 可见那行的文案：唯一胜出者写 Selected: Option X，并列时直接写 Tie: ...（照原组件） */
+function probabilitySelectionLine(options, values) {
+  const winners = probabilityWinners(options, values);
+  return winners.length === 1 ? 'Selected: Option ' + winners[0] : 'Tie: ' + winners.join(', ');
+}
+
+function confidenceExplorerHtml(cfg) {
+  const values = cfg.initial;
+  const confidence = choiceConfidence(values);
+  const winners = probabilityWinners(cfg.options, values);
+  const winner = winners.length === 1 ? winners[0] : null;
+  const chartLabel = 'Probability distribution: ' +
+    cfg.options.map((o, i) => o + ' ' + formatProbability(values[i])).join(', ') + '. ' +
+    probabilitySelection(cfg.options, values) + '.';
+  let rows = '';
+  cfg.options.forEach((option, i) => {
+    rows += '<label class="ex-cf-row">' +
+      '<span class="ex-cf-opt">' + esc(option) + '</span>' +
+      '<input type="range" min="0" max="100" step="1" value="' + values[i] + '" data-ex-option="' + esc(option) +
+      '" aria-label="Probability of ' + esc(option) + '" aria-valuetext="' +
+      esc(formatProbability(values[i])) + '">' +
+      '<output class="ex-out">' + esc(formatProbability(values[i])) + '</output>' +
+      '</label>';
+  });
+  let presets = '';
+  cfg.presets.forEach((p) => {
+    presets += '<button class="ex-tab" type="button" data-ex-preset="' + p.values.join(',') + '">' +
+      esc(p.label) + '</button>';
+  });
+  let grid = '';
+  for (const tick of [0, 50, 100]) {
+    grid += '<div class="ex-cf-grid" style="bottom:' + tick + '%"><span>' + tick + '%</span></div>';
+  }
+  let bars = '';
+  cfg.options.forEach((option, i) => {
+    bars += '<div class="ex-col' + (winner === option ? ' is-winner' : '') + '" style="height:' + values[i] + '%">' +
+      '<span class="ex-col-val">' + esc(formatProbability(values[i])) + '</span>' +
+      '<div class="ex-col-bar"></div>' +
+      '<span class="ex-col-name">' + esc(option) + '</span></div>';
+  });
+  return '<section class="ex-section" aria-label="Explore probabilities and confidence" data-ex-confidence-explorer>' +
+    '<div class="ex-cf-head">' +
+    '<div><div class="ex-eyebrow">Choice question with three options</div>' +
+    '<div class="ex-cf-title">See how probability distribution changes confidence</div></div>' +
+    '<div class="ex-status" role="status" aria-live="polite" aria-atomic="true">' +
+    '<div class="ex-status-label">Confidence</div>' +
+    '<output class="ex-confidence ex-confidence-accent">' + confidence.toFixed(2) + '</output>' +
+    '</div></div>' +
+    '<div class="ex-cf-chart" role="img" aria-label="' + esc(chartLabel) + '">' +
+    '<div class="ex-cf-chart-label">Probability</div>' +
+    '<div class="ex-cf-plot" aria-hidden="true">' + grid +
+    '<div class="ex-cf-bars">' + bars + '</div></div>' +
+    '</div>' +
+    '<p class="ex-nojs">这个演示需要 JavaScript 才能拖动滑块，下面显示的是默认分布：' +
+    esc(cfg.options.map((o, i) => o + ' ' + formatProbability(values[i])).join(' / ')) + '。</p>' +
+    '<div class="ex-cf-controls ex-interactive">' + rows + '</div>' +
+    '<p class="ex-cf-hint ex-interactive">Move a slider to change an option\u2019s probability. ' +
+    'The other probabilities adjust to keep the total at 100%.</p>' +
+    '<div class="ex-cf-presets ex-interactive" aria-label="Example distributions">' + presets + '</div>' +
+    '<div class="ex-cf-selected" aria-live="polite">' + esc(probabilitySelectionLine(cfg.options, values)) + '</div>' +
+    '<details class="ex-details"><summary>How this demo calculates Confidence</summary>' +
+    '<p class="ex-details-p">TypeSafe computes confidence from how the probability is spread across the options. ' +
+    'All of it on one option gives 1.0; the more evenly it spreads, the lower the confidence. This demo uses ' +
+    '<code>(3 \u00d7 largest probability \u2212 1) / 2</code> to approximate confidence for three options.</p>' +
+    '</details>' +
+    '</section>';
+}
+
 /* ------------------------------------------------------------- 组件渲染 */
 
 function calloutHtml(cls, iconName, bodyHtml, title) {
@@ -835,6 +1196,17 @@ function calloutHtml(cls, iconName, bodyHtml, title) {
     (title ? '<p class="callout-title">' + esc(title) + '</p>' : '') +
     bodyHtml +
     '</div></div>';
+}
+
+/** 组件数据解析失败时的降级说明块（明确告诉读者/构建日志哪里出了问题） */
+function explorerFallbackHtml(name, ctx, reason) {
+  ctx.warnings.push('交互式组件 <' + name + ' /> 数据解析失败，退回说明块：' + reason + '（' + ctx.page + '）');
+  return '<div class="runtime-notice">' +
+    '<span class="runtime-ic" aria-hidden="true">' + icon('braces', 'ic') + '</span>' +
+    '<div><p class="runtime-title">交互式演示：' + esc(JS_RUNTIME_COMPONENTS[name] || name) + '</p>' +
+    '<p class="runtime-text">这个区块在原站里是一个交互式组件，' + esc(reason) + '。' +
+    '因此这里显示占位说明。其余正文与代码示例不受影响。</p></div>' +
+    '</div>';
 }
 
 function renderComponent(name, attrs, innerRaw, ctx, env) {
@@ -1018,16 +1390,20 @@ function renderComponent(name, attrs, innerRaw, ctx, env) {
     case 'TypesafeExample':
       return typesafeExampleHtml(attrs, ctx);
 
+    case 'ScoreExplorer': {
+      const data = ctx.explorers && ctx.explorers.ScoreExplorer;
+      if (!data) return explorerFallbackHtml(name, ctx, '未能从 primitives/score.md 的 const examples = [...] 里解析出示例数据');
+      return scoreExplorerHtml(data);
+    }
+
+    case 'ConfidenceExplorer': {
+      const data = ctx.explorers && ctx.explorers.ConfidenceExplorer;
+      if (!data) return explorerFallbackHtml(name, ctx, '未能从 confidence.md 的 options / useState 初值 / 预设按钮里解析出数据');
+      return confidenceExplorerHtml(data);
+    }
+
     default:
-      if (JS_RUNTIME_COMPONENTS[name]) {
-        ctx.warnings.push('交互式组件 <' + name + ' /> 已降级为说明块（' + ctx.page + '）');
-        return '<div class="runtime-notice">' +
-          '<span class="runtime-ic" aria-hidden="true">' + icon('braces', 'ic') + '</span>' +
-          '<div><p class="runtime-title">交互式演示：' + esc(JS_RUNTIME_COMPONENTS[name]) + '</p>' +
-          '<p class="runtime-text">这个区块在原始 Mintlify 站点里是一个 React 交互组件，需要客户端运行时。' +
-          '自托管静态构建不包含该运行时，因此这里显示占位说明。其余正文与代码示例不受影响。</p></div>' +
-          '</div>';
-      }
+      if (JS_RUNTIME_COMPONENTS[name]) return explorerFallbackHtml(name, ctx, '该组件没有可用的内联数据');
       ctx.warnings.push('未知组件 <' + name + '>（' + ctx.page + '）');
       return kids();
   }
@@ -1048,6 +1424,226 @@ function sdkSignatureSource(innerRaw, ctx) {
   s = s.split(NL_SENTINEL).join('\n');
   s = rewriteLinks(s, ctx.base);
   return s.trim();
+}
+
+/* --------------------------------------------------------------- LZ-string */
+
+const LZ_KEY_URI_SAFE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$';
+
+/**
+ * compressToEncodedURIComponent —— 逐字移植自 primitives/score.md 里 TypesafeExample
+ * 内联的那份实现（lz-string 的 URI-safe 变体）。构建期就把请求压好，页面里只出现
+ * 最终的 <a href>；不解压、不发任何外部请求。
+ */
+function compressToEncodedURIComponent(input) {
+  if (input == null) return '';
+  return lzCompress(input, 6, (a) => LZ_KEY_URI_SAFE.charAt(a));
+}
+
+function lzCompress(uncompressed, bitsPerChar, getCharFromInt) {
+  if (uncompressed == null) return '';
+  var i, value, context_dictionary = {}, context_dictionaryToCreate = {}, context_c = '', context_wc = '', context_w = '', context_enlargeIn = 2, context_dictSize = 3, context_numBits = 2, context_data = [], context_data_val = 0, context_data_position = 0, ii;
+  for (ii = 0; ii < uncompressed.length; ii += 1) {
+    context_c = uncompressed.charAt(ii);
+    if (!Object.prototype.hasOwnProperty.call(context_dictionary, context_c)) {
+      context_dictionary[context_c] = context_dictSize++;
+      context_dictionaryToCreate[context_c] = true;
+    }
+    context_wc = context_w + context_c;
+    if (Object.prototype.hasOwnProperty.call(context_dictionary, context_wc)) {
+      context_w = context_wc;
+    } else {
+      if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+        if (context_w.charCodeAt(0) < 256) {
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = context_data_val << 1;
+            if (context_data_position == bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+          }
+          value = context_w.charCodeAt(0);
+          for (i = 0; i < 8; i++) {
+            context_data_val = context_data_val << 1 | value & 1;
+            if (context_data_position == bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value >> 1;
+          }
+        } else {
+          value = 1;
+          for (i = 0; i < context_numBits; i++) {
+            context_data_val = context_data_val << 1 | value;
+            if (context_data_position == bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = 0;
+          }
+          value = context_w.charCodeAt(0);
+          for (i = 0; i < 16; i++) {
+            context_data_val = context_data_val << 1 | value & 1;
+            if (context_data_position == bitsPerChar - 1) {
+              context_data_position = 0;
+              context_data.push(getCharFromInt(context_data_val));
+              context_data_val = 0;
+            } else {
+              context_data_position++;
+            }
+            value = value >> 1;
+          }
+        }
+        context_enlargeIn--;
+        if (context_enlargeIn == 0) {
+          context_enlargeIn = Math.pow(2, context_numBits);
+          context_numBits++;
+        }
+        delete context_dictionaryToCreate[context_w];
+      } else {
+        value = context_dictionary[context_w];
+        for (i = 0; i < context_numBits; i++) {
+          context_data_val = context_data_val << 1 | value & 1;
+          if (context_data_position == bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = value >> 1;
+        }
+      }
+      context_enlargeIn--;
+      if (context_enlargeIn == 0) {
+        context_enlargeIn = Math.pow(2, context_numBits);
+        context_numBits++;
+      }
+      context_dictionary[context_wc] = context_dictSize++;
+      context_w = String(context_c);
+    }
+  }
+  if (context_w !== '') {
+    if (Object.prototype.hasOwnProperty.call(context_dictionaryToCreate, context_w)) {
+      if (context_w.charCodeAt(0) < 256) {
+        for (i = 0; i < context_numBits; i++) {
+          context_data_val = context_data_val << 1;
+          if (context_data_position == bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+        }
+        value = context_w.charCodeAt(0);
+        for (i = 0; i < 8; i++) {
+          context_data_val = context_data_val << 1 | value & 1;
+          if (context_data_position == bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = value >> 1;
+        }
+      } else {
+        value = 1;
+        for (i = 0; i < context_numBits; i++) {
+          context_data_val = context_data_val << 1 | value;
+          if (context_data_position == bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = 0;
+        }
+        value = context_w.charCodeAt(0);
+        for (i = 0; i < 16; i++) {
+          context_data_val = context_data_val << 1 | value & 1;
+          if (context_data_position == bitsPerChar - 1) {
+            context_data_position = 0;
+            context_data.push(getCharFromInt(context_data_val));
+            context_data_val = 0;
+          } else {
+            context_data_position++;
+          }
+          value = value >> 1;
+        }
+      }
+      context_enlargeIn--;
+      if (context_enlargeIn == 0) {
+        context_enlargeIn = Math.pow(2, context_numBits);
+        context_numBits++;
+      }
+      delete context_dictionaryToCreate[context_w];
+    } else {
+      value = context_dictionary[context_w];
+      for (i = 0; i < context_numBits; i++) {
+        context_data_val = context_data_val << 1 | value & 1;
+        if (context_data_position == bitsPerChar - 1) {
+          context_data_position = 0;
+          context_data.push(getCharFromInt(context_data_val));
+          context_data_val = 0;
+        } else {
+          context_data_position++;
+        }
+        value = value >> 1;
+      }
+    }
+    context_enlargeIn--;
+    if (context_enlargeIn == 0) {
+      context_enlargeIn = Math.pow(2, context_numBits);
+      context_numBits++;
+    }
+  }
+  value = 2;
+  for (i = 0; i < context_numBits; i++) {
+    context_data_val = context_data_val << 1 | value & 1;
+    if (context_data_position == bitsPerChar - 1) {
+      context_data_position = 0;
+      context_data.push(getCharFromInt(context_data_val));
+      context_data_val = 0;
+    } else {
+      context_data_position++;
+    }
+    value = value >> 1;
+  }
+  while (true) {
+    context_data_val = context_data_val << 1;
+    if (context_data_position == bitsPerChar - 1) {
+      context_data.push(getCharFromInt(context_data_val));
+      break;
+    } else context_data_position++;
+  }
+  return context_data.join('');
+}
+
+/**
+ * TypesafeExample 的分享链接（移植自 score.md 里同一个组件的 buildHref）：
+ * 把这次请求压进 console.typesafe.ai 的 decode 页，打开就是同一个请求。
+ */
+function buildShareHref(ex) {
+  const documentText = ex.state === undefined ? ''
+    : (typeof ex.state === 'string' ? ex.state : JSON.stringify(ex.state, null, 2));
+  return 'https://console.typesafe.ai/decode#share/' + compressToEncodedURIComponent(JSON.stringify({
+    apiVersion: 'v1',
+    documentText,
+    promptsText: JSON.stringify(ex.questions, null, 2),
+    selectedModels: ex.selectedModels,
+  }));
 }
 
 /** TypesafeExample 还原为「请求 JSON」代码块 */
@@ -1074,8 +1670,8 @@ function typesafeExampleHtml(attrs, ctx) {
   const code = JSON.stringify(shown, null, 2);
   return '<div class="example-block">' +
     codeBlockHtml(code, 'json ' + JSON.stringify(title), ctx) +
-    '<p class="example-hint">想直接运行这段请求？把它粘贴到 ' +
-    '<a href="https://console.typesafe.ai/playground" target="_blank" rel="noreferrer noopener">TypeSafe Playground</a>。</p>' +
+    '<p class="example-hint">想直接运行这段请求？' +
+    '<a href="' + esc(buildShareHref(ex)) + '" target="_blank" rel="noreferrer noopener">在 TypeSafe Playground 中打开 →</a></p>' +
     '</div>';
 }
 
@@ -1437,7 +2033,15 @@ const STYLE_CSS = String.raw`
   --prose-size: 18px;
   --prose-lh: 1.75;
   --prose-max: 720px;
-  --content-w: 768px;       /* 720 正文 + 左右各 24 padding */
+
+  /* 布局几何（与原站 docs.typesafe.ai 同构）：
+       左侧栏 288 固定  +  正文列居中（有上限）  +  右侧 TOC 288 固定
+     正文列 = 720 正文栏 + 左右各 24 内边距 = 768。
+     原站的正文列是 816（正文 768），但那是按拉丁排版定的：本站正文是中文，
+     口径「每行 ≤ 40 汉字」→ 18px × 40 = 720 就是硬上限，所以列宽收窄 48px。
+     收窄的是**宽度上限**，不是定位方式：宽屏下侧栏右缘与 TOC 左缘之间那块空白
+     由正文列两侧均分（原站 ml/mr 也是均分），不再全部堆在右边。 */
+  --content-w: 768px;
   --page-pad: 24px;
   --radius-xl: 12px;
   --radius-2xl: 16px;
@@ -1721,8 +2325,16 @@ html[data-theme="dark"] .top-tab.is-active { color: var(--gray-400); }
 }
 .sidebar::-webkit-scrollbar { width: 8px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 4px; }
-.main { flex: 1 1 auto; min-width: 0; padding-left: var(--page-pad); }
-.main-inner { width: var(--content-w); max-width: 100%; padding: var(--page-pad) var(--page-pad) 0; }
+/* 中间列：吃掉侧栏与 TOC 之间的全部剩余宽度，正文列在它内部水平居中。
+   原站的等价做法是给 #content-area 上 max-width:816px + 随视口变化的左右外边距
+   （xl:ml-[max(0px,calc(50vw-348px-18rem))]）；这里用
+   width:100% + max-width:var(--content-w) + margin:0 auto 得到同样的几何，
+   且窄到装不下时自动退化成撑满，不会溢出。 */
+.main { flex: 1 1 auto; min-width: 0; }
+.main-inner {
+  width: 100%; max-width: var(--content-w); margin: 0 auto;
+  padding: var(--page-pad) var(--page-pad) 0;
+}
 
 /* --- 侧栏导航 ------------------------------------------------------- */
 .sb-group { margin: 0; }
@@ -2172,7 +2784,144 @@ html[data-theme="light"] .tk-o { color: #1F2328; }
 .example-block { margin: 20px 0 32px; max-width: var(--prose-max); }
 .example-hint { font-size: 14px; line-height: 22px; color: var(--muted); margin: 10px 0 0; }
 
-/* --- 右侧目录 ------------------------------------------------------- */
+/* --- 交互式演示（ScoreExplorer / ConfidenceExplorer） ---------------- *
+ *  组件与数据都内联在 primitives/score.md、confidence.md 的 JSX 里。
+ *  下面的尺寸照那段实现的实测值落到本站令牌上：主色 --primary、灰阶 --gray-*、
+ *  亮/暗两套主题各自取值；间距一律 4px 网格、字号取站内既有档位
+ *  （11/12/14/16/30px 在站内已有用例）。
+ * ------------------------------------------------------------------- */
+.ex-section {
+  /* 原组件的 text-zinc-600 / dark:text-zinc-400 映射到站内灰阶（比 --muted 深一档，
+     放在 State 框的 gray-100 底上仍有 6.6:1，过 AA） */
+  --ex-muted: var(--gray-600);
+  margin: 24px 0; padding: 20px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-2xl);
+  max-width: var(--prose-max); color: var(--h1-fg);
+}
+@media (min-width: 640px) { .ex-section { padding: 24px; } }
+html[data-theme="dark"] .ex-section { --ex-muted: var(--gray-400); }
+.ex-eyebrow {
+  font-size: 11px; line-height: 16px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ex-muted);
+}
+.ex-tabs { display: none; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+html[data-js="on"] .ex-tabs { display: flex; }
+.ex-tab {
+  appearance: none; background: none; cursor: pointer; margin: 0;
+  padding: 8px 12px; border: 1px solid var(--gray-500);
+  font: inherit; font-size: 14px; line-height: 22px; text-align: left; color: inherit;
+}
+.ex-tab:hover { background: var(--gray-100); }
+html[data-theme="dark"] .ex-tab:hover { background: var(--gray-800); }
+.ex-tab[aria-pressed="true"] {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+.ex-nojs { margin: 12px 0 0; font-size: 14px; line-height: 22px; color: var(--ex-muted); }
+html[data-js="on"] .ex-nojs { display: none; }
+.ex-interactive { display: none; }
+html[data-js="on"] .ex-interactive { display: block; }
+html[data-js="on"] .ex-cf-presets { display: flex; }
+.ex-qblock { margin-top: 24px; min-height: 152px; }
+.ex-q { margin-top: 8px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.ex-levels { margin-top: 12px; font-size: 14px; line-height: 22px; }
+.ex-level + .ex-level { margin-top: 4px; }
+.ex-level-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ex-state {
+  margin-top: 20px; height: 128px; overflow-y: auto;
+  padding: 12px 16px; background: var(--gray-100);
+}
+html[data-theme="dark"] .ex-state { background: var(--gray-900); }
+@media (max-width: 639px) { .ex-state { height: 160px; } }
+.ex-state-text { margin: 0; font-size: 14px; line-height: 22px; }
+.ex-answer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.ex-answer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ex-answer-sub { margin-top: 12px; font-size: 14px; line-height: 22px; font-weight: 600; }
+.ex-status { flex: none; text-align: right; }
+.ex-status-label { font-size: 14px; line-height: 22px; color: var(--ex-muted); }
+.ex-confidence {
+  display: block; font-size: 30px; line-height: 36px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ex-confidence-accent { color: var(--primary); }
+.ex-score-row {
+  margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  font-size: 12px; line-height: 18px; color: var(--ex-muted);
+}
+.ex-diamond { display: inline-block; width: 10px; height: 10px; background: var(--primary); transform: rotate(45deg); }
+.ex-chart { padding: 0 28px; }
+.ex-plot { position: relative; height: 150px; margin-top: 36px; }
+.ex-gridline {
+  position: absolute; left: 0; right: 0; border-top: 1px dashed;
+  border-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+.ex-bar { position: absolute; bottom: 0; width: 56px; transform: translateX(-50%); background: var(--gray-500); }
+.ex-bar-val {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 14px; line-height: 22px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ex-axis { position: relative; height: 72px; }
+.ex-axis-line { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--gray-500); }
+.ex-tick { position: absolute; top: 0; width: 2px; height: 10px; transform: translateX(-50%); background: var(--gray-500); }
+.ex-ticknum {
+  position: absolute; top: 14px; transform: translateX(-50%);
+  font-size: 14px; line-height: 22px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.ex-tickname { position: absolute; top: 36px; font-size: 12px; line-height: 18px; color: var(--ex-muted); }
+.ex-tickname-mid { display: none; }
+@media (min-width: 640px) { .ex-tickname-mid { display: block; } }
+.ex-score-pin {
+  position: absolute; top: 1px; width: 14px; height: 14px; background: var(--primary);
+  transform: translate(-50%, -50%) rotate(45deg); box-shadow: 0 0 0 2px #FFFFFF;
+}
+html[data-theme="dark"] .ex-score-pin { box-shadow: 0 0 0 2px #000000; }
+.ex-details { margin-top: 20px; font-size: 14px; line-height: 22px; color: var(--ex-muted); }
+.ex-details > summary { cursor: pointer; }
+.ex-details-h { margin-top: 12px; font-weight: 600; color: var(--h1-fg); }
+.ex-details-p { margin: 4px 0 0; }
+.ex-details-formula { margin-top: 8px; font-family: var(--font-mono); font-size: 14px; line-height: 22px; overflow-wrap: anywhere; }
+.ex-details code {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+  background: var(--inline-code-bg); color: var(--inline-code-fg);
+  border: 1px solid var(--inline-code-bd); border-radius: 6px; padding: 2px 6px;
+}
+.ex-cf-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.ex-cf-title { margin-top: 8px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.ex-cf-chart { margin: 24px 0; }
+.ex-cf-chart-label { font-size: 12px; line-height: 18px; color: var(--ex-muted); }
+.ex-cf-plot { position: relative; height: 180px; margin: 36px 0 36px 44px; }
+.ex-cf-grid {
+  position: absolute; width: 100%; border-bottom: 1px solid;
+  border-color: color-mix(in srgb, currentColor 18%, transparent);
+}
+.ex-cf-grid > span { position: absolute; right: calc(100% + 8px); transform: translateY(-50%); font-size: 12px; line-height: 18px; }
+.ex-cf-bars { position: absolute; inset: 0; display: flex; justify-content: space-around; align-items: flex-end; }
+.ex-col { position: relative; width: 21%; }
+.ex-col-bar { height: 100%; background: currentColor; opacity: .45; }
+.ex-col.is-winner .ex-col-bar { background: var(--primary); opacity: 1; }
+.ex-col-val {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 14px; line-height: 22px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.ex-col-name { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); font-size: 14px; line-height: 22px; }
+.ex-cf-controls > label { display: flex; align-items: center; gap: 12px; font-size: 14px; line-height: 22px; }
+.ex-cf-controls > label + label { margin-top: 12px; }
+.ex-cf-opt { width: 20px; font-weight: 600; }
+.ex-cf-row input[type="range"] { min-width: 0; flex: 1 1 auto; min-height: 44px; margin: 0; font-size: 14px; cursor: pointer; accent-color: var(--primary); }
+.ex-out { width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+.ex-cf-hint { margin: 12px 0 0; font-size: 14px; line-height: 22px; color: var(--ex-muted); }
+.ex-cf-presets { margin-top: 16px; flex-wrap: wrap; gap: 8px; }
+.ex-cf-selected { margin-top: 16px; font-size: 14px; line-height: 22px; }
+
+/* --- 右侧目录 ------------------------------------------------------- *
+ *  与原站同构：288 固定宽的独立栏，贴住视口右缘（不参与正文列的居中计算），
+ *  吸顶滚动（原站实测 TOC 内容 223 宽 = 288 - 32 padding - 1 border + ...）。
+ *  正文列居中只发生在「侧栏右缘 → TOC 左缘」这段里，所以 TOC 不会被推走、
+ *  也不会在宽屏下消失；<1280 时整栏收起（见文末响应式）。
+ * ------------------------------------------------------------------- */
 .toc {
   flex: none; width: var(--toc-w); position: sticky; top: var(--header-h);
   height: calc(100vh - var(--header-h)); overflow-y: auto;
@@ -2270,24 +3019,22 @@ html[data-theme="dark"] .site-footer-links a:hover { color: var(--gray-400); }
 .search-result mark { background: var(--sel); color: inherit; border-radius: 3px; padding: 0 2px; }
 .search-empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 14px; }
 
-/* --- 响应式 --------------------------------------------------------- */
-@media (max-width: 1399px) {
-  :root { --content-w: 720px; --prose-max: 672px; }
-}
+/* --- 响应式 --------------------------------------------------------- *
+ *  断点（与原站对齐，覆盖 2560 / 1920 / 1440 / 1280 / 1024 / 768 / 375）：
+ *    ≥1280   三栏：侧栏 288 固定 | 正文列（上限 768，居中） | TOC 288 固定
+ *    ≤1279   收 TOC（原站 xl 以下没有右侧目录），侧栏保留，正文列照常居中
+ *    ≤1023   侧栏收成抽屉（原站 lg 以下），正文列拿到整幅宽度
+ *    ≤899    移动版式：字号 / 栅格 / 页脚改单列
+ *    ≤600    顶栏中段（搜索框）让位
+ *  任何断点都不放大 --content-w / --prose-max，只是「装不下就撑满」，
+ *  所以每行汉字数始终 ≤ 40，窄屏也不会被侧栏挤压出横向滚动。
+ * ------------------------------------------------------------------- */
 @media (max-width: 1279px) {
   .toc { display: none; }
-  .main { padding-left: 0; }
-  .main-inner { margin: 0 auto; }
 }
 @media (max-width: 1023px) {
-  :root { --content-w: 100%; --prose-max: 100%; }
-}
-@media (max-width: 899px) {
-  :root { --header-h: 96px; --prose-size: 17px; }
+  /* 侧栏改抽屉：布局不再给它留 288，正文列占满视口 */
   .menu-btn { display: inline-flex; }
-  .tb-left { flex: none; }
-  .tb-center { flex: 1 1 auto; }
-  .search-btn { width: 100%; max-width: 256px; }
   .layout { margin-left: 0; }
   .sidebar {
     position: fixed; inset: var(--header-h) auto 0 0; width: 300px; height: auto;
@@ -2295,7 +3042,14 @@ html[data-theme="dark"] .site-footer-links a:hover { color: var(--gray-400); }
     padding: 0 8px 32px; transform: translateX(-100%); transition: transform .18s ease; z-index: 70;
   }
   .sidebar.is-open { transform: none; }
-  .main { padding-left: 0; }
+  .tb-left { flex: none; }
+  .tb-center { flex: 1 1 auto; }
+  .search-btn { width: 100%; max-width: 256px; }
+}
+@media (max-width: 899px) {
+  /* 移动版式：字号降到 17px，正文栏同步收到 17 × 40 = 680，
+     列宽 = 680 + 左右各 16 内边距 = 712，仍然守住「每行 ≤ 40 汉字」。 */
+  :root { --header-h: 96px; --prose-size: 17px; --prose-max: 680px; --content-w: 712px; }
   .main-inner { padding: 16px 16px 0; }
   .prose > * { max-width: 100%; }
   .prose { margin-top: 24px; }
@@ -2840,6 +3594,157 @@ const APP_JS = String.raw`
     });
     input.addEventListener('input', function () { render(input.value); });
   }
+
+  /* ---- 交互式演示：ScoreExplorer / ConfidenceExplorer -----------------
+     数据不写在 JS 里：
+       · ScoreExplorer 每个示例的静态标记由构建期渲染进 <template>，
+         这里只做 DOM 交换 + 两处读数（confidence / score）的更新；
+       · ConfidenceExplorer 的选项、当前值、预设值全从 DOM 读
+         （data-ex-option / input.value / data-ex-preset），
+         算法与 confidence.md 里的组件逐行一致。 */
+  function initScoreExplorers() {
+    var sections = d.querySelectorAll('[data-ex-score-explorer]');
+    for (var s = 0; s < sections.length; s++) {
+      (function (section) {
+        var buttons = section.querySelectorAll('.ex-tab[data-ex-index]');
+        var topHost = section.querySelector('[data-ex-top-host]');
+        var restHost = section.querySelector('[data-ex-rest-host]');
+        var confOut = section.querySelector('.ex-confidence');
+        var scoreOut = section.querySelector('[data-ex-score-value]');
+        if (!buttons.length || !topHost || !restHost || !confOut || !scoreOut) return;
+        var firstTop = topHost.innerHTML;
+        var firstRest = restHost.innerHTML;
+        function select(index, btn) {
+          for (var i = 0; i < buttons.length; i++) {
+            buttons[i].setAttribute('aria-pressed', buttons[i] === btn ? 'true' : 'false');
+          }
+          if (index === 0) {
+            topHost.innerHTML = firstTop;
+            restHost.innerHTML = firstRest;
+          } else {
+            var t = section.querySelector('template[data-ex-top="' + index + '"]');
+            var r = section.querySelector('template[data-ex-rest="' + index + '"]');
+            if (t) topHost.innerHTML = t.innerHTML;
+            if (r) restHost.innerHTML = r.innerHTML;
+          }
+          // 这两个节点是固定的（role=status 的 live region 必须留在原地，
+          // 换掉节点本身屏幕阅读器就不播报了），所以只改文本
+          confOut.textContent = btn.getAttribute('data-ex-confidence');
+          scoreOut.textContent = btn.getAttribute('data-ex-score');
+        }
+        section.addEventListener('click', function (ev) {
+          var btn = ev.target && ev.target.closest ? ev.target.closest('.ex-tab[data-ex-index]') : null;
+          if (!btn || !section.contains(btn)) return;
+          select(Number(btn.getAttribute('data-ex-index')), btn);
+        });
+      })(sections[s]);
+    }
+  }
+  initScoreExplorers();
+
+  function initConfidenceExplorers() {
+    var sections = d.querySelectorAll('[data-ex-confidence-explorer]');
+    for (var s = 0; s < sections.length; s++) {
+      (function (section) {
+        var inputs = section.querySelectorAll('input[type="range"][data-ex-option]');
+        var chart = section.querySelector('.ex-cf-chart');
+        var confOut = section.querySelector('.ex-confidence');
+        var selectedEl = section.querySelector('.ex-cf-selected');
+        var cols = section.querySelectorAll('.ex-col');
+        var outs = section.querySelectorAll('.ex-out');
+        if (!inputs.length || !chart || !confOut || !selectedEl || cols.length !== inputs.length) return;
+
+        var options = [];
+        var values = [];
+        for (var i = 0; i < inputs.length; i++) {
+          options.push(inputs[i].getAttribute('data-ex-option'));
+          values.push(Number(inputs[i].value));
+        }
+
+        function formatProbability(value) {
+          if (Math.abs(value - 100 / 3) < 0.000001) return '33\u2153%';
+          return Number(value.toFixed(1)) + '%';
+        }
+        function choiceConfidence(vals) {
+          var count = vals.length;
+          var peak = Math.max.apply(null, vals) / 100;
+          return Math.max(0, Math.min(1, (count * peak - 1) / (count - 1)));
+        }
+        function render(next) {
+          values = next;
+          var maximum = Math.max.apply(null, values);
+          var winners = [];
+          for (var a = 0; a < options.length; a++) {
+            if (Math.abs(values[a] - maximum) < 0.000001) winners.push(options[a]);
+          }
+          var unique = winners.length === 1;
+          confOut.textContent = choiceConfidence(values).toFixed(2);
+          var parts = [];
+          for (var b = 0; b < options.length; b++) {
+            var label = formatProbability(values[b]);
+            parts.push(options[b] + ' ' + label);
+            inputs[b].value = values[b];
+            inputs[b].setAttribute('aria-valuetext', label);
+            if (outs[b]) outs[b].textContent = label;
+            cols[b].style.height = values[b] + '%';
+            cols[b].className = 'ex-col' + (unique && winners[0] === options[b] ? ' is-winner' : '');
+            var val = cols[b].querySelector('.ex-col-val');
+            if (val) val.textContent = label;
+          }
+          var selection = unique ? 'Option ' + winners[0] : 'Tie: ' + winners.join(', ');
+          chart.setAttribute('aria-label',
+            'Probability distribution: ' + parts.join(', ') + '. ' + selection + '.');
+          // 可见那行带 Selected: 前缀，并列时只写 Tie:（与原组件一致）
+          selectedEl.textContent = unique ? 'Selected: ' + selection : selection;
+        }
+        // 与 confidence.md 的 changeProbability 一致：被拖动的那一项取新值，
+        // 其余按原比例分摊剩下的比例，最后一项吃掉舍入误差（总和恒为 100）
+        function changeProbability(index, value) {
+          var remaining = 100 - value;
+          var others = [];
+          var previousRemaining = 0;
+          for (var k = 0; k < values.length; k++) {
+            if (k === index) continue;
+            others.push(k);
+            previousRemaining += values[k];
+          }
+          var next = values.slice();
+          next[index] = value;
+          var assigned = 0;
+          for (var m = 0; m < others.length; m++) {
+            if (m === others.length - 1) {
+              next[others[m]] = remaining - assigned;
+            } else {
+              var share = previousRemaining > 0
+                ? remaining * values[others[m]] / previousRemaining
+                : remaining / others.length;
+              next[others[m]] = share;
+              assigned += share;
+            }
+          }
+          return next;
+        }
+        for (var j = 0; j < inputs.length; j++) {
+          (function (idx) {
+            inputs[idx].addEventListener('input', function () {
+              render(changeProbability(idx, Number(inputs[idx].value)));
+            });
+          })(j);
+        }
+        section.addEventListener('click', function (ev) {
+          var btn = ev.target && ev.target.closest ? ev.target.closest('[data-ex-preset]') : null;
+          if (!btn || !section.contains(btn)) return;
+          var raw = btn.getAttribute('data-ex-preset').split(',');
+          var preset = [];
+          for (var n = 0; n < raw.length; n++) preset.push(Number(raw[n]));
+          if (preset.length !== options.length) return;
+          render(preset);
+        });
+        render(values.slice());
+      })(sections[s]);
+    }
+  }
+  initConfidenceExplorers();
 })();
 `;
 
@@ -3242,6 +4147,7 @@ function tidyHtml(html, ctx) {
 
 function renderPage(md, pagePath, opts, titles) {
   const ctx = newPageContext(opts, pagePath, opts.base);
+  attachExplorerData(md, ctx); // 交互组件的数据取自 .md 源码本身（见文件上方说明）
   let body = renderMarkdown(md, ctx);
   const heading = processHeadings(body);
   body = tidyHtml(wrapTables(heading.html), ctx);

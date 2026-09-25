@@ -1,8 +1,8 @@
-# Interface: Models
+# 接口：Models
 
-Access to the Models API resource.
+对 Models API 资源的访问入口。
 
-## Methods
+## 方法
 
 <a id="sdk-list" />
 
@@ -12,14 +12,14 @@ Access to the Models API resource.
 list(options?): APIPromise<ModelCard[]>;
 ```
 
-List the models available to the account.
+列出账户可用的模型。
 
-#### Parameters
+#### 参数
 
 ##### options?
 
 [`RequestOptions`](/sdk/javascript/api/interfaces/RequestOptions) = `{}`
 
-#### Returns
+#### 返回值
 
 [`APIPromise`](/sdk/javascript/api/classes/APIPromise)\<[`ModelCard`](/sdk/javascript/api/interfaces/ModelCard)\[]>

@@ -1,14 +1,14 @@
-# Interface: ScoreResponse\<T\>
+# 接口：ScoreResponse\<T\>
 
-An expected score with its rubric and probabilities.
+带有量规与概率分布的期望分数。
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T` *extends* [`ScoreCriteria`](/sdk/javascript/api/type-aliases/ScoreCriteria) = [`ScoreCriteria`](/sdk/javascript/api/type-aliases/ScoreCriteria)
 
-## Properties
+## 属性
 
 <a id="sdk-confidence" />
 
@@ -18,7 +18,7 @@ An expected score with its rubric and probabilities.
 readonly confidence: number;
 ```
 
-Reported confidence in the score.
+对分数给出的置信度。
 
 ***
 
@@ -30,7 +30,7 @@ Reported confidence in the score.
 readonly legend: ScoreLegend<T>;
 ```
 
-Rubric descriptions keyed by score.
+以分数为键的量规描述。
 
 ***
 
@@ -42,7 +42,7 @@ Rubric descriptions keyed by score.
 readonly probabilities: { readonly [score in number | `${number}`]: number };
 ```
 
-Probabilities keyed by score.
+以分数为键的概率分布。
 
 ***
 
@@ -54,7 +54,7 @@ Probabilities keyed by score.
 readonly score: number;
 ```
 
-Expected score, which may fall between integer rubric levels.
+期望分数，可能落在量规的整数档位之间。
 
 ***
 

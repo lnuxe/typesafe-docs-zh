@@ -1,12 +1,12 @@
-# Type Alias: Fetch
+# 类型别名：Fetch
 
 ```ts theme={null}
 type Fetch = (input, init?) => Promise<Response>;
 ```
 
-HTTP fetch implementation compatible with the global `fetch`.
+与全局 `fetch` 兼容的 HTTP fetch 实现。
 
-## Parameters
+## 参数
 
 ### input
 
@@ -16,6 +16,6 @@ HTTP fetch implementation compatible with the global `fetch`.
 
 `RequestInit`
 
-## Returns
+## 返回值
 
 `Promise`\<`Response`>

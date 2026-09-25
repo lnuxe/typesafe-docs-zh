@@ -1,11 +1,11 @@
-# Changelog
+# 更新日志
 
 ## v0.6.0 (2026-09-15)
 
-### Breaking changes
+### 破坏性变更
 
-* accept `Score.criteria` as an ordered sequence instead of a dictionary keyed by integers
+* `Score.criteria` 改为接受有序序列，而不再是以整数为键的字典
 
 ## v0.5.7 (2026-09-11)
 
-This is the initial public release of TypeSafe JavaScript and TypeScript SDK. Learn more in the [documentation](https://docs.typesafe.ai/sdk/javascript).
+这是 TypeSafe JavaScript 与 TypeScript SDK 的首个公开发布版本。详见[文档](https://docs.typesafe.ai/sdk/javascript)。

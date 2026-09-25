@@ -1,16 +1,16 @@
-# Class: UnprocessableEntityError
+# 类：UnprocessableEntityError
 
-HTTP 422: request validation failed.
+HTTP 422：请求校验失败。
 
-## Extends
+## 继承
 
 * [`APIError`](/sdk/javascript/api/classes/APIError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new UnprocessableEntityError(
@@ -21,7 +21,7 @@ new UnprocessableEntityError(
 ): UnprocessableEntityError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### status
 
@@ -39,15 +39,15 @@ new UnprocessableEntityError(
 
 `string`
 
-#### Returns
+#### 返回值
 
 `UnprocessableEntityError`
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`constructor`](/sdk/javascript/api/classes/APIError#sdk-constructor)
 
-## Properties
+## 属性
 
 <a id="sdk-body" />
 
@@ -57,9 +57,9 @@ new UnprocessableEntityError(
 readonly body: unknown;
 ```
 
-Parsed JSON, response text, or `undefined` for an empty body.
+解析后的 JSON、响应文本；响应体为空时为 `undefined`。
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`body`](/sdk/javascript/api/classes/APIError#sdk-body)
 
@@ -73,9 +73,9 @@ Parsed JSON, response text, or `undefined` for an empty body.
 readonly headers: Headers;
 ```
 
-HTTP response headers.
+HTTP 响应头。
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`headers`](/sdk/javascript/api/classes/APIError#sdk-headers)
 
@@ -89,9 +89,9 @@ HTTP response headers.
 readonly requestId: string | undefined;
 ```
 
-Request ID from `x-typesafe-request-id`, or `undefined` when absent.
+来自 `x-typesafe-request-id` 的请求 ID；未提供时为 `undefined`。
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`requestId`](/sdk/javascript/api/classes/APIError#sdk-requestid)
 
@@ -105,13 +105,13 @@ Request ID from `x-typesafe-request-id`, or `undefined` when absent.
 readonly status: number;
 ```
 
-HTTP response status code.
+HTTP 响应状态码。
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`status`](/sdk/javascript/api/classes/APIError#sdk-status)
 
-## Methods
+## 方法
 
 <a id="sdk-fromresponse" />
 
@@ -125,9 +125,9 @@ static fromResponse(
 ): APIError;
 ```
 
-Create the error subclass for an HTTP status code.
+为某个 HTTP 状态码创建对应的错误子类。
 
-#### Parameters
+#### 参数
 
 ##### status
 
@@ -141,10 +141,10 @@ Create the error subclass for an HTTP status code.
 
 `Headers`
 
-#### Returns
+#### 返回值
 
 [`APIError`](/sdk/javascript/api/classes/APIError)
 
-#### Inherited from
+#### 继承自
 
 [`APIError`](/sdk/javascript/api/classes/APIError).[`fromResponse`](/sdk/javascript/api/classes/APIError#sdk-fromresponse)

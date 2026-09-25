@@ -1,30 +1,30 @@
-# Class: APIPromise\<T\>
+# 类：APIPromise\<T\>
 
-A promise for the parsed result with access to the HTTP response.
+一个承载解析结果的 promise，同时可以访问 HTTP 响应。
 
-Non-2xx responses reject with an `APIError`, including through `asResponse()`.
+非 2xx 响应会让 promise 以 `APIError` 被拒绝，经由 `asResponse()` 时同样如此。
 
-## Extends
+## 继承
 
 * `Promise`\<`T`>
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T`
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new APIPromise<T>(responsePromise, parseResponse): APIPromise<T>;
 ```
 
-#### Parameters
+#### 参数
 
 ##### responsePromise
 
@@ -34,17 +34,17 @@ new APIPromise<T>(responsePromise, parseResponse): APIPromise<T>;
 
 (`response`) => `Promise`\<`T`>
 
-#### Returns
+#### 返回值
 
 `APIPromise`\<`T`>
 
-#### Overrides
+#### 覆盖
 
 ```ts theme={null}
 Promise<T>.constructor
 ```
 
-## Methods
+## 方法
 
 <a id="sdk-asresponse" />
 
@@ -54,11 +54,11 @@ Promise<T>.constructor
 asResponse(): Promise<Response>;
 ```
 
-Resolves to the raw `Response` without parsing the body. SDK requests buffer the full
-body under the request timeout before handoff; reading it afterwards is caller-owned.
-The caller owns the body; don't also `await` the parsed result on the same promise.
+解析为原始的 `Response`，不解析响应体。SDK 的请求会在移交之前，
+在请求超时之内完整缓冲响应体；之后再读取由调用方负责。
+响应体归调用方所有；不要在同一个 promise 上同时 `await` 解析后的结果。
 
-#### Returns
+#### 返回值
 
 `Promise`\<`Response`>
 
@@ -72,29 +72,29 @@ The caller owns the body; don't also `await` the parsed result on the same promi
 catch<TResult>(onrejected?): Promise<T | TResult>;
 ```
 
-Attaches a callback for only the rejection of the Promise.
+只针对 Promise 被拒绝的情形附加一个回调。
 
-#### Type Parameters
+#### 类型参数
 
 ##### TResult
 
 `TResult` = `never`
 
-#### Parameters
+#### 参数
 
 ##### onrejected?
 
 ((`reason`) => `TResult` | `PromiseLike`\<`TResult`>) | `null`
 
-The callback to execute when the Promise is rejected.
+Promise 被拒绝时执行的回调。
 
-#### Returns
+#### 返回值
 
 `Promise`\<`T` | `TResult`>
 
-A Promise for the completion of the callback.
+一个在回调完成时兑现的 Promise。
 
-#### Overrides
+#### 覆盖
 
 ```ts theme={null}
 Promise.catch
@@ -110,24 +110,24 @@ Promise.catch
 finally(onfinally?): Promise<T>;
 ```
 
-Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-resolved value cannot be modified from the callback.
+附加一个在 Promise 敲定（settled，即兑现或拒绝）时调用的回调。
+已解析的值无法从回调中修改。
 
-#### Parameters
+#### 参数
 
 ##### onfinally?
 
 (() => `void`) | `null`
 
-The callback to execute when the Promise is settled (fulfilled or rejected).
+Promise 敲定（兑现或拒绝）时执行的回调。
 
-#### Returns
+#### 返回值
 
 `Promise`\<`T`>
 
-A Promise for the completion of the callback.
+一个在回调完成时兑现的 Promise。
 
-#### Overrides
+#### 覆盖
 
 ```ts theme={null}
 Promise.finally
@@ -143,21 +143,21 @@ Promise.finally
 map<U>(fn): APIPromise<U>;
 ```
 
-Transform the parsed result, sharing the HTTP response and a single body parse.
+转换解析后的结果，共用同一个 HTTP 响应，且只解析一次响应体。
 
-#### Type Parameters
+#### 类型参数
 
 ##### U
 
 `U`
 
-#### Parameters
+#### 参数
 
 ##### fn
 
 (`data`) => `U`
 
-#### Returns
+#### 返回值
 
 `APIPromise`\<`U`>
 
@@ -171,9 +171,9 @@ Transform the parsed result, sharing the HTTP response and a single body parse.
 then<TResult1, TResult2>(onfulfilled?, onrejected?): Promise<TResult1 | TResult2>;
 ```
 
-Attaches callbacks for the resolution and/or rejection of the Promise.
+为 Promise 的兑现和/或拒绝附加回调。
 
-#### Type Parameters
+#### 类型参数
 
 ##### TResult1
 
@@ -183,27 +183,27 @@ Attaches callbacks for the resolution and/or rejection of the Promise.
 
 `TResult2` = `never`
 
-#### Parameters
+#### 参数
 
 ##### onfulfilled?
 
 ((`value`) => `TResult1` | `PromiseLike`\<`TResult1`>) | `null`
 
-The callback to execute when the Promise is resolved.
+Promise 被兑现时执行的回调。
 
 ##### onrejected?
 
 ((`reason`) => `TResult2` | `PromiseLike`\<`TResult2`>) | `null`
 
-The callback to execute when the Promise is rejected.
+Promise 被拒绝时执行的回调。
 
-#### Returns
+#### 返回值
 
 `Promise`\<`TResult1` | `TResult2`>
 
-A Promise for the completion of which ever callback is executed.
+一个在任一被执行的回调完成时兑现的 Promise。
 
-#### Overrides
+#### 覆盖
 
 ```ts theme={null}
 Promise.then
@@ -219,8 +219,8 @@ Promise.then
 withResponse(): Promise<WithResponse<T>>;
 ```
 
-Return the parsed result, HTTP response, and request ID.
+返回解析后的结果、HTTP 响应和请求 ID。
 
-#### Returns
+#### 返回值
 
 `Promise`\<[`WithResponse`](/sdk/javascript/api/interfaces/WithResponse)\<`T`>>
