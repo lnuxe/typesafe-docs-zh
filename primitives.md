@@ -353,7 +353,7 @@ questions = {
 
 显式路径清楚地指明了结构化状态的哪些部分应当参与每个判断。如何组织输入见[状态](/concepts/state)。
 
-## 一次提问多个问题
+## 一次提问多个问题 {#ask-multiple-questions-together}
 
 把所有使用同一个状态的问题放进一次请求。你可以随意混用问题类型。System One 模型并行评估请求中的每个问题。增加问题几乎不改变响应时间，成本也只是额外问题的 token，非常便宜。问一个可能用不上的问题几乎是免费的。
 
@@ -447,7 +447,7 @@ print(response.answers["frustration"].score)
 
 例如，工单优先级可以由三个 Score 问题构建：缺陷有多严重、客户有多沮丧、报告给工程师留下了多少可着手的信息。Score 页面在[把复杂判断拆成多个 Score](/primitives/score#splitting-a-complex-judgment-into-several-scores)中详细演示了这个请求以及归一化并加权答案的代码。这种技术称为[复合评分](/patterns/composite-scoring)模式。
 
-### 当一个问题依赖另一个问题时
+### 当一个问题依赖另一个问题时 {#when-one-question-depends-on-another}
 
 同一请求中的问题是相互独立的：一个答案不会成为另一个问题的上下文。如果后续判断依赖前面的答案，就在代码中发起第二次请求。只有当你的代码没有第一个答案就无法构建第二个请求时，依赖才是真实的：需要答案来为状态获取更多数据、决定状态的组成，或选择下一个问题的选项。否则，就把问题放在一起提问，并在代码中组合它们的答案。
 

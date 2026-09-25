@@ -1,38 +1,33 @@
-# Date extraction
+# 日期抽取
 
-> Extracts absolute and relative dates by asking TypeSafe for the parts named in a document, then resolving and validating them in code with confidence-based review.
+> 通过向 TypeSafe 询问文档中点名的各个部分来抽取绝对日期与相对日期，再在代码里解析与校验，并依据置信度决定是否人工复核。
 
-*Read a date's parts off the text with TypeSafe, then resolve them to a `date` in code.*
+*用 TypeSafe 从文本里读出日期的各个组成部分，再在代码里把它们解析成一个 `date`。*
 
-The function you build here, `extract_date(document, role)`, takes a document and a
-phrase naming the date you want, such as "the deadline to return the form", and hands
-back a `date` with a confidence. It flags a low-confidence read, and one whose parts do
-not add up to a date at all, including a date the document never states. The date can be
-spelled out ("August 14, 2027") or written relative to today ("tomorrow", "next
-Thursday").
+这里要构建的函数 `extract_date(document, role)` 接收一份文档和一个指代所需日期的短语，
+比如 "the deadline to return the form"，返回一个 `date` 及其置信度。它会标出置信度偏低的结果，
+以及各部分根本凑不出一个日期的结果，包括文档从未提到的日期。日期可以写全
+（"August 14, 2027"），也可以相对今天来写（"tomorrow"、"next Thursday"）。
 
-TypeSafe answers `Choice` questions about the date in one call: what kind of date it is,
-and
-which month, day, year, or weekday the text names. Code turns those answers into a `date`.
-The model reads what the text says and never does the calendar math.
+TypeSafe 在一次调用中回答关于这个日期的若干 `Choice` 问题：它是哪一类日期，
+以及文本点名了哪个年、月、日或星期。代码把这些答案变成一个 `date`。
+模型只读文本说了什么，日历运算一概不做。
 
-The cells below run that function over four short documents, print each date with its
-confidence, and split the results into the ones code accepts and the ones a person should
-look at.
+下面的代码单元把这个函数跑在四份短文档上，打印每个日期及其置信度，并把结果分成
+代码直接接受的和需要人工过目的两类。
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/date_extraction_cookbook/overview.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=4d1d1d4d446eefafb556505d9834e7a0" alt="Overview diagram" width="1351" height="348" data-path="cookbooks/date_extraction_cookbook/overview.png" />
 
-*TypeSafe reads how the date is written and which parts the text names. Code turns those
-answers into a `date`, counting from today when the date is relative, and either accepts
-it or sends it to review.*
+*TypeSafe 读出日期是怎么写的、文本点名了哪些部分。代码把这些答案变成一个 `date`，
+日期是相对的就从今天算起，然后要么接受它，要么送去复核。*
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`.
+然后设置 `TYPESAFE_API_KEY`。
 
 ```python expandable theme={null}
 import os
@@ -92,22 +87,18 @@ if __name__ == "__cookbook__":
     )
 ```
 
-## The questions
+## 问题
 
-Seven `Choice` questions go out in one call. `mode` says how the date is written:
-`absolute`
-for a date that names a month, `relative` for one written relative to today, and `none`
-when the document does not state the date at all.
+一次调用发出七个 `Choice` 问题。`mode` 说明日期是怎么写的：`absolute` 表示点名了月份的日期，
+`relative` 表示相对今天写的日期，`none` 表示文档根本没有提到这个日期。
 
-The other six read the pieces. An absolute date needs `month`, `day`, and `year`. A
-relative one needs `day_anchor`: today, tomorrow, the day after, or a named weekday. When
-it names a weekday, `weekday` and `week_offset` say which one and which week. Code reads
-only the pieces `mode` calls for.
+另外六个读各个组成部分。绝对日期需要 `month`、`day` 和 `year`。相对日期需要
+`day_anchor`：今天、明天、后天，或点名的星期几。点名了星期几时，`weekday` 和 `week_offset`
+说明是哪一个、哪一周。代码只读 `mode` 点名要的那几个部分。
 
-`year` lists one option per year from 1900 to 2050, plus two escapes. `none` means the text
-states no year and code fills one in. `out_of_range` means the text states a year outside
-the list, and code flags that instead of guessing. If a list that long bothers you, pull
-the year-like numbers out of the text first and offer the model only those.
+`year` 从 1900 到 2050 每年列一个选项，外加两个出口。`none` 表示文本没给年份、由代码补一个。
+`out_of_range` 表示文本给出的年份不在列表里，代码据此标记而不是去猜。如果嫌列表太长，
+可以先把文本里像年份的数字挑出来，只把它们给模型。
 
 ```python expandable theme={null}
 def date_questions(role: str) -> dict[str, Choice]:
@@ -171,17 +162,15 @@ def date_questions(role: str) -> dict[str, Choice]:
     }
 ```
 
-## Resolve it in code
+## 在代码里解析
 
-`read_parts` makes the call. `assemble` turns the answers into a `date`: it fills in the
-year when the text states none, and it works out which day a named weekday points at. Both
-of those count from `TODAY`, which is pinned so relative dates come out the same on every
-run. `assemble` also reports the lowest confidence among the parts it used, so a weak
-answer on any one part can send the whole date to review.
+`read_parts` 负责发起调用。`assemble` 把答案变成一个 `date`：文本没给年份时它补上年份，
+并算出点名的星期几指向哪一天。这两件事都从 `TODAY` 算起，而它是钉住的，
+好让相对日期每次运行都得到同样的结果。`assemble` 还会报告它用到的各部分中最低的置信度，
+所以任何一个部分答得勉强，整个日期就会被送去复核。
 
-"next Thursday" can mean two different days, so code decides which. A weekday with no
-qualifier means the next one on or after today. `next` means the following calendar week,
-and `current` means this week.
+"next Thursday" 可能指两个不同的日子，所以由代码来定。不带限定的星期几指今天或之后
+最近的那一个。`next` 指下一个自然周，`current` 指本周。
 
 ```python expandable theme={null}
 @json_cache
@@ -291,12 +280,11 @@ def extract_date(document: str, role: str) -> dict:
     return assemble(read_parts(document, role))
 ```
 
-## Run it
+## 跑一遍
 
-Six questions across four short documents: two dates from a contract that states its years,
-a form deadline written without a year, a survey that closes "today", a review set for
-"next Thursday", and a date the form never mentions. All of them resolve against `TODAY` =
-2026-07-30, a Thursday.
+六条查询分布在四份短文档上：合同里两个写明年份的日期、一个没写年份的表单截止日期、
+一个 "today" 截止的问卷、一个定在 "next Thursday" 的设计评审会，以及一个表单从未提到的日期。
+它们都相对 `TODAY` = 2026-07-30（星期四）解析。
 
 ```python theme={null}
 CONTRACT = "This agreement is effective January 1, 2025 and expires December 31, 2027."
@@ -340,21 +328,19 @@ OK the date the survey closes            2026-07-30  2026-07-30    0.94
 OK the date of the design review         2026-08-06  2026-08-06    0.92
 ```
 
-The contract states both of its years, so those came off the text. The form states no year,
-so code filled in 2026: it takes the current year and moves to the next one only when the
-date is already more than a month past. "today" and "next Thursday" went through the same
-function as the spelled-out dates.
+合同的两个年份都写明了，所以直接用文本里的。表单没写年份，于是代码补上 2026：
+它取当前年份，只有当那个日期已经过去一个多月时，才挪到下一年。"today" 和 "next Thursday"
+走的是和写明的日期同一个函数。
 
-The kickoff call is the one the form never mentions. There is a date in that form, just not
-this one, and the note `absolute date incomplete` means `mode` came back `absolute` with no
-month to go with it. The date came back empty, the confidence reads 0.46, and the row is
-flagged for a person.
+启动会是表单从未提到的那一个。表单里确实有日期，只是不是这一个，而备注
+`absolute date incomplete` 说明 `mode` 返回了 `absolute`，却没有与之配套的月份。
+日期返回为空，置信度是 0.46，这一行被标出来交给人工。
 
-## Confidence to route on
+## 用于路由的置信度
 
-Every answer comes back with a calibrated confidence, and a date's confidence is the lowest
-one among the parts that went into it. A date under `REVIEW_BELOW` = 0.60 goes to a person,
-and so does a date code could not assemble at all. The rest go straight through.
+每个答案都带着校准过的置信度返回，而一个日期的置信度是组成它的各部分中最低的那个。
+低于 `REVIEW_BELOW` = 0.60 的日期会交给人工，代码根本拼不出来的日期也一样。
+其余的照常通过。
 
 ```python theme={null}
 if __name__ == "__cookbook__":
@@ -391,11 +377,10 @@ send to review (1):
   - the date of the kickoff call  (conf 0.46 / absolute date incomplete)
 ```
 
-## Open it in the TypeSafe playground
+## 在 TypeSafe playground 中打开
 
-The link below carries the "next Thursday" message and the same questions the code sends.
-Open it to see the answers and their confidences, and to change the wording without writing
-any code.
+下面的链接带着 "next Thursday" 那条消息和代码发出的同一组问题。打开它就能看到答案和它们的
+置信度，还能在不写任何代码的情况下改措辞。
 
 ```python theme={null}
 if __name__ == "__cookbook__":
@@ -409,4 +394,4 @@ if __name__ == "__cookbook__":
     )
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIAMgigOQDO+FUAFgmDADYL4r35gIUCWA5knwAnBADceCAO74AZhCH4kWFPjS0YQimACGATwB0IADSEADkIhxTKChmx5CwADog4ELi4LOQKXaYSe+C50EDxQAcZBIDxIFChCMFAoPBCxgS4AEhDSPFTsrDoorBAybBxcvALCYhLSkkI8KEVIAPz4ZNoARhQQTDBFZPgAvPja+FDaLEg6CoWsSNpwMXyj+G6otPgAFAj6fPrtAIIwfDBx+ACMACxkJmT5+ADMQmD4JfgAstpCdGQAlABudoiJjaZKiBCDEZ8HgQwQgsGw1goCBsdx6bYonS6EwotxCCySXHlDHaGRFBR4+SEkzyVYLRCvSQIBAAa2x1ESm20VDISmwqnUmmx-yBfNSkOGZQK0HgyBUkG4iggKjiYORtFynHV+hcJmCDQpPG0gW8XR6fSKgSQzCY+pACPBEQINqYdqiSAl1ttAF8ffb1uxTS5fP50iAQmEIvaYnEEkkUmkHC4AJKlB5zN7p8rcfjwmpSfBa7SCc29fqsCZTGbaoomSSauhrVLsItURpF1p6qJQQ0IBomhzeABSJZg3103rd9oAYghOgkJ1P3S4vj9aMv7YdzDwmJuol9Jw5XSuQMOYEp9y5z0wjy7bVuTmcUFeQABlBDWBBwTr918AeSSCBfyEV8ADkIAhH8-2PB8ogAEQQcJoNA2Dpw9L1kxANQZVgRBUE4CAlU9VUUHVMpclpBQOy1EiKKoVkYled45l1EA-XtbFgx8PxnR7WhQnCbsXFjeJEmSVIKHDNNpVrYpswKXMqhEcRC2LUtunLIpxkmZAazmetG02Dl3geQNNi2C4AFpHguP4WmEiM+wHbiLlfAAmV9HlfK5XwAVlfAA2V8AHZXwADlfABOV8LgABlity0NPC5POS+0Lm89KomuWKAuylwLmCgqQAuMKSouSKKpikr3IS2qkvvdCXHctKmtPdysva+13N82r8u6qJ3OKwaWvK0aQHcqqJvcmqJseer5saxQ4JcT1LywnDCLw+VCOIlVqDI7T2Eot5qJUWiDpOhimKzOS2I4qJdAQb5uNDPjggEqNHNE+MJKTAhUwUuS7ozJT81UnIqBLUZNMtStdOmb45MMsJNme742gABTCVl2nWyUeGByAdoItUiioT18AxhQtigdxWBiGR+3bFA-io9oIH6AB9EpuaEEs+EJ0oxhpttDvVV5On6ZULsEB4mFyFA2PtXtGn7Y1XKiuLFpW5rSu15aTwy7W2r1lLta682TbivqJoubWButnLtZG53Cu18b3YNuLpu9h24rm-2ovi2KQ6N1aDdSsPMpju3g4uJ3jZdoqY695OPcqmOg4zg26rD9yI-1h3WoLq3c5L+OK6i9yk8jku3er9z0-rmu-abnPW4WsPbJ7s3q8ecuu6rru6+LqLHkbruW-Hx5267zvx6uXXq6uIuLaufvW6uIel5Hpex43qel5njf56XxeLb8lfW789eTb8rfx783er-3q-D4f4+r9Ph-z6vy+JtAo33HoFe+LtApPwtoFV+QD35AM-hA7+QDf4QP-kAwBLsQogItiFcBHsQpQJNiFWBWD4FYMQQQ5BWDUEEPQVgzBHtwo4JNuFfBBtwpEJduFUhTDyFMMoRw6hTDaEcPoUwxhBttZhxDjIrhHsJ4yP4VIwRDsorCKkaItR4ipGSLqjrDyOt2H6PkZNHWvCzG20MXFQR+iNH6NEfonR+i9FxVDrVNxxi3GmLqrHDxuV-G2LcfYtxji3HOLca4-OHjC6GNLjEixdVepxKCcNOJYSppxNcd3Dxvdck+LioPQxjxlF1UeEEyexSwlz2Ka45ehi14NIKTvBppTbZBKuCEq4YSrgRKuK46+r4uYoF5jIfmgsPogEONTF61EqDkwYLIOk10QbSwulQYZvAuCyUVnERZAskBCxVhhDagMQAQRmcjLUCzXhyEpJqKgrEXCPRcNibmJYQioS8CGXi4ZIxCUiCJWIYkEySWksTcipkcyVAhrUcWjokRojRNiVGTYORakaG0e46JdC3HaFSAk2Q8VkDeWSCkgwtgZlJOSfsaJ8SEnZmddozI2Qim2GMBkiyTLAxZayP4xyDTqxckOEMOLXwEsJK+UlNKvne15VxEqBNwxbRJnKAiipKYHQWfRDmNFNUqBWYxaYd0nnsX9FEeVeg3q-Kwv86MURfriUTFJLCMkqXaShYpGF1RIaKEWEqMY3LZK8tRZsCUDlAVOSFZrEVIAPipAVRNNAMBuCJu9gAdQYEoLQVqSpqA0Dmu83sZwNDTbnN8YINBlsjm+C81b9ZKs2uUWU+EFREX1RLY6DzdXrNlvRfARrmKlFNS8kAvLRkyAoKQa1YZbVfQBTGYFf1nXgtkpmT1nBwY+rhZy6G+BLU4n3UZfdLI8YYrlli-k5AlkKD5MoQUBa2V0jIPm4UGIr0nrZGQMUsACTykGHc-FDyH1vtxWKAmAG6RjE6N8VgB792NE2FTAAjuORWMgJC0wAFbPnaK+wtgwAD0nNBD4ZFPyxyasjSDm+RGDQIhUCvivUxzCZyVUtt2hqvt2rro9vFnRQ1t0WI6meX6SIIBtCmB4AANRZomBwIBRAXHE1OlgSQGDxq4EwCgDgADaIAsNiCshcfQqUQAAF0fRAA" target="_blank" rel="noreferrer" className="text-primary">Open this document + questions in the TypeSafe playground →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIAMgigOQDO+FUAFgmDADYL4r35gIUCWA5knwAnBADceCAO74AZhCH4kWFPjS0YQimACGATwB0IADSEADkIhxTKChmx5CwADog4ELi4LOQKXaYSe+C50EDxQAcZBIDxIFChCMFAoPBCxgS4AEhDSPFTsrDoorBAybBxcvALCYhLSkkI8KEVIAPz4ZNoARhQQTDBFZPgAvPja+FDaLEg6CoWsSNpwMXyj+G6otPgAFAj6fPrtAIIwfDBx+ACMACxkJmT5+ADMQmD4JfgAstpCdGQAlABudoiJjaZKiBCDEZ8HgQwQgsGw1goCBsdx6bYonS6EwotxCCySXHlDHaGRFBR4+SEkzyVYLRCvSQIBAAa2x1ESm20VDISmwqnUmmx-yBfNSkOGZQK0HgyBUkG4iggKjiYORtFynHV+hcJmCDQpPG0gW8XR6fSKgSQzCY+pACPBEQINqYdqiSAl1ttAF8ffb1uxTS5fP50iAQmEIvaYnEEkkUmkHC4AJKlB5zN7p8rcfjwmpSfBa7SCc29fqsCZTGbaoomSSauhrVLsItURpF1p6qJQQ0IBomhzeABSJZg3103rd9oAYghOgkJ1P3S4vj9aMv7YdzDwmJuol9Jw5XSuQMOYEp9y5z0wjy7bVuTmcUFeQABlBDWBBwTr918AeSSCBfyEV8ADkIAhH8-2PB8ogAEQQcJoNA2Dpw9L1kxANQZVgRBUE4CAlU9VUUHVMpclpBQOy1EiKKoVkYled45l1EA-XtbFgx8PxnR7WhQnCbsXFjeJEmSVIKHDNNpVrYpswKXMqhEcRC2LUtunLIpxkmZAazmetG02Dl3geQNNi2C4AFpHguP4WmEiM+wHbiLlfAAmV9HlfK5XwAVlfAA2V8AHZXwADlfABOV8LgABlity0NPC5POS+0Lm89KomuWKAuylwLmCgqQAuMKSouSKKpikr3IS2qkvvdCXHctKmtPdysva+13N82r8u6qJ3OKwaWvK0aQHcqqJvcmqJseer5saxQ4JcT1LywnDCLw+VCOIlVqDI7T2Eot5qJUWiDpOhimKzOS2I4qJdAQb5uNDPjggEqNHNE+MJKTAhUwUuS7ozJT81UnIqBLUZNMtStdOmb45MMsJNme742gABTCVl2nWyUeGByAdoItUiioT18AxhQtigdxWBiGR+3bFA-io9oIH6AB9EpuaEEs+EJ0oxhpttDvVV5On6ZULsEB4mFyFA2PtXtGn7Y1XKiuLFpW5rSu15aTwy7W2r1lLta682TbivqJoubWButnLtZG53Cu18b3YNuLpu9h24rm-2ovi2KQ6N1aDdSsPMpju3g4uJ3jZdoqY695OPcqmOg4zg26rD9yI-1h3WoLq3c5L+OK6i9yk8jku3er9z0-rmu-abnPW4WsPbJ7s3q8ecuu6rru6+LqLHkbruW-Hx5267zvx6uXXq6uIuLaufvW6uIel5Hpex43qel5njf56XxeLb8lfW789eTb8rfx783er-3q-D4f4+r9Ph-z6vy+JtAo33HoFe+LtApPwtoFV+QD35AM-hA7+QDf4QP-kAwBLsQogItiFcBHsQpQJNiFWBWD4FYMQQQ5BWDUEEPQVgzBHtwo4JNuFfBBtwpEJduFUhTDyFMMoRw6hTDaEcPoUwxhBttZhxDjIrhHsJ4yP4VIwRDsorCKkaItR4ipGSLqjrDyOt2H6PkZNHWvCzG20MXFQR+iNH6NEfonR+i9FxVDrVNxxi3GmLqrHDxuV-G2LcfYtxji3HOLca4-OHjC6GNLjEixdVepxKCcNOJYSppxNcd3Dxvdck+LioPQxjxlF1UeEEyexSwlz2Ka45ehi14NIKTvBppTbZBKuCEq4YSrgRKuK46+r4uYoF5jIfmgsPogEONTF61EqDkwYLIOk10QbSwulQYZvAuCyUVnERZAskBCxVhhDagMQAQRmcjLUCzXhyEpJqKgrEXCPRcNibmJYQioS8CGXi4ZIxCUiCJWIYkEySWksTcipkcyVAhrUcWjokRojRNiVGTYORakaG0e46JdC3HaFSAk2Q8VkDeWSCkgwtgZlJOSfsaJ8SEnZmddozI2Qim2GMBkiyTLAxZayP4xyDTqxckOEMOLXwEsJK+UlNKvne15VxEqBNwxbRJnKAiipKYHQWfRDmNFNUqBWYxaYd0nnsX9FEeVeg3q-Kwv86MURfriUTFJLCMkqXaShYpGF1RIaKEWEqMY3LZK8tRZsCUDlAVOSFZrEVIAPipAVRNNAMBuCJu9gAdQYEoLQVqSpqA0Dmu83sZwNDTbnN8YINBlsjm+C81b9ZKs2uUWU+EFREX1RLY6DzdXrNlvRfARrmKlFNS8kAvLRkyAoKQa1YZbVfQBTGYFf1nXgtkpmT1nBwY+rhZy6G+BLU4n3UZfdLI8YYrlli-k5AlkKD5MoQUBa2V0jIPm4UGIr0nrZGQMUsACTykGHc-FDyH1vtxWKAmAG6RjE6N8VgB792NE2FTAAjuORWMgJC0wAFbPnaK+wtgwAD0nNBD4ZFPyxyasjSDm+RGDQIhUCvivUxzCZyVUtt2hqvt2rro9vFnRQ1t0WI6meX6SIIBtCmB4AANRZomBwIBRAXHE1OlgSQGDxq4EwCgDgADaIAsNiCshcfQqUQAAF0fRAA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开这份文档和这些问题 →</a>

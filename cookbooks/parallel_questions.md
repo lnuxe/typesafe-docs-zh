@@ -1,34 +1,22 @@
-# Parallel questions
+# 并行问题
 
-> Runs a 13-question regulatory briefing over the GDPR Wikipedia article, showing that batching every question into one TypeSafe call is 12.2x cheaper and 10.0x faster with no change in answers.
+> 在 GDPR 维基百科文章上跑一份 13 个问题的监管简报，说明把所有问题批处理进一次 TypeSafe 调用后，成本降到 1/12.2、速度快 10.0 倍，而答案完全不变。
 
-You have one document and N questions about it. You can send one request with all N
-questions, or N requests with one question each. With TypeSafe the answers come out the
-same either way: each question is scored on its own against the document, so its answer
-doesn't depend on what else is in the request.
+你有一份文档，还有关于它的 N 个问题。你可以把 N 个问题放进一次请求，也可以发 N 次请求、每次只问一个问题。在 TypeSafe 上两种做法得到同样的答案：每个问题都单独对照文档评分，所以一个问题的答案不取决于请求里还放了什么。
 
-To check that, the cookbook asks each question several times both ways - all N in one
-request, and one question per request - and compares the run-to-run std dev: how far an
-answer moves from one repeat to the next. Whatever noise a question has, it has under
-both batching strategies. Batching adds none. Most answers came back identical across all
-5 repeats either way, the same value on every call, std dev exactly 0.0.
+为了验证这一点，本 cookbook 用两种方式把每个问题都问上几遍（N 个问题放一次请求，以及每次请求只问一个问题），再比较运行之间的标准差：同一个答案在重复之间会漂移多远。一个问题有多少噪声，两种批处理策略下就有多少噪声；批处理本身不增添噪声。多数答案在两种方式下的 5 次重复里都完全一致，每次调用都是同一个值，标准差正好是 0.0。
 
-Cost and speed do change. The document dominates every request. N single-question calls
-pay for it N times, in N round trips; the batched call pays once. The bigger the document,
-the nearer that saving comes to a full Nx.
+成本和速度确实会变。文档在每次请求里都占大头。N 次单问题调用要为它付 N 次成本、走 N 个来回；批处理调用只付一次。文档越大，省下的越接近整整 N 倍。
 
-The case here is a regulatory briefing. The document is the Wikipedia article on the GDPR
-(\~54,000 characters, a document-dominated workload where the document is most of every
-request), and a compliance team wants 13 things checked: 8 `Noul` questions, 2 `Choice`
-questions, and 3 `Score` questions.
+这里的案例是一份监管简报。文档是 GDPR 的维基百科文章（约 54,000 字符，属于文档主导型负载，文档占了每次请求的大部分），合规团队想核对 13 项内容：8 个 `Noul` 问题、2 个 `Choice` 问题和 3 个 `Score` 问题。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`.
+然后设置 `TYPESAFE_API_KEY`。
 
 ```python theme={null}
 import json
@@ -52,11 +40,9 @@ client = TypeSafeClient(api_key=os.environ["TYPESAFE_API_KEY"], timeout=120.0)
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-## The document: the Wikipedia article on the GDPR
+## 文档：GDPR 的维基百科文章
 
-Fetched as plain text from a pinned revision of the article and cached in `json_cache.json`
-next to the API calls, so the document and its numbers stay fixed even as the live
-article gets edited.
+以纯文本从文章的固定版本抓取，并与 API 调用一起缓存到 `json_cache.json`，这样即使线上文章被编辑，文档和其中的数字也保持不变。
 
 ```python theme={null}
 WIKIPEDIA_REVISION = 1363040264  # "General Data Protection Regulation", as of 2026-07
@@ -90,15 +76,13 @@ display(Markdown(f"📄 [Read the pinned Wikipedia revision]({DOCUMENT['source']
 
 📄 [Read the pinned Wikipedia revision](https://en.wikipedia.org/?oldid=1363040264)
 
-## The questions: 8 nouls + 2 choices + 3 scores
+## 问题：8 个 noul + 2 个 choice + 3 个 score
 
-One number tracked per answer, by type:
+每个答案按类型只跟踪一个数字：
 
-* `Noul`: the probability of "yes".
-* `Choice`: the max prob, the probability on the picked label. `criteria` maps each
-  label to its meaning.
-* `Score`: the score normalized to 0-1, the score divided by the top level.
-  `criteria` lists the level descriptions, from level 0 up.
+* `Noul`：回答"是"的概率。
+* `Choice`：max prob，即选中标签上的概率。`criteria` 把每个标签映射到它的含义。
+* `Score`：归一化到 0–1 的分数，即分数除以最高档。`criteria` 从 0 档往上列出各档位的描述。
 
 ```python expandable theme={null}
 QUESTIONS = {
@@ -179,15 +163,11 @@ METRIC = {  # question type -> the one number we track per answer
 }
 ```
 
-## Ask two ways, 5 times each
+## 用两种方式各问 5 遍
 
-`ask()` sends any subset of the questions with the document and reduces each answer to its
-one tracked number. The document is byte-identical in every call.
+`ask()` 把问题的任意子集连同文档发出去，并把每个答案归约为它那一个跟踪数字。文档在每次调用中逐字节一致。
 
-Both batching strategies run `RUNS` = 5 times, giving each question 5 answers per strategy,
-enough to compare the mean (do the two agree?) and the std dev (does batching add noise?).
-Calls are cached to `json_cache.json`, which ships with the cookbook, so re-rendering is
-free; delete it to re-run live.
+两种批处理策略各跑 `RUNS` = 5 次，每个问题在每种策略下都有 5 个答案，足以比较均值（两者是否一致？）和标准差（批处理是否带来噪声？）。调用结果缓存到 `json_cache.json`，该文件随 cookbook 一起提供，因此重新渲染不花钱；删掉它就会重新实测。
 
 ```python expandable theme={null}
 @json_cache
@@ -232,11 +212,9 @@ singles = [
 ]  # N x 1, x RUNS
 ```
 
-## Batching doesn't change the answers
+## 批处理不会改变答案
 
-Per question: the mean and std dev of its tracked number over the 5 runs, under each
-batching strategy. If batching changed the answers, the batched columns would differ from
-the single columns. A shifted mean is bias. A larger std dev is noise.
+每个问题一行：在每种批处理策略下，它的跟踪数字在 5 次运行中的均值和标准差。如果批处理改变了答案，批处理列就会与单问列不同。均值偏移就是偏差，标准差变大就是噪声。
 
 ```python theme={null}
 print(
@@ -269,32 +247,21 @@ penalty_severity      normalized score          1.000       1.000       0.0000  
 compliance_burden     normalized score          0.750       0.750       0.0000      0.0000
 ```
 
-Reading the table by question type:
+按问题类型来读这张表：
 
-* Choices, scores, and six of the eight nouls come back identical across the 5 repeats:
-  std dev exactly 0.0 under both batching strategies, every batched and single call
-  returning the same number. One call with N questions gives the same answers as N calls
-  with one question each.
-* `breach_72h` and `criminal_penalties` carry a little run-to-run sampling noise, and it's
-  the same size under both batching strategies, with the means agreeing to within that
-  noise. The noise is a property of the question, not of how you batch: batching neither
-  shifts the answer nor adds variance.
+* Choice、Score，以及八个 noul 中的六个，在 5 次重复中都完全一致：两种批处理策略下标准差都正好是 0.0，每次批处理调用和单问调用返回的都是同一个数字。一次带 N 个问题的调用，与 N 次各带一个问题的调用给出相同答案。
+* `breach_72h` 和 `criminal_penalties` 带有一点运行间的采样噪声，两种批处理策略下噪声大小相同，均值差异也在这个噪声范围内。噪声是问题本身的属性，与你如何批处理无关：批处理既不移动答案，也不增加方差。
 
-Either way, there is no batching effect: no question's answer depends on the 12 other
-questions sharing its request.
+无论哪种方式，都不存在批处理效应：没有任何问题的答案取决于与它同处一次请求的另外 12 个问题。
 
-## The only difference: cost and speed
+## 唯一的差别：成本与速度
 
-Same answers, different bill. The \~54,000-character article dominates every request, so:
+答案相同，账单不同。约 54,000 字符的文章在每次请求里都占大头，因此：
 
-* Cost: the 13 single-question calls re-send the article 13 times; the batched call sends
-  it
-  once. This saving holds however you fire the calls.
-* Speed: the figure sums the 13 single-call latencies, so it assumes they run one after
-  another. Fire them concurrently and the gap shrinks, but the 13x token cost stays.
+* 成本：13 次单问题调用会把文章重发 13 遍；批处理调用只发一次。无论你怎么发起这些调用，这笔节省都成立。
+* 速度：这个数字把 13 次单问题调用的延迟加总，所以它假定这些调用是串行执行的。并发发起时差距会缩小，但 13 倍的 token 成本依然存在。
 
-Token counts and latencies are cached alongside the answers; cost is applied after, and
-both are averaged over the 5 runs.
+token 计数与延迟和答案一起被缓存；成本在之后套用，两者都取 5 次运行的平均值。
 
 ```python theme={null}
 batched_cost = mean(cost for _values, cost, _latency in batched)
@@ -325,10 +292,9 @@ one call, all 13             1   $0.000497       0.27s
 batching: 12.2x cheaper, 10.0x faster
 ```
 
-## Open it in the TypeSafe playground
+## 在 TypeSafe playground 中打开
 
-The same article and the same 13 questions, packed into a share link. Open it to re-run
-the briefing live; the same numbers come back.
+同一篇文章、同样这 13 个问题，打包成一个分享链接。打开它就能重新实测这份简报，返回的数字相同。
 
 ```python theme={null}
 playground_link = make_playground_link(

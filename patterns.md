@@ -1,20 +1,20 @@
-# Patterns
+# 模式
 
-> Architectural patterns for building systems with TypeSafe.
+> 用 TypeSafe 构建系统的架构模式。
 
-TypeSafe is designed to sit within a larger system, powering decisions with AI. Learning to think in terms of discrete, atomic decisions that compose into complex system behavior is a key skill for getting the most out of TypeSafe.
+TypeSafe 生来就该待在更大的系统里，用 AI 驱动决策。学会用离散、原子的判断来思考，再让它们组合成复杂的系统行为，是发挥 TypeSafe 价值的关键技能。
 
-This section assumes you know the [TypeSafe primitives](/primitives) and understand [how confidence works](/confidence). If not, read those first.
+本节假设你已经了解 [TypeSafe 原语](/primitives)，也理解[置信度是怎么工作的](/confidence)。如果还没有，请先读那两篇。
 
-## The patterns
+## 这些模式
 
-| Pattern                                                  | What it does                                                                                               | Benefits                 |
+| 模式                                                     | 做什么                                                                                                     | 收益                     |
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------ |
-| [Speculative Fan-Out](/patterns/fan-out)                 | Send many questions in a single call, including speculative ones, and let your code decide what's relevant | Cost, Speed              |
-| [Confidence-Gated Routing](/patterns/confidence-routing) | Utilize confidence as a second decision axis to build safer systems                                        | Reliability, Safety      |
-| [Composite Scoring](/patterns/composite-scoring)         | Combine several dimensions of analysis into a single score                                                 | Cost, Reliability, Speed |
-| [Intent Routing](/patterns/intent-routing)               | Classify a user's intent and route to the appropriate handler                                              | Cost, Speed              |
+| [推测性扇出](/patterns/fan-out)                          | 在一次调用里发出大量问题（包括只是猜的），由代码决定哪些答案有用                                           | 成本、速度               |
+| [置信度门控路由](/patterns/confidence-routing)           | 把置信度当作第二条决策轴，构建更安全的系统                                                                 | 可靠性、安全性           |
+| [复合评分](/patterns/composite-scoring)                  | 把多个分析维度合成一个分数                                                                                 | 成本、可靠性、速度       |
+| [意图路由](/patterns/intent-routing)                     | 判断用户意图并路由到合适的处理器                                                                           | 成本、速度               |
 
 <Tip>
-  We're always keen to learn how people are making use of our primitives. If you've found a killer use case you think should be mentioned here, feel free to drop us a note!
+  我们一直很想了解大家是怎么用这些原语的。如果你有一个自认为该被列在这里的杀手级用例，欢迎来信告诉我们！
 </Tip>

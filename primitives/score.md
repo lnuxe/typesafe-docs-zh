@@ -1,6 +1,6 @@
 # Score
 
-> A Score is a System One question type for rating content against ordered, descriptive levels. The answer includes a score, a probability for each level, and confidence.
+> Score 是一种 System One 问题类型，用有序的描述性档位给内容打分。答案包含一个分数、每个档位的概率，以及置信度。
 
 export function ScoreExplorer() {
   const examples = [{
@@ -543,23 +543,23 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Use a Score when the answer is a position on a spectrum you can describe in steps. For example, how severe a bug is, how happy a customer is, or how much Python experience a candidate has. If the answer is one of a fixed set of options with no order between them, use a [Choice](/primitives/choice). If it's a yes or no, use a [Noul](/primitives/noul). [Choose a question type](/primitives#choose-a-question-type) compares all three.
+当答案是一条你能用档位描述的谱系上的位置时，就用 Score。比如一个 bug 有多严重、一个客户有多满意、一个候选人有几年 Python 经验。如果答案是一组固定选项之一、彼此之间没有顺序，就用 [Choice](/primitives/choice)。如果是「是或否」，就用 [Noul](/primitives/noul)。[选择问题类型](/primitives#choose-a-question-type)对这三者做了比较。
 
-A Score answer is a position along your levels in `score`, which can fall between two levels. The model also returns a probability for every level in `probabilities`, and a `confidence` value for the answer.
+Score 的答案是在 `score` 里给出的、沿你的档位的一个位置，可以落在两个档位之间。模型还会在 `probabilities` 里返回每个档位的概率，以及这个答案的 `confidence`。
 
 <ScoreExplorer />
 
-The numbers in front of each step are positions, explained under [Levels](#levels).
+每个档位前面的数字是位置，详见[档位](#levels)。
 
-## Request structure
+## 请求结构
 
-The POST request body to the [TypeSafe API](/api) has the same three top-level fields as any other question type: `state`, which is the content to evaluate; `model`; and `questions`. Each Score question has the following fields:
+发往 [TypeSafe API](/api) 的 POST 请求体和其他问题类型一样，有三个顶层字段：要评估的内容 `state`、`model` 和 `questions`。每个 Score 问题包含以下字段：
 
-* `type`: Always `"score"`.
-* `instructions`: The question the model answers. What it's rating.
-* `criteria`: An ordered array of level descriptions, from the low end of the scale to the high end. Should have at least two levels; the API accepts up to 10.
+* `type`：始终是 `"score"`。
+* `instructions`：模型要回答的问题，也就是它在给什么打分。
+* `criteria`：有序的档位描述数组，从量表的低端排到高端。至少要两个档位；API 最多接受 10 个。
 
-Below is a request where the state is a bug report and the question is how severe the bug is:
+下面这个请求里，状态是一份 bug 报告，问题是这个 bug 有多严重：
 
 <TypesafeExample
   display="request"
@@ -580,17 +580,16 @@ questions: {
 }}
 />
 
-You choose the question id, `bug_severity` in this case. This id is not sent to the model. The answer is returned under the same id.
+问题 id 由你决定，这里是 `bug_severity`。这个 id 不会发给模型，答案会以同一个 id 返回。
 
-### Levels
+### 档位 {#levels}
+`criteria` 里的每一项就是一个档位：可能答案谱系上的一个点，用文字描述出来。档位的编号就是它在 `criteria` 数组里的位置（从 0 开始），所以上面那三项分别是档位 0、1、2。数组的顺序就是编号。
 
-Each entry in `criteria` is a level: one point on the spectrum of possible answers, described in words. A level's number is its position in the `criteria` array, starting at 0, so the three entries above are levels 0, 1 and 2. The order of the array is the numbering.
+模型拿到的只有这些描述，别的什么都没有；每个档位都单独与状态比对判断。
 
-The model gets the descriptions and nothing else, and each level is judged on its own against the state.
+响应里的 `score` 是档位谱系上的一个位置。三档量表它就是 0 到 2，而且可以落在两个档位之间。
 
-The `score` in the response is a position on the levels spectrum. For a three-level scale it runs from 0 to 2, and it can land between two levels.
-
-Our [client SDKs](/sdk) provide typed questions. In Python, the same question is a `Score`:
+我们的[客户端 SDK](/sdk)提供类型化的问题。在 Python 里，同一个问题是 `Score`：
 
 ```python theme={null}
 from typesafe_sdk import Score, TypeSafeClient
@@ -613,17 +612,17 @@ with TypeSafeClient() as client:
     print(response.answers["bug_severity"].score)
 ```
 
-Use the `system_one` method or the `https://api.typesafe.ai/v1/systemone` endpoint to call a System One model. The `model` field selects which model handles the request. [How to build with TypeSafe](/concepts/how-to-build-with-system-one) covers where in your code to call it.
+调用 System One 模型可以用 `system_one` 方法，也可以用 `https://api.typesafe.ai/v1/systemone` 端点。`model` 字段决定由哪个模型处理这次请求。[如何用 TypeSafe 构建](/concepts/how-to-build-with-system-one)讲了该在代码的哪个位置调用它。
 
-Use one of our [client SDKs](/sdk) or call the [TypeSafe API](/api) directly. If a coding agent is writing the integration for you, install the [TypeSafe agent skill](/agent-skill#installation) first so it knows the request and response shapes.
+可以用我们的[客户端 SDK](/sdk)，也可以直接调用 [TypeSafe API](/api)。如果集成代码由编码智能体来写，先装好 [TypeSafe 智能体技能](/agent-skill#installation)，它就知道请求与响应长什么样了。
 
 <Note>
-  `instructions` and each level in `criteria` can be a string, an object, or an array. Start with strings. Use an object when a level needs a description plus a few example situations. See [Structured level descriptions](#structured-level-descriptions) below and the [API reference](/api#param-instructions-2).
+  `instructions` 和 `criteria` 里的每个档位都可以是字符串、对象或数组。先用字符串。当某个档位需要一段描述外加几个示例情形时，再用对象。参见下文[结构化的档位描述](#structured-level-descriptions)和 [API 参考](/api#param-instructions-2)。
 </Note>
 
-## Response structure
+## 响应结构
 
-The response has one entry in `answers` per question, under the ids from the request. This is the response to the example request above:
+响应里 `answers` 每个问题一个条目，键就是你请求里用的那组 id。下面是上面那个示例请求的响应：
 
 ```json theme={null}
 {
@@ -652,21 +651,21 @@ The response has one entry in `answers` per question, under the ids from the req
 }
 ```
 
-Each Score answer has five values:
+每个 Score 答案有五个值：
 
-* `type`: The type of TypeSafe question.
-* `probabilities`: The probability of each level, keyed by level number as a string. The sum of all values is 1.
-* `score`: The position on the level number line, from 0 to the top level number, which is 2 here. It's each level number multiplied by its probability, added up: 0 x 0.0 + 1 x 0.57 + 2 x 0.43 = 1.43.
-* `legend`: Each level number mapped back to its description.
-* [`confidence`](/confidence): A number from 0 to 1 computed from how `probabilities` is spread. A single peak on one level means high confidence. Probability spread over several levels means low confidence.
+* `type`：TypeSafe 问题的类型。
+* `probabilities`：每个档位的概率，以档位编号的字符串为键。所有值之和为 1。
+* `score`：在档位编号轴上的位置，从 0 到最高档位编号（这里是 2）。它等于每个档位编号乘以其概率再相加：0 x 0.0 + 1 x 0.57 + 2 x 0.43 = 1.43。
+* `legend`：每个档位编号映射回它的描述。
+* [`confidence`](/confidence)：0 到 1 之间的一个数，由 `probabilities` 的分散程度算出来。概率集中在一个档位上就是高置信度，摊在好几个档位上就是低置信度。
 
-A score of 1.43 means the model is split between levels 1 and 2, leaning to level 1. That matches the report: the export is broken, and switching to Chrome is a workaround for most customers, but not for the ones who only use Safari. The model puts 0.57 on "workaround exists" and 0.43 on "no workaround", and confidence is 0.35 because it's split.
+1.43 分意味着模型在档位 1 和 2 之间摇摆，略偏向档位 1。这和报告是吻合的：导出确实坏了，换到 Chrome 对多数客户算是有绕过办法，但对只用 Safari 的那部分客户不算。模型给"有绕过办法" 0.57、给"没有绕过办法" 0.43，因为两边分票，置信度只有 0.35。
 
-Using the Python SDK, `ScoreAnswer` has `score`, `confidence`, `probabilities`, and `legend` as typed fields. The SDK keys `probabilities` and `legend` by integer level rather than by string.
+用 Python SDK 时，`ScoreAnswer` 把 `score`、`confidence`、`probabilities` 和 `legend` 作为类型化字段。SDK 里 `probabilities` 和 `legend` 用整数档位而不是字符串做键。
 
-## Reading a Score
+## 解读 Score
 
-Let's look at how the score changes with different inputs. For example, using the question and its levels from the request above:
+来看看分数如何随输入变化。仍用上面请求里的问题和档位：
 
 ```
 "How severe is the reported issue?"
@@ -675,7 +674,7 @@ Let's look at how the score changes with different inputs. For example, using th
   → 2: Blocking issue; no workaround exists
 ```
 
-We can see how different bug reports change the score:
+不同的 bug 报告会得到这样的分数：
 
 <table>
   <thead>
@@ -686,58 +685,58 @@ We can see how different bug reports change the score:
     </tr>
 
     <tr>
-      <th style={{ width: '44%' }}>State</th>
+      <th style={{ width: '44%' }}>状态</th>
       <th style={{ width: '12%', whiteSpace: 'nowrap' }}><code>score</code></th>
       <th style={{ width: '16%', whiteSpace: 'nowrap' }}><code>confidence</code></th>
-      <th style={{ width: '9%', whiteSpace: 'nowrap' }}>Level 0</th>
-      <th style={{ width: '9%', whiteSpace: 'nowrap' }}>Level 1</th>
-      <th style={{ width: '10%', whiteSpace: 'nowrap' }}>Level 2</th>
+      <th style={{ width: '9%', whiteSpace: 'nowrap' }}>档位 0</th>
+      <th style={{ width: '9%', whiteSpace: 'nowrap' }}>档位 1</th>
+      <th style={{ width: '10%', whiteSpace: 'nowrap' }}>档位 2</th>
     </tr>
   </thead>
 
   <tbody>
     <tr>
-      <td>The export button is misaligned by a few pixels on the settings page.</td>
+      <td>设置页上的导出按钮错位了几个像素。</td>
       <td>0.0</td><td>1.0</td><td>1.0</td><td>0.0</td><td>0.0</td>
     </tr>
 
     <tr>
-      <td>The PDF export button does nothing when clicked. I can still export to CSV and convert it myself, but that takes ages.</td>
+      <td>点 PDF 导出按钮没有任何反应。我还能导出 CSV 自己转，但那太费时间了。</td>
       <td>1.0</td><td>1.0</td><td>0.0</td><td>1.0</td><td>0.0</td>
     </tr>
 
     <tr>
-      <td>Export to PDF fails with a spinner that never finishes. Some of our team say CSV export still works for them, others say it fails too.</td>
+      <td>导出 PDF 时转圈永远转不完。我们团队里有人说 CSV 导出还能用，也有人说那个也坏了。</td>
       <td>1.11</td><td>0.84</td><td>0.0</td><td>0.89</td><td>0.11</td>
     </tr>
 
     <tr>
-      <td>The export button crashes the settings page in Safari. It works in Chrome, but a few of our customers only use Safari.</td>
+      <td>在 Safari 里点导出按钮会让设置页崩溃。Chrome 里正常，但有几位客户只用 Safari。</td>
       <td>1.43</td><td>0.35</td><td>0.0</td><td>0.57</td><td>0.43</td>
     </tr>
 
     <tr>
-      <td>Nobody on our team can log in since this morning. We get a 500 error on every attempt.</td>
+      <td>从今天早上开始，我们团队谁也登不进去，每次尝试都是 500 错误。</td>
       <td>2.0</td><td>1.0</td><td>0.0</td><td>0.0</td><td>1.0</td>
     </tr>
   </tbody>
 </table>
 
-In these examples, confidence 1.0 means the returned distribution puts all its probability on one level. This describes the model's answer, not a guarantee that the answer is correct.
+在这些例子里，置信度 1.0 表示返回的分布把所有概率都放在了一个档位上。它描述的是模型这个答案本身的状态，并不保证答案就是对的。
 
-The score is a probability-weighted mean of the level numbers. In the third and fourth examples, probability is split between levels 1 and 2. More weight on level 2 raises the score. It does not measure the fraction of customers without a workaround.
+分数是各档位编号的概率加权平均值。第三、第四个例子里，概率分摊在档位 1 和 2 之间，压在档位 2 上的权重越大，分数就越高。它并不是在衡量「没有绕过办法的客户占多大比例」。
 
-Different distributions can produce the same score. A score of 1.0 can mean all probability is on level 1, or half is on each of levels 0 and 2. Read `probabilities` and `confidence` alongside the score to distinguish these cases.
+不同的分布可以得出同一个分数。1.0 分可能是全部概率都在档位 1，也可能是档位 0 和 2 各占一半。要区分这些情况，就把 `probabilities` 和 `confidence` 与分数放在一起看。
 
-A fractional score is a position. You can use it to rank reports by severity, or round it to the nearest level when your code needs one outcome. Our [entity alignment cookbook](/cookbooks/entity_alignment) shows an example of rounding to the nearest level to make a decision.
+带小数的分数是一个位置。你可以用它按严重程度给报告排序，也可以在代码只需要一个结论时把它四舍五入到最近的档位。我们的[实体对齐 cookbook](/cookbooks/entity_alignment)里就有四舍五入到最近档位再做决定的例子。
 
-Low confidence on a Score usually means one of three things. The levels overlap for this state, the question is measuring more than one thing, or the state doesn't say enough to place it. Our [Confidence](/confidence) docs cover how to use it in your code.
+Score 上的低置信度通常意味着三件事之一：对这个状态来说各档位界限重叠了；这个问题实际在衡量不止一件事；或者状态里给的信息不足以把它放到位。[置信度](/confidence)文档讲了在代码里怎么用它。
 
-## Writing good levels
+## 怎么写出好的档位
 
-Describe situations, not degrees. "Broken or degraded feature, but workaround exists" gives the model something to match the state against. "Moderately severe" doesn't. Concrete descriptions can help the model distinguish levels. Check the answers against known examples; higher confidence alone does not show that a description is better.
+要描述情境，而不是程度。"功能损坏或降级，但有绕过办法"能让模型拿去和状态比对；"中等严重"就不行。具体的描述有助于模型区分档位。要用已知的例子去检验答案；光看置信度变高，并不能说明这版描述更好。
 
-Every level is evaluated separately. The model doesn't see a level's number or its neighbours, so "worse than the previous level" means nothing to it, and numbers in the descriptions or the instructions don't help. Here is what happens when the levels are only numbers, on the misaligned-button report from the table above:
+每个档位都是单独评估的。模型看不到档位的编号，也看不到相邻的档位，所以"比上一档更严重"对它毫无意义，在描述或指令里写数字也没用。拿上面表格里那份"按钮错位"的报告来试，如果档位只有数字，结果是这样：
 
 ```
 instructions: "Rate severity from 0 to 2, where 2 is worst"
@@ -745,21 +744,21 @@ criteria: ["0", "1", "2"]
 → score 0.55, confidence 0.33, probabilities 0: 0.45, 1: 0.55, 2: 0.0
 ```
 
-The same report with the three descriptive levels scores 0.0 at confidence 1.0. With numbers only, the model has nothing to match against and splits the probability between 0 and 1.
+同一份报告，换成那三个描述性档位，得分 0.0、置信度 1.0。只有数字时，模型没有东西可比对，就把概率摊在 0 和 1 之间。
 
-Use as many levels as you can describe distinctly, up to 10. Three is fine. Don't add levels you can't describe distinctly.
+在能描述出彼此区别的前提下，档位有多少用多少，上限 10 个。三个就够。描述不出区别的档位不要加。
 
-Keep each Score question to one dimension. If a description says "punctual and smart and experienced", the question is measuring three things, and an input that is high on one and low on another can't be placed. Confidence drops and the score means less. Split it into one Score question per thing and combine them in code, as the next section shows.
+每个 Score 问题只管一个维度。如果某条描述写成"准时、聪明、有经验"，那这个问题就在衡量三件事，一个在某项上高、在另一项上低的输入根本没地方放，置信度会掉下来，分数也就没那么大意义。把它拆成每个维度一个 Score 问题，再在代码里组合，下一节会示范。
 
-If the top of your scale has a rare extreme case you need to act on differently, give it its own level. A sentiment scale that ends at "very angry" can add "abusive or threatening". Without that level, both messages may receive a score near the top. The score alone may not distinguish them.
+如果量表顶端有一种少见、但需要区别对待的极端情况，就单给它一个档位。一个最高只到"非常愤怒"的情感量表，可以再加一档"辱骂或威胁"。少了这一档，两类消息可能都拿到接近顶端的分数，光看分数分不出来。
 
-If there is no in-between at all, and the answer is one of a few discrete categories, use a [Choice](/primitives/choice) instead, or split the question into several [Noul](/primitives/noul) questions. It's important to test your levels against your own data. Two wordings of the same scale can behave differently on your data.
+如果压根没有中间状态，答案只是几个离散类别之一，那就改用 [Choice](/primitives/choice)，或者把问题拆成几个 [Noul](/primitives/noul) 问题。一定要用自己的数据检验档位：同一个量表换两种写法，在你的数据上表现可能不一样。
 
-## Splitting a complex judgment into several Score questions
+## 把复杂判断拆成多个 Score 问题
 
-A complex judgment, one that depends on several things, is best split into one Score question per thing. You can then combine the Scores returned from TypeSafe in your code to make the judgment. Some Score questions may matter more than others, so give each Score question a weight for its relative importance. The weights are yours. When the combined result doesn't match what your team would decide, change them in code and run again. Send the Score questions in one request. They are evaluated in parallel. Adding questions barely changes the response time and costs a few extra question tokens; see [Ask multiple questions together](/primitives#ask-multiple-questions-together).
+一个依赖多个因素的复杂判断，最好拆成每个因素一个 Score 问题，再在代码里把 TypeSafe 返回的分数组合起来得出结论。有些 Score 问题比别的更重要，就给每个 Score 问题一个权重表示相对重要性，权重由你自己定。当组合结果和你们团队会做出的决定不一致时，改代码里的权重再跑一次。这些 Score 问题放在一次请求里发出，它们是并行评估的：多问几个几乎不会改变响应时间，只多花一点问题 token；见[一次提多个问题](/primitives#ask-multiple-questions-together)。
 
-The request below is the spinner ticket from the table above with some more context. It asks three Score questions: how severe the bug is, how frustrated the customer is, and how much the report gives an engineer to work with.
+下面这个请求用的是上面表格里那份"转圈圈"工单，补了一些上下文。它一次问了三个 Score 问题：bug 有多严重、客户有多沮丧、这份报告给了工程师多少可用的信息。
 
 <TypesafeExample
   display="request"
@@ -799,7 +798,7 @@ questions: {
 }}
 />
 
-TypeSafe's response:
+TypeSafe 的响应：
 
 ```json theme={null}
 {
@@ -860,15 +859,15 @@ TypeSafe's response:
 }
 ```
 
-Each question is answered on its own against the ticket and given a score:
+每个问题都单独针对这份工单作答，各自得到一个分数：
 
-* `severity` is 1.24 at confidence 0.64. Same reading as the opening example: the export is broken and some have a workaround.
-* `frustration` is 1.28 at confidence 0.58. The wording is civil, but "third time" and "I'm done" shift some of the score toward the top level, so the model splits 0.72 and 0.28 between "frustrated but civil" and "very angry". For this ticket the two levels overlap, which is why the confidence is moderate.
-* `report_quality` is 3.0 at confidence 1.0. The steps and browser version are both stated.
+* `severity` 是 1.24，置信度 0.64。读法和开头的例子一样：导出坏了，但一部分人有绕过办法。
+* `frustration` 是 1.28，置信度 0.58。措辞还算克制，但"第三次"和"我受够了"把一部分分数推向最高档，于是模型在"沮丧但克制"和"非常愤怒"之间分成 0.72 和 0.28。就这份工单而言这两个档位是重叠的，所以置信度只是中等。
+* `report_quality` 是 3.0，置信度 1.0：复现步骤和浏览器版本都写清楚了。
 
-The three scales have different lengths, so before combining them, normalize each score. A four-level scale returns 0 to 3 and a three-level scale returns 0 to 2, so a top score on one is bigger than a top score on the other. Divide each score by its top level number, `len(criteria) - 1`, to put every score on 0 to 1. Then the weights mean what they say: 0.6 on severity and 0.3 on frustration makes severity count twice as much.
+这三个量表的档位长度不同，组合之前要先把每个分数归一化。四档量表返回 0 到 3，三档量表返回 0 到 2，一边的满分比另一边大。用每个分数除以它的最高档位编号 `len(criteria) - 1`，把分数都压到 0 到 1。这样权重才名副其实：严重程度 0.6、沮丧程度 0.3，意味着严重程度的分量是它的两倍。
 
-The TypeSafe Python SDK code below asks the three questions, normalizes each score, and combines them using an example priority calculation:
+下面这段 TypeSafe Python SDK 代码问了这三个问题，把每个分数归一化，再用一个示例优先级公式把它们组合起来：
 
 ```python theme={null}
 from typesafe_sdk import Score, TypeSafeClient
@@ -924,15 +923,14 @@ def priority(ticket: str) -> float:
     return 0.6 * severity + 0.3 * frustration + 0.1 * report_quality
 ```
 
-For the example response above, the normalized scores are 0.62 for severity, 0.64 for frustration, and 1.0 for report quality. The priority is `0.6 × 0.62 + 0.3 × 0.64 + 0.1 × 1.0 = 0.664`, which rounds to `0.66`.
+对于上面的示例响应，归一化后的分数是：严重程度 0.62、沮丧程度 0.64、报告质量 1.0。优先级是 `0.6 × 0.62 + 0.3 × 0.64 + 0.1 × 1.0 = 0.664`，四舍五入得到 `0.66`。
 
-The weights live in your code, so you can see exactly how the number is made and change it when the ranking doesn't match what your team would do. If you later need more Score questions, add them to `TRIAGE_QUESTIONS`. The request count stays at one. This technique of breaking a complex judgment into separate Scores and then combining them with weights in your code is called the [Composite scoring](/patterns/composite-scoring) pattern.
+权重就写在你的代码里，所以你能一眼看出这个数字是怎么来的；当排序和你们团队会做出的决定不一致时，直接改它。以后需要更多 Score 问题，就往 `TRIAGE_QUESTIONS` 里加，请求次数仍然是一次。这种把复杂判断拆成多个独立 Score、再在代码里按权重组合的做法，就是[复合评分](/patterns/composite-scoring)模式。
 
-## Structured level descriptions
+## 结构化的档位描述 {#structured-level-descriptions}
+先给每个档位写一条基本的文字描述。如果在那些你认为是清楚的输入上，模型总是在相邻两个档位之间摇摆，就把每个档位从字符串换成对象：一个字段说明这一档涵盖什么，另一个字段给几个示例情形。每个档位用同样的字段名，模型才能拿同类的东西互相比对。
 
-Start with a basic text description for each level. When the model keeps scoring between two neighbouring levels on inputs you think are clear, give each level an object instead of a string, with a field for what the level covers and a field with a few example situations. Use the same field names on every level so the model can compare like with like.
-
-The request below is the spinner ticket that we used earlier, but with examples on each level:
+下面这个请求用的还是前面那份"转圈圈"工单，只是每个档位都带上了示例：
 
 <TypesafeExample
   display="request"
@@ -962,7 +960,7 @@ questions: {
 }}
 />
 
-The response:
+响应：
 
 ```json theme={null}
 {
@@ -1008,14 +1006,14 @@ The response:
 }
 ```
 
-With plain strings this ticket scored 1.11 with a confidence of 0.84. With examples it scores 1.09 at 0.87 confidence, a small shift because the plain strings already placed it well. The effect is larger when the plain strings leave the model split, as the next table shows.
+用纯字符串时，这份工单得 1.11 分、置信度 0.84；加上示例后是 1.09 分、置信度 0.87——变化很小，因为纯字符串本来就已经放得挺准。当纯字符串让模型摇摆不定时，效果就明显得多，下一张表就是这种情况。
 
-Examples steer the model, and they only help when they look like your real inputs. The table below is the opening Safari report with three different sets of level objects:
+示例会引导模型，而且只有像你真实输入的示例才有用。下表用的是开头那份 Safari 报告，配三组不同的档位对象：
 
-| Level description                                                                                            | `score` | `confidence` |
+| 档位描述                                                                                                     | `score` | `confidence` |
 | ------------------------------------------------------------------------------------------------------------ | ------- | ------------ |
-| plain string: no object with examples                                                                        | 1.43    | 0.35         |
-| Added examples array with useful example: "export fails in one browser but works in another"                 | 1.03    | 0.96         |
-| Added examples array with example unrelated to browsers: "search fails, but browsing categories still works" | 1.43    | 0.35         |
+| 纯字符串：不带示例对象                                                                                       | 1.43    | 0.35         |
+| 加了 examples 数组，示例有用："export fails in one browser but works in another"                             | 1.03    | 0.96         |
+| 加了 examples 数组，但示例与浏览器无关："search fails, but browsing categories still works"                  | 1.43    | 0.35         |
 
-In this comparison, the matching example concentrates almost all the probability on one level. The unrelated example returns the same result as plain strings. Higher confidence does not establish which answer is correct. Choose examples with known expected levels, then test the revised descriptions on separate inputs before keeping them.
+这个对比里，示例对得上时，几乎全部概率都集中到一个档位上；示例不相关时，结果和纯字符串一模一样。置信度变高并不能证明答案是对的。挑那些已知正确档位的示例，然后在另外一批输入上测过修改后的描述，再决定是否留下。

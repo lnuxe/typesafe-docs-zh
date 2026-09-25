@@ -1,72 +1,47 @@
-# Hierarchical classification
+# 层级分类
 
-> Classifies documents through deep patent, retail product, biomedical, and source-code hierarchies using parallel beam search over TypeSafe Choice probabilities.
+> 借助 TypeSafe Choice 概率上的并行束搜索，把文档分类进很深的专利、零售商品、生物医学和源代码层级。
 
-A lot of data exists as structured hierarchies, such as a taxonomies, filesystem
-hierarchies, website structures, codebases, org charts, biological ontologies, LLM skills,
-moderation policies, etc. The goal of Hierarchical Classification is to traverse the
-hierarchy to the correct leaf node, which is the final classification. This is a perfect
-fit for typesafe's `Choice` primitive. We find the most probable leaf by classifying the
-document at each node (starting at the root), and then iteratively proceeding to the next
-most-probable node until we end at a leaf (**Greedy Search**).
+大量数据本身就是有层级的结构，比如分类法、文件系统层级、网站结构、代码库、组织架构图、生物本体、LLM 技能、审核策略等等。层级分类（Hierarchical Classification）的目标是沿层级走到正确的叶子节点，那就是最终的分类结果。这非常适合 TypeSafe 的 `Choice` 原语。做法是在每个节点上对文档做一次分类（从根开始），一路走向概率最高的下一个节点，直到抵达叶子（**贪婪搜索**）。
 
-The parallel nature of the API also lets us explore multiple paths with parallel questions
-using **Beam Search** to improve performance. The cookbook's TypeSafe API calls each
-simultaneously evaluate `K` paths of the hierarchy. Beam search keeps the best `K` paths
-by a geometric-mean edge probability: `product(edge_probabilities) ** (1 / decisions)`,
-and prunes the rest. The probability is length-normalized so that shallow and deep leaves
-are compared fairly.
+API 的并行特性也使得可以用并行问题同时探索多条路径，也就是 **束搜索（Beam Search）**，以提升效果。这篇 cookbook 里的 TypeSafe API 调用会同时评估层级上的 `K` 条路径。束搜索按边概率的几何平均 `product(edge_probabilities) ** (1 / decisions)` 保留最好的 `K` 条路径，其余剪掉。概率做过长度归一化，好让浅层和深层的叶子能被公平比较。
 
-Decomposing the problem into a hierarchy like this has benefits of its own:
+把问题这样拆成层级，本身也有好处：
 
-* Observability
-  * identify which nodes your misclassifications occur most in
-  * measure the number of times each node and edge is traversed
-* Testability
-  * unit test and measure the impact of hierarchy updates on classification performance
+* 可观测性
+  * 找出误分类最常发生在哪些节点
+  * 统计每个节点和每条边被走过的次数
+* 可测试性
+  * 对层级更新做单元测试，并衡量它对分类效果的影响
 * <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/hierarchical_classification/this_is_the_way.jpg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=15d390074a4f6a97e45f19e2cf039622" alt="this is the way" width="100" height="56" data-path="cookbooks/hierarchical_classification/this_is_the_way.jpg" />
 
-### Hierarchies used in this cookbook
+### 本 cookbook 用到的层级
 
-* **[CPC 2026.05](https://www.cooperativepatentclassification.org/sites/default/files/cpc/bulk/CPCSchemeXML202605.zip):** patent subject matter, from broad technology sections to narrow inventions.
-* **[Shopify 2026-02](https://github.com/Shopify/product-taxonomy/blob/v2026-02/dist/en/categories.txt):** retail product categories, from store departments to specific product types.
-* **[MeSH
-  2026](https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/desc2026.zip):**
-  biomedical subjects from broad domains to specific conditions. MeSH is a DAG, so one
-  descriptor can appear under multiple parents; this demo expands its official tree-number
-  paths.
-* **CookSafe files:** TypeSafe's cookbook repository hierarchy, searched from folders to
-  source files.
+* **[CPC 2026.05](https://www.cooperativepatentclassification.org/sites/default/files/cpc/bulk/CPCSchemeXML202605.zip):** 专利主题，从宽泛的技术大类到具体的发明。
+* **[Shopify 2026-02](https://github.com/Shopify/product-taxonomy/blob/v2026-02/dist/en/categories.txt):** 零售商品分类，从商店部门到具体商品类型。
+* **[MeSH 2026](https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/desc2026.zip):** 生物医学主题，从宽泛的领域到具体的疾病。MeSH 是有向无环图（DAG），因此一个描述符可以出现在多个父节点下；这个演示把官方给出的树编号路径展开。
+* **CookSafe 文件：** TypeSafe 的 cookbook 仓库层级，从目录一路搜索到源文件。
 
-### Methods
+### 方法
 
-* **Greedy search:** choose the highest-probability child and discard every alternative.
-  One early mistake cannot be recovered.
-* **Beam search:** retain `K` plausible paths and classify every frontier in parallel.
-  Deeper evidence can repair an ambiguous early decision.  The leaf of the path with the
-  highest geometric-mean probability is the final classification.
-* **TypeSafe Choice:** every node is a `Choice` question whose full probability
-  distribution is its
-  edges. Each path of the beam runs as parallel questions, so extra exploration adds little
-  wall-clock latency.
-* **Formula:**
+* **贪婪搜索：** 选择概率最高的子节点，丢掉其余所有分支。前面错一次就无法挽回。
+* **束搜索：** 保留 `K` 条看似合理的路径，并行地对每个前沿做分类。更靠后的证据可以修正前面含糊的决定。几何平均概率最高的那条路径的叶子就是最终分类。
+* **TypeSafe Choice：** 每个节点都是一个 `Choice` 问题，它的完整概率分布就是该节点的各条边。束中的每条路径都作为并行问题发出，因此多探索一些几乎不增加实际耗时。
+* **公式：**
   * `path_score = product(edge_probabilities) ** (1 / decisions)`
-    * used for pruning and comparing paths
+    * 用于剪枝和比较路径
   * `separation = top_path_score / second_path_score`
-    * useful metric, but not used for pruning
-    * the ratio compares the top path's geometric mean against its nearest rival.
-      * Near `1×` is ambiguous
-      * A large ratio means clear separation.
-* **Notes on metrics:**
-  * a different metric such as `min(top_prob/second_top_prob)` which would optimize for
-    paths that have very clear decisions at every node.
-  * use `exp(mean(log(probs)))` instead of `product(edge_probabilities) ** (1 / decisions)`
-    to avoid precision errors for hierarchies that are very deep (eg >10 layers)
+    * 有用的指标，但不用于剪枝
+    * 这个比值把最优路径的几何平均与最接近的对手相比。
+      * 接近 `1×` 说明有歧义
+      * 比值很大说明区分得很清楚。
+* **关于指标的补充：**
+  * 也可以换个指标，比如 `min(top_prob/second_top_prob)`，它会倾向于每个节点上的决定都非常明确的路径。
+  * 层级非常深时（比如超过 10 层），用 `exp(mean(log(probs)))` 代替 `product(edge_probabilities) ** (1 / decisions)`，以避免精度误差
 
-## Load and visualize the example hierarchies
+## 加载并可视化示例层级
 
-These helpers download pinned taxonomy sources, parse them into direct-child trees,
-and render each search traversal as a static SVG.
+这些辅助函数下载固定版本的分类法数据源，解析成直接子节点的树，并把每次搜索的遍历过程渲染成静态 SVG。
 
 ```python expandable theme={null}
 import html
@@ -611,11 +586,9 @@ def render_svg(hierarchy: Hierarchy, result: dict, path: Path) -> None:
     path.write_text(svg)
 ```
 
-## Implement greedy and beam search
+## 实现贪婪搜索与束搜索
 
-Each sibling set becomes one `Choice` question in the next section, which also
-implements
-both traversal strategies and keeps the probabilities the static diagrams need.
+每个兄弟节点集合在下一节里变成一个 `Choice` 问题；这一节还实现了两种遍历策略，并保留静态图所需的概率。
 
 ```python expandable theme={null}
 HIERARCHIES = load_hierarchies()
@@ -766,10 +739,9 @@ def compare_searches(hierarchy: Hierarchy) -> dict:
     return result
 ```
 
-## Compare the methods
+## 对比两种方法
 
-Run both strategies on four labeled examples, compare their leaves against the
-expected classifications, and visualize the routes they explored.
+在四个带标注的例子上跑这两种策略，把它们的叶子与预期分类对比，并把各自探索的路线画出来。
 
 ```python expandable theme={null}
 with ThreadPoolExecutor(max_workers=len(HIERARCHIES)) as executor:
@@ -842,31 +814,31 @@ display(
 )
 ```
 
-## Results
+## 结果
 
-Each example has a known expected leaf. Beam search matched 4 of 4 expected leaves; greedy search matched 2 of 4. Keeping three paths recovered the expected classification for CPC patents, Shopify products.
+每个例子都有已知的预期叶子。束搜索命中了全部 4 个预期叶子；贪婪搜索命中 4 个中的 2 个。保留三条路径，为 CPC 专利和 Shopify 商品找回了预期分类。
 
-| Hierarchy                | Expected leaf                                       | Greedy leaf                                                         | Beam K=3 leaf                                       | Greedy correct | Beam correct |
+| 层级                     | 预期叶子                                            | 贪婪搜索叶子                                                        | 束搜索 K=3 叶子                                     | 贪婪正确       | 束搜索正确   |
 | ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- | -------------- | ------------ |
-| CPC patents              | A01K31/12 Perches for poultry or birds, e.g. roosts | E99Z99/00 Subject matter not otherwise provided for in this section | A01K31/12 Perches for poultry or birds, e.g. roosts | no             | yes          |
-| Shopify products         | Cat Window Beds & Perches                           | Pet Chairs                                                          | Cat Window Beds & Perches                           | no             | yes          |
-| MeSH biomedical subjects | C06.405.469.432.500 Crohn Disease                   | C06.405.469.432.500 Crohn Disease                                   | C06.405.469.432.500 Crohn Disease                   | yes            | yes          |
-| CookSafe files           | retrievers.py                                       | retrievers.py                                                       | retrievers.py                                       | yes            | yes          |
+| CPC 专利                 | A01K31/12 Perches for poultry or birds, e.g. roosts | E99Z99/00 Subject matter not otherwise provided for in this section | A01K31/12 Perches for poultry or birds, e.g. roosts | 否             | 是           |
+| Shopify 商品             | Cat Window Beds & Perches                           | Pet Chairs                                                          | Cat Window Beds & Perches                           | 否             | 是           |
+| MeSH 生物医学主题        | C06.405.469.432.500 Crohn Disease                   | C06.405.469.432.500 Crohn Disease                                   | C06.405.469.432.500 Crohn Disease                   | 是             | 是           |
+| CookSafe 文件            | retrievers.py                                       | retrievers.py                                                       | retrievers.py                                       | 是             | 是           |
 
-The diagrams show why the methods differ. Orange marks the greedy route, green marks the winning beam route, purple marks other retained paths, and dashed edges were pruned.
+这些图说明了两种方法为什么不同。橙色标出贪婪路线，绿色标出胜出的束搜索路线，紫色标出其他保留下来的路径，虚线边是被剪掉的。
 
-### CPC patents
+### CPC 专利
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/hierarchical_classification/cpc_tree.svg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=e2e78c257ef946e0e40f49ed0aadddf4" alt="" width="2876" height="2322" data-path="cookbooks/hierarchical_classification/cpc_tree.svg" />
 
-### Shopify products
+### Shopify 商品
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/hierarchical_classification/shopify_tree.svg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=eaeffcf7e76e389ffbe3397a1b6c5d8e" alt="" width="2156" height="2272" data-path="cookbooks/hierarchical_classification/shopify_tree.svg" />
 
-### MeSH biomedical subjects
+### MeSH 生物医学主题
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/hierarchical_classification/mesh_tree.svg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=a71b2ce23a81fd3165a67abd09d5e26f" alt="" width="2516" height="2693" data-path="cookbooks/hierarchical_classification/mesh_tree.svg" />
 
-### CookSafe files
+### CookSafe 文件
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/hierarchical_classification/codebase_tree.svg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=052f2001a9e5f53a2647eb179ebdafd9" alt="" width="2156" height="1072" data-path="cookbooks/hierarchical_classification/codebase_tree.svg" />

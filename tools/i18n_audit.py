@@ -58,7 +58,9 @@ HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 TABLE_SEP_RE = re.compile(r"^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$")
 COMPONENT_RE = re.compile(r"<([A-Z][A-Za-z0-9]*)[\s/>]")
 ANCHOR_RE = re.compile(r"\{#([A-Za-z0-9_.:-]+)\}")
-JS_FUNC_RE = re.compile(r"^(export\s+)?(async\s+)?function\s+[A-Za-z_$]")
+# 必须真的是函数声明：标识符后面紧跟 "(" 或 "{"。否则散文里以 "function as ..." 开头的一行
+# 会被误判成代码，导致它之后的标题不计入统计（曾造成 date_extraction_cookbook.md 的假阳性）。
+JS_FUNC_RE = re.compile(r"^(export\s+)?(async\s+)?function\s+[A-Za-z_$][\w$]*\s*[({]")
 JS_EXPORT_RE = re.compile(r"^export\s+(default\s+)?(const|let|var|class)\s")
 JSX_OPEN_RE = re.compile(r"^</?[A-Za-z][A-Za-z0-9.-]*")
 ATTR_TEXT_RE = re.compile(r'\b(title|description|label|summary|placeholder)\s*=\s*"([^"]*)"')

@@ -1,57 +1,57 @@
-# Smart home assistant demo
+# 智能家居助手演示
 
-> Demo code: a smart home assistant that uses TypeSafe to evaluate user requests.
+> 演示代码：一个使用 TypeSafe 评估用户请求的智能家居助手。
 
-## Check it out in action
+## 看看实际运行效果
 
 <Frame>
-  <iframe src="https://www.loom.com/embed/18c4dbcf8db546dfb2d7f2ef018e78e4" title="Smart home assistant demo video" allow="fullscreen; picture-in-picture" style={{ width: '100%', aspectRatio: '16 / 9', border: 'none' }} />
+  <iframe src="https://www.loom.com/embed/18c4dbcf8db546dfb2d7f2ef018e78e4" title="智能家居助手演示视频" allow="fullscreen; picture-in-picture" style={{ width: '100%', aspectRatio: '16 / 9', border: 'none' }} />
 </Frame>
 
-## How it works
+## 工作原理
 
-### Speculative fan-out
+### 推测性扇出
 
-The chief pattern demonstrated here is [speculative fan-out](/patterns/fan-out). Each user request is evaluated against a long list of questions, including many that will end up irrelevant for most requests.
+这里演示的核心模式是[推测性扇出](/patterns/fan-out)。每个用户请求都会针对一长串问题做评估，其中很多问题对大多数请求来说最终都用不上。
 
-Let's consider the following user request:
+来看下面这个用户请求：
 
-> "Turn off all of the lights in the house"
+> "把家里所有的灯都关掉"
 
-This is a very simple request, and our code will only need to consider the answers to the following questions:
+这是一个非常简单的请求，代码只需要用到下面这几个问题的答案：
 
-* "What category of request is this?" (smarthome command)
-* "What domain is this request targeting?" (whole house)
-* "What type of device is this request targeting?" (lights)
-* "What action should be taken on the lights?" (turn off)
+* "这个请求属于哪一类？"（smarthome command）
+* "这个请求针对哪个房间？"（whole house）
+* "这个请求针对哪种设备类型？"（lights）
+* "应该对灯执行什么操作？"（turn off）
 
-Notice that the last question is written with the assumption that the user is issuing a command to lights, and we ask it before we know what the user is actually requesting. This is what we call a "speculative question" - we ask it before we even know if it's relevant, allowing us to evaluate all questions in parallel and rely on code to filter out the irrelevant results after the fact. This is a key pattern for building systems that can handle a wide variety of user requests with a single set of questions.
+注意最后一个问题的措辞，已经假定了用户是在对灯下命令，而我们是在还不知道用户究竟要什么的时候把它问出去的。这就是所谓的 "推测性问题"——在还不知道它是否相关时就先问出来，这样所有问题可以并行评估，再由代码在事后滤掉不相关的结果。要用一套问题应对各种各样的用户请求，这是关键模式。
 
-#### The wrong way: sequential API calls
+#### 错误做法：串行调用 API
 
-The wrong way to do this would be to separate the questions in to multiple API calls, waiting to ask questions only once you are certain you need the answer:
+错误做法是把这些问题拆到多次 API 调用里，等到确定需要某个答案时再去问：
 
-* "What category of request is this?" (smarthome command)
+* "这个请求属于哪一类？"（smarthome command）
 
-Then, only once you know it's a smarthome command:
+然后，只有在确定它是 smarthome 命令之后，才问：
 
-* "What domain is this request targeting?" (whole house)
-* "What type of device is this request targeting?" (lights)
+* "这个请求针对哪个房间？"（whole house）
+* "这个请求针对哪种设备类型？"（lights）
 
-Then, only once you know it's targeting lights:
+再然后，只有在确定它针对的是灯之后：
 
-* "What action should be taken on the lights?" (turn off)
+* "应该对灯执行什么操作？"（turn off）
 
-This approach optimizes for a minimum number of questions, but it ends up being much slower and more expensive than batching all of the questions in to one upfront API call.
+这种做法把问题数量压到最少，但比把所有问题打包进一次前置的 API 调用要慢得多，也贵得多。
 
-### TypeSafe and LLM pairing
+### TypeSafe 与 LLM 搭配
 
-This demo also shows how TypeSafe can be paired with LLMs to handle a system that sometimes requires a string-generation step:
+这个演示还展示了如何把 TypeSafe 和大语言模型（LLM）搭配起来，处理偶尔需要一步字符串生成的系统：
 
-**Splitting a compound user request:** One of the questions in this demo is a Noul question identifying if the user request is asking for more than one distinct action. If this is true, the system uses an LLM to split the request into a list of atomic commands. The split requests are then evaluated by TypeSafe individually.
+**拆分复合用户请求：** 这个演示里有一个 Noul 问题，用来判断该用户请求是否要求了不止一个不同的动作。如果为真，系统就用 LLM 把请求拆成一串原子命令，再让 TypeSafe 逐个评估拆分出来的请求。
 
-**Falling back to a conversational LLM:** When TypeSafe determines that the user query is a request for general information or conversation, the system calls an LLM to generate a freeform response. This allows an interactive system to handle requests with known deterministic behavior in a fast and cost efficient way, while still allowing for the flexibility provided by a generative LLM when needed. The initial TypeSafe response is so fast compared to the LLM response that it adds negligible latency to the overall system.
+**回退到对话式 LLM：** 当 TypeSafe 判断用户的请求是在要一般信息或闲聊时，系统就调用 LLM 生成自由形式的回复。这样一套交互式系统可以用又快又省的方式处理行为已知且确定的请求，同时在需要时保留生成式 LLM 提供的灵活性。TypeSafe 的首次响应比 LLM 的响应快得多，给整个系统增加的延迟可以忽略。
 
-## Run it yourself
+## 自己跑起来
 
-This demo is a simple Vite/React single-page app that uses the TypeSafe API to evaluate user requests. The full source code will be available on GitHub at release. Its README includes instructions for running the demo locally and an overview of which bits of the source code are responsible for which parts of the demo.
+这个演示是一个简单的 Vite/React 单页应用，通过 TypeSafe API 评估用户请求。完整源码会在发布时放到 GitHub 上，其 README 包含本地运行演示的说明，以及源码的哪些部分对应演示的哪个环节的概览。

@@ -1,6 +1,6 @@
-# Advanced: structure
+# 进阶：结构
 
-> Instructions, Choice options, Score levels, and Noul criteria all accept JSON structure.
+> 指令、Choice 的选项、Score 的档位和 Noul 的判据，都接受 JSON 结构。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,27 +231,27 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-System One models are trained to understand structure.
+System One 模型受过训练，能理解结构。
 
-## Where structure is allowed
+## 哪些地方允许用结构
 
-Every one of these fields is an [`EntryType`](/sdk/javascript/api/type-aliases/EntryType).
+下面这些字段全都是 [`EntryType`](/sdk/javascript/api/type-aliases/EntryType)。
 
-| Field                                   | Applies to          | Accepted shape                         |
+| 字段                                    | 适用于              | 接受的形态                             |
 | --------------------------------------- | ------------------- | -------------------------------------- |
 | `instructions`                          | Choice, Score, Noul | `string`, `object`, `array`, or `null` |
-| `criteria` values (option descriptions) | Choice              | `string`, `object`, `array`, or `null` |
-| `criteria` entries (level descriptions) | Score               | `string`, `object`, `array`, or `null` |
-| `criteria.true` and `criteria.false`    | Noul                | `string`, `object`, `array`, or `null` |
+| `criteria` 的值（选项描述） | Choice              | `string`, `object`, `array`, or `null` |
+| `criteria` 的条目（档位描述） | Score               | `string`, `object`, `array`, or `null` |
+| `criteria.true` 和 `criteria.false`    | Noul                | `string`, `object`, `array`, or `null` |
 
-## When to structure a question
+## 什么时候该把问题结构化
 
-* **When it helps with clarity.** When a question has multiple parts, putting them in the form of JSON helps with clarity because the keys are labeled.
-* **When question needs supporting data.** A schema, a taxonomy, or a database row is already JSON. Use the JSON entirely or pass in the relevant subfields instead of serializing them into a string template.
+* **当它有助于说清楚时。** 一个问题有多个部分时，写成 JSON 形式会更清楚，因为每个键都有名字。
+* **当问题需要附带的资料时。** 一份 schema、一套分类法、数据库里的一行，本来就是 JSON。要么整个 JSON 直接用，要么传入相关的子字段，而不是把它们序列化进一个字符串模板。
 
-## Structured instructions
+## 结构化的指令
 
-One `field` object describes the field being checked, and each question refers to it by key. The same shape drives a Noul that verifies a value, a Choice that picks one from candidates, and two Scores that place a value on a scale.
+一个 `field` 对象描述被检查的字段，每个问题按键引用它。同一套结构既驱动「校验某个值」的 Noul，也驱动「从候选里挑一个」的 Choice，还驱动两个「把值放到某个刻度上」的 Score。
 
 <TypesafeExample
   display="request"
@@ -334,9 +334,9 @@ questions: {
 }}
 />
 
-In code, you could loop over the potential records and build one of these questions per field, all sent in a single call. The [SDE cascade cookbook](/cookbooks/sde_cascade) does something similar to this.
+在代码里可以遍历候选记录，为每个字段生成这样一个问题，全部在一次调用里发出。[结构化数据抽取级联 cookbook](/cookbooks/sde_cascade)做的就是类似的事。
 
-Arrays work too. Use one when the instruction is a list of things to check or to compare:
+数组也行。当指令是一串要检查或要比对的东西时，就用数组：
 
 ```json theme={null}
 "instructions": {
@@ -346,11 +346,11 @@ Arrays work too. Use one when the instruction is a list of things to check or to
 }
 ```
 
-## Structured Choice options
+## 结构化的 Choice 选项
 
-A Choice option description can be a structured object as well.
+Choice 的选项描述同样可以是结构化对象。
 
-### JSON rubric for boundary clarification
+### 用 JSON 量规把边界划清楚
 
 <TypesafeExample
   display="request"
@@ -387,13 +387,13 @@ questions: {
 }}
 />
 
-The example tells the model what each option does and does *not* cover. It sharpens the boundary between options.
+示例告诉模型每个选项涵盖什么、不涵盖什么，从而让选项之间的边界更清晰。
 
-### Walking a taxonomy
+### 遍历分类树
 
-To classify into a deep taxonomy, ask one Choice per level and walk the tree in code. At each step the options are the children of the current node, and each option's value is the child's tree. Doing so lets the model see what lives under a branch before committing to it, which matters when the item belongs to a leaf whose name is not obvious from the branch name alone.
+要把内容分类到很深的分类树里，就每一层问一个 Choice，在代码里遍历这棵树。每一步的选项就是当前节点的子节点，每个选项的值就是该子节点的子树。这样模型在选定一个分支之前就能看到这个分支底下有什么；当条目所属的叶子节点光看分支名看不出来时，这一点很关键。
 
-Here the state is a product listing and the first question picks a top-level department.
+这里的状态是一条商品信息，第一个问题挑选顶层部门。
 
 <TypesafeExample
   display="request"
@@ -422,17 +422,17 @@ questions: {
 }}
 />
 
-The bottle plausibly fits under two departments. Showing the subtrees lets the model see that both `Sporting Goods > Cycling > Bike Bottles & Cages` and `Home & Kitchen > Drinkware > Water Bottles` exist, and weigh the listing's emphasis on bike cages against everyday drinkware. The `probabilities` on this answer tell you whether the split is close enough to explore both branches.
+这个瓶子放在两个部门下都说得通。把子树展示出来，模型就能看到 `Sporting Goods > Cycling > Bike Bottles & Cages` 和 `Home & Kitchen > Drinkware > Water Bottles` 都存在，从而在这条商品信息对自行车水壶架的强调与日常饮水器皿之间做权衡。这个答案上的 `probabilities` 会告诉你，两边是不是接近到值得把两个分支都探索一遍。
 
-Once a department is chosen, ask the next Choice with that department's children as the options and their subtrees as the values, and repeat until you reach a leaf. In code this could be a loop over a nested dict, where each question's `criteria` is simply the current node. The [Hierarchical Classification cookbook](/cookbooks/hierarchical_classification) shows an example of a similar walk of the tree, including a beam search that keeps several candidate paths alive when the probabilities are close.
+选定一个部门后，用该部门的子节点作选项、它们的子树作值，问下一个 Choice，如此重复直到到达叶子。在代码里这可以是对一个嵌套 dict 的循环，每个问题的 `criteria` 就是当前节点。[层级分类 cookbook](/cookbooks/hierarchical_classification)里有一个类似遍历树的例子，其中还有一段束搜索：当概率很接近时，让几条候选路径都保住。
 
 <Note>
-  Subtrees can get large. If a branch is too large, trim the value to its direct children and a sample of leaves.
+  子树可能会很大。如果某个分支太大，就把它的值裁剪成直接子节点加少量叶子样本。
 </Note>
 
-## Structured Score levels
+## 结构化的 Score 档位
 
-Each entry in a Score `criteria` array can be an object.
+Score 的 `criteria` 数组里每一项都可以是对象。
 
 <TypesafeExample
   display="request"
@@ -466,9 +466,9 @@ questions: {
 }}
 />
 
-## Structured Noul criteria
+## 结构化的 Noul 判据
 
-Noul `criteria` is optional, and when the yes/no boundary is subtle, structured `true` and `false` descriptions let you pin it down with a definition and examples on each side.
+Noul 的 `criteria` 是可选的；当「是」与「否」的界线很微妙时，结构化的 `true` 和 `false` 描述能用定义加例子把两侧都钉清楚。
 
 <TypesafeExample
   display="request"

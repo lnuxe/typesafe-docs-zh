@@ -383,6 +383,43 @@ terms:
       - file: "concepts/use-case-map.md"
         line: 183
         text: "| **检索** | 工作流需要最相关的上下文或记录 | RAG 上下文、证据检索、知识查询 |"
+  - term: "batching"
+    zh: "批处理"
+    status: "新增译法"
+    forbidden: ["批量分组", "分批处理"]
+    reason: "指把多个问题打包进一次请求，cookbooks.md 用它做分组标题。"
+    examples:
+      - file: "_tsdoc/cookbooks.md"
+        line: 18
+        text: "## 批处理"
+  - term: "beam search"
+    zh: "束搜索"
+    status: "沿用现有译法"
+    forbidden: ["光线搜索", "柱搜索"]
+    reason: "层级分类在 Choice 概率上并行保留多条候选路径的搜索方式；primitives/choice.md 已用「束搜索」，本轮翻译的 advanced.md、cookbooks.md 沿用。"
+    examples:
+      - file: "_tsdoc/primitives/choice.md"
+        line: 353
+        text: "要通过深层级结构或大型分类体系给文档分类，可以逐级串联 Choice 问题。[层级分类 cookbook](/cookbooks/hierarchical_classification) 展示了如何在 Choice 概率上执行束搜索，每一级保留最优的 `K` 条候选路径，而不是只沿一条贪婪路径走到底。"
+  - term: "demo"
+    zh: "演示"
+    status: "新增译法"
+    forbidden: ["演示程序", "样例集"]
+    reason: "demos.md 与 demos/smart-home.md 的标题与正文统一用「演示」。"
+    examples:
+      - file: "_tsdoc/demos.md"
+        line: 1
+        text: "# 演示"
+  - term: "structure recovery"
+    zh: "结构恢复"
+    status: "沿用现有译法"
+    forbidden: ["结构重建", "格式还原"]
+    reason: "autoformat cookbook 的固定叫法，primitives.md 已链接为「结构恢复」。"
+    examples:
+      - file: "_tsdoc/primitives.md"
+        line: 454
+        text: "两次请求是例外而不是常态。如果第二次请求的问题本可以针对原始状态提出，就把它们放进第一次请求，让代码忽略不需要的答案。有三个 cookbook 是出于真实原因发起第二次请求的。[技能推荐](/cookbooks/skill_suggestion)在一次请求中对 182 个技能排序，然后获取前三名的完整文本，再基于这些更好的证据重新评判它们。[结构恢复](/cookbooks/autoformat)先询问每个换行是否截断了句子，根据答案把行合并成块，再对这些块分类——而这些块在第一次请求应答之前根本不存在。[层级分类](/cookbooks/hierarchical_classification)用每个 Choice 的答案决定下一次请求提供哪些选项。"
+
 allow:
   - pattern: "^System One$"
     reason: "模型类别名，保留英文"

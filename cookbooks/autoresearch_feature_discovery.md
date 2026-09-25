@@ -1,19 +1,17 @@
-# Autoresearch feature discovery
+# Autoresearch 特征发现
 
-> Runs an autoresearch loop that proposes TypeSafe questions, converts free text into numeric features, and uses model errors to improve a supervised CatBoost regressor.
+> 跑一个 autoresearch 循环：提出 TypeSafe 问题、把自由文本转成数值特征，再用模型的误差改进一个有监督的 CatBoost 回归器。
 
-*TypeSafe questions turn free text into numeric features for a supervised CatBoost model;
-use an autoresearch loop to discover them.*
+*TypeSafe 问题把自由文本变成有监督 CatBoost 模型能用的数值特征；
+再用一个 autoresearch 循环把它们找出来。*
 
-CatBoost needs a table of numbers, and a tasting note is not one. This cookbook builds the
-table out of questions about the note, and none of them are written by hand. An LLM
-proposes the questions, TypeSafe answers them for every row, and CatBoost trains on the
-answers. The autoresearch part is what comes next: CatBoost reports which questions it used
-and which rows it still gets wrong, the following proposal call reads that report, and the
-loop runs again.
+CatBoost 需要一张数字表，而一条品鉴笔记不是数字表。这个 cookbook 用关于这条笔记的问题
+把表搭出来，而且没有一个问题是手写的。LLM 提出这些问题，TypeSafe 为每一行回答它们，
+CatBoost 在答案上训练。接下来才是 autoresearch 的部分：CatBoost 报告它用了哪些问题、
+还有哪些行仍然预测错，下一轮的提议调用读取这份报告，循环再跑一遍。
 
-By the end you have a loop you can point at your own labelled text, a curve of held-out
-error per round, and a table of which questions the final model used most.
+最后你会得到一个可以指向你自己带标签文本的循环、一条逐轮的留出误差曲线，
+以及一张说明最终模型最常用哪些问题的表。
 
 ```
 tasting note
@@ -30,29 +28,28 @@ tasting note
                                      held-out RMSE: 1.77 points
 ```
 
-A score answer becomes two columns: the average level the answer points at, and how spread
-out it is around that average. A noul answer is one probability, so it is one column.
+一个 Score 答案会变成两列：答案指向的平均档位，以及它在平均值周围的分散程度。
+一个 Noul 答案是一个概率，所以只有一列。
 
-The data is 2,000 wine reviews: a tasting note in, the critic's score on an 80-100 scale
-out. RMSE measures prediction error in critic-score points, with larger misses counting for
-more, and lower is better. Every number in the table below comes from the 800 reviews that
-neither the model nor the loop ever saw.
+数据是 2,000 条葡萄酒评论：输入一条品鉴笔记，输出评论家给出的 80-100 分。RMSE 用分数
+衡量预测误差，错得越多罚得越重，越低越好。下面表格里的每个数字都来自模型和循环都没见过
+的那 800 条评论。
 
-| how the note becomes a score                            | RMSE     |
+| 笔记如何变成一个分数                                    | RMSE     |
 | ------------------------------------------------------- | -------- |
-| predict the average score of the training rows          | 3.09     |
-| the same CatBoost, reading the note as word counts      | 2.47     |
-| ask TypeSafe for the score itself, rescaled and shifted | 2.15     |
-| 18 questions from one proposal call, no loop            | 1.87     |
-| **38 questions after five rounds of the loop**          | **1.77** |
+| 预测训练行的平均分                                      | 3.09     |
+| 同一个 CatBoost，把笔记当作词频读入                     | 2.47     |
+| 直接问 TypeSafe 要分数，再做缩放和平移                  | 2.15     |
+| 一次提议调用得到的 18 个问题，不跑循环                  | 1.87     |
+| **跑五轮循环之后的 38 个问题**                          | **1.77** |
 
-The last two rows are the loop. One proposal call, with nothing to go on yet, gets to 1.87.
-Four more rounds of reading its own worst predictions get to 1.77. Most of the gain is in
-that first call, and how much the four rounds after it add is measured further down.
+最后两行是循环带来的。第一次提议调用没有任何依据，就能到 1.87。之后又跑四轮，让模型
+读自己错得最狠的预测，才到 1.77。收益的大头在第一次调用，后面四轮究竟加了多少，
+在下面会测出来。
 
 <Tip>
-  Want to take this notebook further or apply it to another problem? See
-  [Next steps](#next-steps).
+  想把这个 notebook 继续做深，或者用到别的问题上？见
+  [下一步](#next-steps)。
 </Tip>
 
 ```python expandable theme={null}
@@ -1012,21 +1009,20 @@ def rounds_chart(
     return fig
 ```
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install anthropic openai catboost numpy matplotlib ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY` and `ANTHROPIC_API_KEY`. Every API call is cached to
-`json_cache.json`, which ships with the cookbook, so a re-render replays these numbers
-without calling anything. Delete it to re-run live. The numbers came from TypeSafe
-`jev-1.12` and `claude-sonnet-5` on 2026-08-03. `propose()` has a second branch for
-`gpt-5.6-luna`, which was not run.
+然后设置 `TYPESAFE_API_KEY` 和 `ANTHROPIC_API_KEY`。每次 API 调用都会缓存到
+`json_cache.json`，这个文件随 cookbook 一起提供，所以重新渲染时直接回放这些数字，
+不调用任何接口。删掉它就能真跑一遍。这些数字来自 2026-08-03 的 TypeSafe
+`jev-1.12` 和 `claude-sonnet-5`。`propose()` 里还有一条给 `gpt-5.6-luna` 的分支，
+没有跑过。
 
-The first code cell is the whole implementation: API calls, encodings, metrics, chart
-style. It is there so this file runs on its own, and the docs site folds it away. Skip it
-on a first read - the recipe starts under it.
+第一个代码单元就是全部实现：API 调用、编码、指标、图表样式。把它放在这里是为了让这个
+文件能独立运行，文档站点会把它折叠起来。第一遍读可以直接跳过，做法从它下面开始。
 
 ```python theme={null}
 N_DEV, N_TEST = 1200, 800  # the loop reads dev labels only; test is scored once
@@ -1054,22 +1050,21 @@ one of the notes:
 A Champagne that is very much wine. The structure and the richness are just right for a food wine, showing ripe acidity, flavors of plums and apricots, and balancing these primary fruits with a dense, complex structure that takes in yeast, maturity and a tight apple skin finish.
 ```
 
-The loop reads the same 1,200 of the 2,000 rows (the dev rows) over and over, and keeps a
-question when it helps predict those 1,200 scores. Scoring on the same rows would mostly
-measure how well the loop fitted itself to them, so the other 800 are held out and scored
-once, at the end.
+循环反复读取这 2,000 行里的同 1,200 行（dev 行），只要某个问题有助于预测这 1,200 个分数
+就保留它。在同一批行上评分，多半只是在衡量循环把自己拟合得有多好，所以另外 800 行被留
+出来，直到最后才评一次。
 
-## Two question types
+## 两类问题
 
-A proposed question is one of two kinds, and the kind decides what number comes back.
+提议出来的问题只有两种，是哪一种决定了返回什么数字。
 
-* **`intensity`** becomes a `Score`, for anything that comes in degrees. Its five
-  levels are printed below, and the column is the average level, so a note that sits
-  between "moderate" and "strongly" comes out between the two.
-* **`presence`** becomes a `Noul`, for a yes/no fact like whether a fault is named.
-  The column is that one probability.
+* **`intensity`** 会变成一个 `Score`，用于有程度之分的东西。它的五个档位打印在
+  下面，这一列取的是平均档位，所以落在 "moderate" 和 "strongly" 之间的笔记，
+  结果就在两者之间。
+* **`presence`** 会变成一个 `Noul`，用于是/否的事实，比如是否点出了某个缺陷。
+  这一列就是那一个概率。
 
-## The method
+## 方法
 
 ```
 questions <- {}
@@ -1085,15 +1080,13 @@ repeat for each round:
     out_of_fold <- k-fold CatBoost on the columns   # judges, and picks next round's notes
 ```
 
-No question is filtered out before it is answered. All of a round's questions go out in the
-same request, so one more question costs no extra request. A question that applies to one
-row in ten will look useless in the 60 notes the proposer reads, and still be the most
-useful column in the set.
+没有任何问题会在被回答之前就被筛掉。一轮里的所有问题都在同一次请求里发出，所以多问一个
+问题不需要多一次请求。只适用于十分之一行的问题，在提议者读到的那 60 条笔记里看着没用，
+却仍可能是整套问题里最有用的那一列。
 
-k-fold means splitting the dev rows into k parts and predicting each part with a model
-trained on the other parts. Those predictions do three jobs: they judge every revision and
-drop, they pick the notes the next round reads, and they tell the proposer which of its
-questions helped, by how far they have moved since the round before.
+k 折（k-fold）指把 dev 行切成 k 份，每一份都用其余几份训练出来的模型来预测。这些预测
+有三项用途：评判每一次修改和删除、挑出下一轮要读的笔记，以及告诉提议者它哪些问题起了
+作用——依据是这些问题相比上一轮移动了多少。
 
 ```python theme={null}
 print("every intensity question is graded on these five levels:\n")
@@ -1131,13 +1124,12 @@ Return up to 18 actions. Each action is one of:
   ...
 ```
 
-## The autoresearch loop
+## autoresearch 循环
 
-`run_loop` runs all five rounds and prints a block per round. An added question goes
-straight in: its answers have already been fetched, and its importance will show later
-whether it was worth asking. A revision or a drop takes away a column the model is already
-using, so each one is tried first: refit with the change, and keep it only if the dev
-error goes down. A refit costs no API calls, so trying a change and rejecting it is free.
+`run_loop` 跑完五轮，每轮打印一个区块。新增的问题直接进：它的答案已经取回来了，之后
+它的重要度会说明它值不值得问。修改或删除会拿掉模型正在用的一列，所以每一个都先试一次：
+带着改动重新拟合，只有 dev 误差下降才保留。重新拟合不花 API 调用，所以试一个改动再否掉
+它是免费的。
 
 ```python theme={null}
 run = run_loop(
@@ -1205,26 +1197,24 @@ round 5: 4 add, 2 revise, 8 drop
   -> 38 features, dev CV RMSE 1.840
 ```
 
-## Pointing it at your own data
+## 换成你自己的数据
 
-`PROPOSER_TASK` is the only string that mentions wine, and `featurize()` takes any list of
-strings. Editing that brief changes the proposal prompt, and the prompt is part of the
-cache key, so the next run calls the API again for every round.
+`PROPOSER_TASK` 是唯一提到葡萄酒的字符串，而 `featurize()` 接受任何字符串列表。改动这段
+任务说明就会改变提议用的提示词，而提示词是缓存键的一部分，所以下次运行每一轮都会重新
+调用 API。
 
-The request count grows with rows, not with questions: one request per row per round, so
-100,000 rows is 100,000 requests a round. A revision counts as a new question, so it costs
-another pass over every row. Raise the worker pool slowly. Eight is already enough to hit
-a rate limit on a shared key.
+请求数随行数增长，而不是随问题数增长：每一轮里每行一次请求，所以 100,000 行就是每轮
+100,000 次请求。一次修改算一个新问题，因此要再扫一遍所有行。worker 池要慢慢往大调，
+在共享的 key 上，八个线程已经足以撞上速率限制。
 
-## What the questions see
+## 这些问题看到了什么
 
-Five held-out reviews, one at each quarter of the score range, against fifteen of the 38
-questions: the top eight score questions by importance, plus the top seven nouls.
+五条留出的评论，分别落在分数范围的四个等分点上，对上 38 个问题里的 15 个：按重要度排的
+前八个 Score 问题，加上前七个 Noul。
 
-Those fifteen rows are then sorted by which way the answer moves with the critic score.
-Questions whose answer rises with the score come first, questions whose answer falls with
-it come after the divider. So going left to right, from the worst review to the best, the
-answers above the divider should climb and the answers below it should drop off.
+这十五行随后按答案随评论家分数变化的方向排序。答案随分数上升的问题排在前面，答案随分数
+下降的问题排在分隔线之后。所以从左到右、从最差的评论到最好的评论，分隔线以上的答案应当
+逐渐升高，分隔线以下的答案应当逐渐降低。
 
 ```python theme={null}
 X, labels = design(accepted, answers_for, ENCODING)
@@ -1265,24 +1255,18 @@ the five held-out heatmap columns:
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/autoresearch_feature_discovery/autoresearch_feature_discovery.executed.1.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=9a9c9e88ad39b5cc6ae00db22d38b9d5" alt="output" width="1882" height="1593" data-path="cookbooks/autoresearch_feature_discovery/autoresearch_feature_discovery.executed.1.png" />
 
-The table from the top of the page, computed. All five arms are scored once on the same 800
-held-out rows, and the first three skip feature discovery. One predicts the mean of the dev
-scores and reads nothing from the note at all. One hands the note to the same CatBoost
-through its `text_features` handling, which turns it into word counts. One asks TypeSafe
-for the score itself.
+页面顶部那张表，现在算出来。五个对照组都在同一批 800 条留出行上评一次，前三个不做特征
+发现。一个预测 dev 分数的平均值，完全不读笔记。一个把笔记交给同一个 CatBoost，走它的
+`text_features` 处理，也就是把笔记变成词频。一个直接问 TypeSafe 要分数。
 
-That third one is a single `Score` per row over ten quality bands, from "faulty or
-unpleasant" up to "profound". Ten because ten levels is the most a `Score` question
-takes -
-eleven comes back as a server error. Level 0 maps to 80 points and level 9 to 100.
-Spreading the bands over the scale that way is not enough on its own, because nothing in
-the question says where this publication's scores actually sit on it. So every answer is
-then moved by a single offset, measured on the dev scores. That offset is printed in the
-row label, and it is the only thing this shortcut learns from the scores.
+第三个是每行一个 `Score`，覆盖十个质量档位，从 "faulty or unpleasant" 到 "profound"。
+之所以是十个，是因为一个 `Score` 问题最多只能有十档——十一档会返回服务器错误。档位 0
+对应 80 分，档位 9 对应 100 分。光把档位摊在这个范围上还不够，因为问题里没有任何东西说明
+这家媒体的分数实际落在哪里。所以每个答案随后再按一个偏移量平移，这个偏移量是在 dev 分数
+上测出来的。它打印在行标签里，也是这个捷径唯一从分数里学到的东西。
 
-Spearman is rank correlation, where 1.0 would put the held-out wines in exactly the
-critic's order. The word-count row is CatBoost's own text handling, not a tuned
-text-regression pipeline. All of this is one dataset and one run of the loop.
+Spearman 是秩相关，取 1.0 意味着留出的这些酒排序与评论家完全一致。词频那一行是 CatBoost
+自带的文本处理，不是调过的文本回归流水线。所有这些都只来自一个数据集和循环的一次运行。
 
 ```python theme={null}
 predicted = fit_predict(X, split)
@@ -1320,23 +1304,18 @@ ask for the score itself, shifted -1.71         2.145     0.761
 38 questions after all 5 rounds                 1.772     0.799
 ```
 
-## Did the autoresearch rounds help?
+## autoresearch 的几轮搜索有用吗？
 
-Both lines plot the error of the question set at the end of each round, starting from
-the first proposal. The dashed line is the cross-validated dev error, the number every
-accept and reject decision is made on. The solid line scores the same question set on
-the held-out rows, which the loop never reads. Each point is the set as it stood when
-the round closed, so a round that only revised or dropped a question still moves both
-lines. The feature map says what the questions measure; the error is what tells you
-whether the rounds after the first proposal made the predictions any better.
+两条线画的都是每一轮结束时问题集的误差，起点是第一次提议。虚线是交叉验证的 dev 误差，
+也就是所有接受和拒绝决策依据的那个数字。实线用同一套问题集在留出行上评分，而循环从不读
+这些行。每个点都是该轮结束时的问题集，所以一轮即使只修改或删除了一个问题，两条线也都会
+移动。特征图说明这些问题在量什么；误差才告诉你第一次提议之后的几轮有没有让预测变得更好。
 
-The axis is tight: everything on it happens inside a fifth of a point, and every shortcut
-from the table above sits far off the top of it. The dev line runs above the held-out line
-the whole way, and that is a training-size effect. Each dev fold trains on four fifths of
-the dev rows, while the held-out number comes from a model that got all 1,200. The two
-lines move together, so the dev number the loop steers by tracks the held-out number it
-never sees. The interval under the title comes from resampling the held-out rows, so it
-says whether the move from round 1 to round 5 is bigger than the noise in 800 rows.
+纵轴范围很窄：线上发生的一切都在五分之一点之内，而上面表格里的每个捷径都远在它上方。
+dev 线全程都在留出线之上，这是训练集大小的效应。每个 dev 折只用 dev 行的五分之四来训练，
+而留出那个数字来自见过全部 1,200 行的模型。两条线一起移动，所以循环用来掌舵的 dev 数字能
+跟上它从未见过的留出数字。标题下面的区间来自对留出行的重采样，说明从第 1 轮到第 5 轮的
+移动是否大于 800 行里的噪声。
 
 ```python theme={null}
 curve, per_round = [], []
@@ -1363,13 +1342,11 @@ round 1 -> round 5 on the held-out rows: -0.097 points, 95% CI [-0.147, -0.050]
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/autoresearch_feature_discovery/autoresearch_feature_discovery.executed.2.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=8e122e0435a22f9f18f4a3d780f06e69" alt="output" width="945" height="599" data-path="cookbooks/autoresearch_feature_discovery/autoresearch_feature_discovery.executed.2.png" />
 
-The held-out line falls further than the dev line does. Round 1 wrote its questions with no
-feedback to work from, and the four rounds after it are worth 0.10 points on the held-out
-rows, 95% CI \[-0.147, -0.050].
+留出线比 dev 线降得更多。第 1 轮是在没有任何反馈可依据的情况下写出它的问题的，之后四轮
+在留出行上值 0.10 分，95% CI \[-0.147, -0.050]。
 
-Round 5 proposed four adds, two rewordings and eight drops, and gave the first dev number
-that did not improve. There is only so much to ask about a 245-character note, and by round
-5 the proposals had tipped from adding questions to dropping them.
+第 5 轮提议了四个新增、两处改写和八个删除，给出了第一个没有改善的 dev 数字。一条 245
+字符的笔记能问的东西就那么多，到第 5 轮时，提议已经从加问题倒向了删问题。
 
 ```python theme={null}
 kinds = {f["name"]: f["kind"] for f in accepted}
@@ -1413,50 +1390,42 @@ the question behind the top row:
   note_overall_tone_positivity: "Setting aside specific descriptors, how positive is the overall emotional tone and word choice of the note taken as a whole (warm, admiring language throughout vs. flat, neutral, or lukewarm phrasing)?"
 ```
 
-`importance share` is CatBoost feature importance, normalized so all 38 questions sum to
-100%. It is not a share of rows, of questions, or of prediction accuracy. A score question
-owns two columns, a mean and a spread, so its two column importances are added back
-together before the percentage is printed. `note_overall_tone_positivity` accounts for
-17.4% of the total. The fourth row is a noul: whether the note names a single vineyard or
-some other prestige signal is a yes/no fact, so it was asked as one.
+`importance share` 是 CatBoost 的特征重要度，做了归一化，让 38 个问题加起来是 100%。它
+不是行数占比、问题数占比，也不是预测准确率的占比。一个 Score 问题占两列，一列均值一列
+分散度，所以打印百分比之前会把它两列的重要度加回去。`note_overall_tone_positivity` 占
+全部的 17.4%。第四行是一个 Noul：笔记是否点出单一葡萄园或其他某种声望信号，这是一个是/否
+事实，所以就按是/否来问。
 
-## Next steps
+## 下一步 {#next-steps}
+这次运行把循环控制在很小的规模。可以直接往下扩展的方向：
 
-This run keeps the loop small. Direct extensions:
+* 在花钱回答之前先筛一遍候选。把提议出来的问题本身当作状态，对它问 Noul：它能否从源
+  文本回答、在它的判据下含义是否唯一、是否适用于大多数行、是否会在不同行之间有变化。
+  只把四个条件都以足够置信度通过的问题发出去。
+* 剪掉相关的特征。在 dev 行上测量编码后各列之间的相关性，把近似重复的聚成一簇，每个簇
+  里只保留最清晰或最重要的那个问题。
+* 加上简单的基线。先单独比较 TF-IDF、字符数和其他结构特征，再把它们接到发现出来的列后面，
+  看看各自贡献了什么。
+* 混用不同家族的提议者。用 Anthropic、OpenAI、Google Gemini 和开源模型分别生成候选批次，
+  在它们送进 TypeSafe 之前先合并去重。不同家族对搜索的拓宽，应当超过反复调用同一个提议者。
+* 比较不同的预测模型和方法。可以试线性回归或弹性网络回归、支持向量回归、随机森林，以及
+  在下游输出是概率时的重新校准。看看发现出来的特征在 CatBoost 之外是否也有用。
+* 加上一个 embedding 基线。embedding 把一条笔记变成几百个数字，不带任何问题：
+  `sentence-transformers/all-MiniLM-L6-v2` 可以本地运行，OpenAI 的
+  `text-embedding-3-small` 是托管调用。把一个 embedding 接到发现出来的列后面，测量它
+  是否携带了这些列没有的信息。
+* 让验证方式匹配上线场景。预测未来时用按时间切分，相关的行必须待在一起时用分组切分，
+  并且留一个最终测试集，特征发现和模型选择都不许碰它。
+* 在平台期停下来。当交叉验证 RMSE 连续固定轮数没有改善，或者到达问题数、请求数预算时，
+  结束循环。
+* 在智能体的 Goal mode 下跑更长的搜索。给它明确的指标、预算和停止规则，然后让它多提议、
+  多评估、多打磨几轮。
+* 检查稳定性。换几个随机种子或数据切片重复做特征发现，保留那些始终有用的问题，而不是
+  重要度只挂在某一次切分上的问题。
 
-* Screen a candidate before paying to answer it. Treat the proposed question itself as the
-  state and ask nouls about it: can it be answered from the source text, does it mean
-  one thing under its criteria, does it apply to most rows, will it vary across rows. Send
-  only the questions that clear all four with enough confidence.
-* Prune correlated features. Measure correlation between encoded columns on the dev rows,
-  cluster the near-duplicates, and keep the clearest or most important question from each
-  cluster.
-* Add simple baselines. Compare TF-IDF, character counts, and other structural features on
-  their own, then append them to the discovered columns to measure what each contributes.
-* Mix proposer families. Generate candidate batches with Anthropic, OpenAI, Google Gemini,
-  and open-source models, then merge and deduplicate them before any of them reach
-  TypeSafe. Different families should widen the search more than repeated calls to one
-  proposer.
-* Compare predictive models and methods. Try linear or elastic-net regression, a support
-  vector regressor, random forests, and recalibration where the downstream output is
-  probabilistic. Check whether the discovered features help outside CatBoost.
-* Add an embedding baseline. An embedding turns a note into a few hundred numbers with no
-  question attached: `sentence-transformers/all-MiniLM-L6-v2` runs locally, OpenAI's
-  `text-embedding-3-small` is a hosted call. Append one to the discovered columns and
-  measure whether it carries anything they do not.
-* Match validation to deployment. Use chronological splits when predicting the future,
-  grouped splits when related rows must stay together, and keep a final test set untouched
-  by both feature discovery and model selection.
-* Stop on a plateau. End the loop when cross-validated RMSE stops improving for a fixed
-  number of rounds, or when it reaches a question or request budget.
-* Run a longer search in an agent's Goal mode. Give it an explicit metric, budget, and
-  stopping rule, then let it propose, evaluate, and refine more rounds.
-* Check stability. Repeat discovery across seeds or data slices and keep the questions that
-  stay useful, rather than the ones whose importance rests on one split.
+## 在 Playground 中打开
 
-## Open it in the playground
-
-This share link holds one tasting note plus every question the loop ended up with.
+这个分享链接里有一条品鉴笔记，加上循环最终留下的每一个问题。
 
 ```python theme={null}
 playground_link = make_playground_link(
@@ -1469,4 +1438,4 @@ display(
 )
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIAgvgMIAWAhnAA6UDmSC+KVK+AlgM74BuCAJwCe+ODCjl8Adw5MAdPjTlmXFAPEoYA5pSRgWy-AI4SmXHpW34AVjFVGO9cuwBmEAfkr43EfTKYANPhc5BD+9A40OlAcYBwoQkEuADaUvO48EC74NMnwFnqeNMZQEChcQbr6AEaUqUgxSBGsCFzMxRxwliIu6vE8Mqye+GDIbUGltMlYwWoaWsyslOwolADWrZxI+EIIlKpBXZrGCZ6FXiiOzkW5Kmuy3rLc5HIgQSDFELTlGNh4hMAADogSa3TDxITAghAkAJKJQ-DArilbTAoLAqAnQQcSgIgDawIAcmUcto2qgtgZuPgkGUdOw6sk0YiQAAhSwIZIiYqtZDsAC0oj5HAgTH0oqgCCCDzo5lk9GZwIACmS+Z4GaJfIJlsxpvwmW8WSreRTVAJRfQufhBS0aXSRlJOclMtt4oqQAARL6yXQCgzMWkoZjU1ICeickSUaoQGArcjcYEAXXRIFkZo0IqQXARwIAEmFZuamlbIJtbYHmAhaFQuBwAF6LQz+BAAch4oOm4ISQVSu20+hSaQyQXcohgyUutxG3EuDQZ5q6XAA9IP0gIBu57k0WBBwy0BAB+YEAXxTvRg8QA+rIg1mIQiYXCEDmQMj3M-DRiscZcf8CSBiXYHlyXYB5WGpCt1U8ZIDRTdltCtYC1UFRBUEzBBxQaKVKVlWsmndY0QKgrw4C1AQdXwPVOQI1VTTUC0rRtQxILAR0YJdTgUHdL04B9CkmIDe0Q0scMrSjGM4wTEBkxZNM5igS5RWzf48wLM0GMjQpeA4bSwBLCAy2Y+1RmRYxqmYc94nwCRLEoBTBHwAAKBA5HoOQgmMKIzAqYIohiFwTG8Pp2BMzEOBoFBhwcUxWkybJLNcVI1wASiPEBTxZVYkCQWRL3TBSFgfYEnxfN9UU-EFvxxfEiRJJCKTA+MeEg5ZoNgll4IjUkTT9VDFLFfAJWwmV9jwhUKsItVWpIsiKKo9rlVo9h1OLEQBLtIMHSdDi3Qqni+L9cshJ4UNRMjaNYypZSZOBOT1AUzNlIIVSpELDSRgMngjs2uJkTsL7dBy7Z8uOZhRwgfhyJgwt5ihx4BDgbyl1qKA1mjJg0oy4E7NiCFr1QMZ73+R8hHhFTXxRD8UzCoMfxqgC6qWylwOa+1ppg91OsQpmUOFUUMMGrDpW2XD5RonriM1UZyM2+bxaIlbLTW-0NuYVjtsFzjuO9JBfWtFXIOEsMuvEy6WaTFM7ozJSX3zV7Ff0wzBJ+7hYHMTwYjibtrOMLgaG8kcPFWAQUG8zGUwgdZ8dvWsEiK2FSY-Z6Kffd0aexX8CH-QDuqIxqILZhkOYqrnuR5oU0P5zDJWFnJRrFiamemqXtVlhB9XltUHeV761bY51Nd2lN9t1-iDeOyiRJNi7JOuy2s3k-qnpZO23tWj6ndViv+sG9YgikCBfE8eh5SCWoBAQoJIv2FBA74XQOBgyglz9kxnbLUmTEZHoF13tZw5ZAFHKIRLwAEcYB1CJtCYqidSqUzTlVTO+Bs6MwlvnVmm12YLTZBybmEteaVwGkNWuot8KNwls3Ui0s5rt2ouQhW9F17rRYv3HaXE9o6z1swiep1p4SSuhbWSC97pL1tmpRhSsN5fSMptYolBuCNmYOAyBpwsgqyAc8TibRkguCCIGGwdhQLlEosgegQxnKuXcvgFsyR5SCB4OZSgsYOAuHHFyFsQQWyWliK0Dx1jShYVQDLAWGiQh+JsRaDyCAgEhKeGE5KfB7F2HwCfbS25bShMkLSDaUZpg5AgLHHSixtDLD6gA4EtR6iSkvFQBGopITExgWTZOZUqYsnTnTP8tUgJM3QVvLBnNcFl3wdvdC1dhoi3rmQlMk0KSUNmm3Du9Cu4SMYuPH6rDB7sOHpwsevdOAnSnmJGeAjpLzxBo9MR9tVkiFLNI9+pJ5FtBVs2Ns+BKm6BrvgWppEkCJEGh4G8CB6Ay0zINbI-RrJfBoPzVAXBykgAYPKS8MLbyXDqPHEq5NWkIPiBnemOd6qgW2CzfpRdsGl1zshUZVdBZfJGnKaZRom4aioa3XUtDsGzOWjc-W+z1bsS2drXio9DoyODIc42xz+HmzOUIi5Ntyar27lI9ZKgYD0HDPYUlzZvn7GPvKfJaKcTJABdIR+prOifH4EuUY+oIA0G8Fofc5qhiXEQMzQwkon6HhPCmGFhT+B5RgFEAQqRLhBvqPQCB4ZMWwOxfAiqHTqpdIZj0tBJKmpkraoMhCwyiIEP6gLYhOEpnjRmSy4YbLgkmKWRWiWKruEbI1qKLWHCRVcLVQcyeUrzoyqaoI26wjrZZiuWvSRdyu12HVaG8NRSzXxicIhAp8R53tzqBAiNupdDRoYMwCxblPH0HcOGGMXBwnUEoHWeU4SQV7GWuISU5hwltGoNMZ9njHHONcckFsCTIqPIUS82QYNIaMgRUwegywimXhpl-ZIl4o0xqTvgEmzSWQ4qTYgglqC86ZoLpg8luaupEv1n1MZdKJl10ZeW5lFDWULI5XWujDCiySKbX3FtrptkshHp2-ZRszqeBObKm6qZh0PUVcnZVvLJ29zeRDbU0NIpMGCBqrV7BwxIAvKp36lAaAwpvH1M1XhIZxAUgYVqtpdUuEZDwEI7h2AHqsS2R06xWgoHCXp1Qghwn6J-VaAJaTGj0D-ZUTIBmCkCwA14MaeTeLJH0FANI96aUDQZWNV18Zti6EGvuGQzyA2rv4EYduHAEBSARWAYwSA1hRkfnjPYeFYpxvQ0iRN1NsOpsJb0-DGD6Q5pLkMqlY9yO0pLRlhu9aiLzOoYsuh02VlsbWfyzZrah68d2WKh5gm+FmwHXKodCrR1KvEct25n0u29GoIo81qn9VNaEPyarsgtz0CCLWKY2EYANGhbY5LQYwB3xKWAEQAGXu1btK9QYoRLquJDsoDwdrOQOrKX6lk0ZQeXhKOQbyrWUPtdTlhvFnSs7dJG8Sq62bGTEbwQWtLxahalpo53OZDG5tMYWyxpb70ONbUFetnjwI+N7PFd23h0r9tSTE1bSTJ3pNnfenJsXoUzK3deQ43w-zHRXFvtFXHsU74BMlEE6DrbnOeIC-yTH5WwDhJx15sYrZPHG75MEu3qV0dIkdAgUOsVEOcvx3AonnWScprJ2minnqCMDZp0NvNUfC0UYm5Mlnyy2dVsY7Wrni0G28r5wKgegvhUHT5WL3bkvZ6DvE8d5eL1x2O3uVvVXHBzLBB93792o4uAau6NZWpdlaaeuYM2BFQZsALEvC3iKGQg8JpD+0rrEeesZqpy1Ij8eSPlzG0Qpnk2mW55m+z9l2euVM0bV2wvbCS+irLztyVQnTZV8OzXxelzTvXPO6q-lrQwpt9WA9HkuPqDGaqRLGOQC4AgJyE5C5IetYlwKRGUOQOEvqPwAkC+o-GsEIOEpiHsHANgZ4jClINLNgZ7ulCmHsAjkIHlEOMIJeBWMvGhgTinOVKHrTOHsguTqRn0uvoNnBMNqRknuNnvqnmNKzgyMfjWnLOnjyl-gXmttxjfvxuXg-nts-jLhJqIh-g3hdpvCxL-mrvgJQawP8lwLQf8qOLSEgPyAlP3rZPZB4D3hIJ4CdPeojlfBACjKUEED9tLNUOoCEIcCBlDHfIjtUKrPCl7iAIOFIJeO4FPtEggApJeDvhhHPsnLSOOO6LLlocnF6HofaDvsMDEWaqMJARZo1CPiBh9uIJIPquZIav2OIBhEkD9lgYcLGC0XquuOQB9jGAIHfEgYIAVmDC4C4PyDQLGLOPQGlGwfio0rCOoMwUoA8qoDqNItSKOFANMJYFaFarYpsBtsCLZs6MsWLqkpsNkrIOZmbtsGorKseFjK+PKNMJeGkggEIJYGAHEQICimSJcOGHlI4LrAaNAgnG1iAJkdgjke-nkZdvsrWIwHUL5EkSarnACWDB4FEHEHeo2OaBqpIEUWorFn5C4oFO8Z8QIEDkYWsZtNoJMasP1D2J0HivoJ8GACOiOIlnwCBj5LZmAQMCBl0BsAMWaoGLkswORCcEIEuHZNsfInALMYvmHkgo+EsS+CsVvLSYZJsR4NsZQXsVMOVjwEcdEXUG0BqecUUqzFsDcTvPcQdo8SmLwJYOVqsAhtUNMHoAkasI-OkSyFCdkZobCZtgUZtH7KiS4GDoYCCvpswC6cYL7iIKOJ6cgGyYICbqsFqpSKML6ckEqV+CqZiuqeTJqZBNqRsZkHqTsWGiIPscaW2meOaWcQ8hcTadcV-PadkA8U8UQYILBkNKbv1Ihjushv6YTqwcqewUgigumnhmvoXHwR1AIdvnzLvvSqIVNtzhnjNBzqfuIToXfs3goY2Zth2qLvfj2o-iJgdhobXmOiqsrg8tOpPE0MhuCiMITN7H2aKa7kOZmHfECneKcBbtYqMFmM7tYuQBqpBS2H+WoDqHbp4mme+uep4m0FWC8SIChbFOEtUI4H+juJ+aZK3uriBgpmBtDFaoPgiquPEb9LOA9PwHjgsVii0h1lOfMcvrhmqDwYuXHvwQnoIQzuMiQmWgebNiftIYtnRHIZfieaaSLttlvBXn2lLnPPKm-lJivAWD9nYBAskEEFgGUCYHfBGf5IFNSLaIplDKanRQILKQuKZtAFGOOH3tOvoHxZtKBUQF0OaGfGUMIJcD5LGTQPGEGB9pQGMUWEEKijCloMYAkqCByPoDFlvHmoaq2pML8kZZDEIGAJQD-BeCgEuJHGsMRWFDPuuPrDWgAAycDZDCgJ5abYhQBBAAAsDVKs6QyW1QblwgWinIEK9magHAb2Zw+gelPeyJrA+JTgEkCKLVJQl4CUI5b5e645kJMY0JwZ2lwu8JYuCeXQsgVoraS1plUKcAvyuQdkFkwUFVnkkU1VjktiGw-eggwgZ8H1-yuQ8AlQBm0wCSMO-CugtyM4sgTFmJ+AU1Bldh5EDhERBZlURZrFJZycZZ9oFZVOWxNZhpuQDZppJxFppZVp-A7ZegnZYKDpUkTp7SVQtul4lglwAUMQdQK1SU7gm1gZFUMJe1noB1DyLebeyWFNXRTNZJrNhlwQQgqAyglwbVZqXAvglA-Ir1FkHNz1sBViAAyh0BFdZLoOqlBqKbZjAJgEFMVRMFUEIAkj3pqh5oal4KkKjB+brMcMiaOE4i0GhFAHDYPoIEjcmqqcVGjSyBjeGYyTqVWdZLjXWUaYcULmaacZaa2daXaLaZTa2tTcpLTcCAEfLYzeAcKFALBgPg4ZtZhnMaTpwZHtwX1tTsXIJVviMqkaJczmITIZLNWjQsxofjzkwvJVxqefteecpYbKoZXqcneVpfLjpZ-krgLVvNdh6vnRda4rVv8ufH8l8YMYlvyAfL4EuK5o-Hbn7Qjfql4AxRDVupUEXT7TySHDAKMcBqpo5DLIjpZjlhYN4KkK9EsMSnMCZKUb7vDeUMlFEsbXpLFB+VIHLR-f-WfUPtSOaRAD7KujEA2PoJyG0LA4IMGJmu-AipyMCp8ggCtbyW0GtburGqxfGuxQvoWdOThnObxfXbwQJcuUJauYQozhudRh3TJRIZnnudJdubIbzoPQLooe2qXnzqpcJv2tLucjPXXiADJl-k+VvC+Uhnuh+cQ1BkzjEuYNhNoDEn1FEmaPIqgLFRALYoEWajyDELWOblrchdMAY55p4qYyBkhdYjCnY8oL4y2P8eRDeBgckFgd1E45mIRQBjZKA9iA2C-QgAiiKkpnjI49wJmFQ2ObQxCZXZxdXbOVHl5bHo3Zw83fTq3ZRmJWnoI13VnqI33bJRI6tkPYpVtkeePVeWoVPcoyIiGfXo+YvZBFWGFfsPWMwGk1DBCB9iphQ3fE7SBpYCuNAB5bFdoE4yoE7h+SDAsDAZYp4tM3UM9sYMxS+ghbrpRORZ4rYkwJYOEgCc4FaG4G7BhGFtOKoNfUFF8EYUzeQMmR4FvZSUlmXbTAioE+GN8corYgFBhH8U8ihkwS+Nzf0yOqo-kU3pBHQBwFiaE88g6VUapjDmcEYZgPjTEOwDCy4kIIaslvwK1KBS2H1Z41BWELQgII87Dk4OErsJ5v+mwCwGM-YmarYrxMYrlkMQICMfkoGjoMY+YGjsTkw6jU-SnVqZHZWWavqbsXHfjQne6ETS2VvG2enR2QDlTd2Y6U8doNpBVv2TZYyG8YIOZigHlGoKYqwBXRxYw1xTXSvvOaSuw+U8CJSsJdUynvw1uc00I7uVJYHp3Rfm01I8PfzaPV0zwkcmpeoWi3Lqo+owvWGZWOS2SAUGSxS-EBMKKAFOBewI69DGZiYAyDeUS62DwNSyBa49YlgJKBFJmHUBeqSJ0MW9QFOFkBc-zPyKUNybuuRATLBfzB+baOZKoIRe-Q5EsMDPsbcgYa3oauSErQNcsKNSy5sMDZdLFvAH5SILYGAPQEq08TDWzfEevVgQkSRVVW8XUMgJKN6ww8jSq9xSww1Gw-xSGzglwy3Wubw1RqQrRjGw0yIwm-U0myrgpYnUpRm5tPI0-n05pQM3zQAOrKAENaNtA8BPtS2vsWFAuWDb1Un8hPgPXhRPU8CgXAs73fIZAID8hrGpmtG1ZBCsjaAoAoDgNcfz3ryTpWTL2NjUjxP+0eAX2yvFbYRX1vnPCGqXN1tWuttGDLDwNUBf3FG-2K1fC+7ZbNCCuQAdpBgFD6C5mgORHkEY6BVCDBU-F5Skls3NjCnIqIkglc3bVBn3nkyYtdpFEkmonIm+frBadJG44cDgJQ0BJexgqjTQA4iA5ZbfJXD4AdumG1EuHvJufBU9gUS1Jk167nwITeCCB9S3FGXYBpkCzTCbBIpNB3yUeJLGOmodcRCgWTENDKCihVsNAicIBkFV0cFqlqsk2rGavY3VkGl6sHEmmJ1GvquQSmtXEU0WtZ1Ws01PE9v+7xGdAfJYRAlImgmoZNLMGov4fosvjhcInqYebJPdo2WQCBDfJ7C8BPZGejDUmjg-YXeSieXAzmdGHTDGagUndyglZlVLjXwHDQSlChCmrKDLBXyAwPA2XJCRzUnbEQC0vbhcAd4BxQVWRCAxjD7eC3XhI3jqAmSPNQG0wcTE+k+ha21FcINeCgiwp1uQy4PJBwA8DrtBxGdbBBixl2c5fWYgaB1L63eLFzfo1i5Y2ko40recDx3reGvNlbf2g7eoPmu3FLvWspjT5bo+nyIIbgWxwNJglsUYY+sAd+vFN10LmEZLmhsrlQc8Nt377wcgDcqIfxu92h-n756SNF7SM7LptyMT3Zt4dHYqNjpdB-KfOMV67mUS2eBOUrga0vyLxaDInW8ZDf5i50Au0PCORO2RKTx9gCwA51C7i7Okks1cAJL6oOoBrRaoO2D2CLujgoAHwpLICtXMdVU+TaCQOoUwNwMbuGC0xi8F-tArpbpikkNboIpwYl18jQW1j7BwADlIA1s-tIt3fB6Tm+tFNcG9be9lMUr+9VPQdB+bkH5R-0bCMR857f+sZWmaHdphh06ZJ8emk9UTLm1yJz0xwzhTRpBBBzFdcsYzNgBdQCQX8KQWAUNOwDTLcdjMhLO7G20GiUVTUBXJyIrE-LylQUJWORAoiCCjBomJWRtgpB74RZ++qVVBl4EHB65JiCea3vOlHCQtHaUAUoD9hQAIozCa4agj4G+LNg8o2IM9CxWd50NXe-7IOswxKagcfeHDP3pBzf6B8am7daNgAKmiSEe6--MPqh0FroclCF5FSsnwUbqVq8vNWekM1kwjN7QsnD7vqjaDGAz0SQQ+GAH3qOYAWZlUvrZREAtgrUjmX0C2AOZwFqsphCIV0T6qPxXAo-FfhKTPgXgJwRFXRiS1jLaRVg3ffTi6k3bIDgg+xbCMlmmqmpawBmAOlEQrBxFSBl4FTGQyKwRooEKvF3hOTaR38OCnvR-kGzA4v99B1KCNiISjZf8w+klKQshzEaHl5CIAuwWPUza9onBObR7nmxfDa1fc0xFwj4hRIWVfaFfdcEEFCCvQuh86KyoYHramoqwJlUUDNUXZVBpA7gUFhADfgW8HkqwDYMZy8CwNbG+6KQJYDgCVAwAvEGrBEB0bhgDAc1WHOwF4BcAFAPAvRAgFjAhFRWMADYGCIRg5ByA5EMaGQSeJ7MoYCg-wXYGUG9DVB-Q3FIB39Y8UQOT-YiOBzDbcMi0H-GYSHzmHmD5sZ+PPHJWTZx9U2mHcARLhT5QCdhMA9wRo08GbQ3Ac-fEoUHJHIliGfUNjllCBiVBPYszUQMERUQ21iutoMok8E64fR02CnBGoQObAeQDOy-XLB62gzbhbCo4ToIgDiAURbg+wfZvqltDHURY3w1AAihp7gEf07QwmKKCu6Bc8mzBApoMJnIP9V8ownQeyNf6TD3+Rg4PhJX5Gc5BRgAgeiKOvwyNb8EorNlsNT6v4CObgtRorik4Ki1Yu7f-E2BAzFcwxFop5igCtAHxfCOPEOHfG1GWUcs0gQqpZlcDkREAWrGOOl2-oBddmig5JKimFDIkJen9KoVME0jQ0kAIOHoL-UkFaBbM1SHkKJwoZvEuACRCKOQD-a393e9-WuiMKzTBtxhlTTMYYMjZwdcxv-BYZHysEx9ixQqUscoUvKSjKx0otPjWPzb1iJ0jY0rKdUh4uBeBInb2KMH+w6gkgBPbEaOEeynNXshqOEVUVYAg1nQqDALpAm3CjArxczERAsDMqLiuA3kGqhRE6ouIu01IGzj6Gy7VARAn2KcCeNnDQMSWtiUTnkmwbYR6qrEhElcPbA1lPyV4kvjRKsBt8mgtYUYGajkh7BxQ2QfiRQwRQdBqkLpPIGQzIk3dkW5MB7hBKe5hdYJ2A-7PECtCmM8GWEIdl8kMlP0q2qPFMggEdopIghyMSgA5z2B2VMhUzfmEICV4o1neodYEOHRUCLctey3XVrr31b68Kom3ebiazTq7c7SlrU5I8WPCGhEUNADgAADV7EmYf4CAF4AABGQqdoiSKA4AAslqGdB-gQA1gduPyGqlyBqpAAJmkjHggAA" target="_blank" rel="noreferrer" className="text-primary">Open the note + questions in the TypeSafe playground →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIAgvgMIAWAhnAA6UDmSC+KVK+AlgM74BuCAJwCe+ODCjl8Adw5MAdPjTlmXFAPEoYA5pSRgWy-AI4SmXHpW34AVjFVGO9cuwBmEAfkr43EfTKYANPhc5BD+9A40OlAcYBwoQkEuADaUvO48EC74NMnwFnqeNMZQEChcQbr6AEaUqUgxSBGsCFzMxRxwliIu6vE8Mqye+GDIbUGltMlYwWoaWsyslOwolADWrZxI+EIIlKpBXZrGCZ6FXiiOzkW5Kmuy3rLc5HIgQSDFELTlGNh4hMAADogSa3TDxITAghAkAJKJQ-DArilbTAoLAqAnQQcSgIgDawIAcmUcto2qgtgZuPgkGUdOw6sk0YiQAAhSwIZIiYqtZDsAC0oj5HAgTH0oqgCCCDzo5lk9GZwIACmS+Z4GaJfIJlsxpvwmW8WSreRTVAJRfQufhBS0aXSRlJOclMtt4oqQAARL6yXQCgzMWkoZjU1ICeickSUaoQGArcjcYEAXXRIFkZo0IqQXARwIAEmFZuamlbIJtbYHmAhaFQuBwAF6LQz+BAAch4oOm4ISQVSu20+hSaQyQXcohgyUutxG3EuDQZ5q6XAA9IP0gIBu57k0WBBwy0BAB+YEAXxTvRg8QA+rIg1mIQiYXCEDmQMj3M-DRiscZcf8CSBiXYHlyXYB5WGpCt1U8ZIDRTdltCtYC1UFRBUEzBBxQaKVKVlWsmndY0QKgrw4C1AQdXwPVOQI1VTTUC0rRtQxILAR0YJdTgUHdL04B9CkmIDe0Q0scMrSjGM4wTEBkxZNM5igS5RWzf48wLM0GMjQpeA4bSwBLCAy2Y+1RmRYxqmYc94nwCRLEoBTBHwAAKBA5HoOQgmMKIzAqYIohiFwTG8Pp2BMzEOBoFBhwcUxWkybJLNcVI1wASiPEBTxZVYkCQWRL3TBSFgfYEnxfN9UU-EFvxxfEiRJJCKTA+MeEg5ZoNgll4IjUkTT9VDFLFfAJWwmV9jwhUKsItVWpIsiKKo9rlVo9h1OLEQBLtIMHSdDi3Qqni+L9cshJ4UNRMjaNYypZSZOBOT1AUzNlIIVSpELDSRgMngjs2uJkTsL7dBy7Z8uOZhRwgfhyJgwt5ihx4BDgbyl1qKA1mjJg0oy4E7NiCFr1QMZ73+R8hHhFTXxRD8UzCoMfxqgC6qWylwOa+1ppg91OsQpmUOFUUMMGrDpW2XD5RonriM1UZyM2+bxaIlbLTW-0NuYVjtsFzjuO9JBfWtFXIOEsMuvEy6WaTFM7ozJSX3zV7Ff0wzBJ+7hYHMTwYjibtrOMLgaG8kcPFWAQUG8zGUwgdZ8dvWsEiK2FSY-Z6Kffd0aexX8CH-QDuqIxqILZhkOYqrnuR5oU0P5zDJWFnJRrFiamemqXtVlhB9XltUHeV761bY51Nd2lN9t1-iDeOyiRJNi7JOuy2s3k-qnpZO23tWj6ndViv+sG9YgikCBfE8eh5SCWoBAQoJIv2FBA74XQOBgyglz9kxnbLUmTEZHoF13tZw5ZAFHKIRLwAEcYB1CJtCYqidSqUzTlVTO+Bs6MwlvnVmm12YLTZBybmEteaVwGkNWuot8KNwls3Ui0s5rt2ouQhW9F17rRYv3HaXE9o6z1swiep1p4SSuhbWSC97pL1tmpRhSsN5fSMptYolBuCNmYOAyBpwsgqyAc8TibRkguCCIGGwdhQLlEosgegQxnKuXcvgFsyR5SCB4OZSgsYOAuHHFyFsQQWyWliK0Dx1jShYVQDLAWGiQh+JsRaDyCAgEhKeGE5KfB7F2HwCfbS25bShMkLSDaUZpg5AgLHHSixtDLD6gA4EtR6iSkvFQBGopITExgWTZOZUqYsnTnTP8tUgJM3QVvLBnNcFl3wdvdC1dhoi3rmQlMk0KSUNmm3Du9Cu4SMYuPH6rDB7sOHpwsevdOAnSnmJGeAjpLzxBo9MR9tVkiFLNI9+pJ5FtBVs2Ns+BKm6BrvgWppEkCJEGh4G8CB6Ay0zINbI-RrJfBoPzVAXBykgAYPKS8MLbyXDqPHEq5NWkIPiBnemOd6qgW2CzfpRdsGl1zshUZVdBZfJGnKaZRom4aioa3XUtDsGzOWjc-W+z1bsS2drXio9DoyODIc42xz+HmzOUIi5Ntyar27lI9ZKgYD0HDPYUlzZvn7GPvKfJaKcTJABdIR+prOifH4EuUY+oIA0G8Fofc5qhiXEQMzQwkon6HhPCmGFhT+B5RgFEAQqRLhBvqPQCB4ZMWwOxfAiqHTqpdIZj0tBJKmpkraoMhCwyiIEP6gLYhOEpnjRmSy4YbLgkmKWRWiWKruEbI1qKLWHCRVcLVQcyeUrzoyqaoI26wjrZZiuWvSRdyu12HVaG8NRSzXxicIhAp8R53tzqBAiNupdDRoYMwCxblPH0HcOGGMXBwnUEoHWeU4SQV7GWuISU5hwltGoNMZ9njHHONcckFsCTIqPIUS82QYNIaMgRUwegywimXhpl-ZIl4o0xqTvgEmzSWQ4qTYgglqC86ZoLpg8luaupEv1n1MZdKJl10ZeW5lFDWULI5XWujDCiySKbX3FtrptkshHp2-ZRszqeBObKm6qZh0PUVcnZVvLJ29zeRDbU0NIpMGCBqrV7BwxIAvKp36lAaAwpvH1M1XhIZxAUgYVqtpdUuEZDwEI7h2AHqsS2R06xWgoHCXp1Qghwn6J-VaAJaTGj0D-ZUTIBmCkCwA14MaeTeLJH0FANI96aUDQZWNV18Zti6EGvuGQzyA2rv4EYduHAEBSARWAYwSA1hRkfnjPYeFYpxvQ0iRN1NsOpsJb0-DGD6Q5pLkMqlY9yO0pLRlhu9aiLzOoYsuh02VlsbWfyzZrah68d2WKh5gm+FmwHXKodCrR1KvEct25n0u29GoIo81qn9VNaEPyarsgtz0CCLWKY2EYANGhbY5LQYwB3xKWAEQAGXu1btK9QYoRLquJDsoDwdrOQOrKX6lk0ZQeXhKOQbyrWUPtdTlhvFnSs7dJG8Sq62bGTEbwQWtLxahalpo53OZDG5tMYWyxpb70ONbUFetnjwI+N7PFd23h0r9tSTE1bSTJ3pNnfenJsXoUzK3deQ43w-zHRXFvtFXHsU74BMlEE6DrbnOeIC-yTH5WwDhJx15sYrZPHG75MEu3qV0dIkdAgUOsVEOcvx3AonnWScprJ2minnqCMDZp0NvNUfC0UYm5Mlnyy2dVsY7Wrni0G28r5wKgegvhUHT5WL3bkvZ6DvE8d5eL1x2O3uVvVXHBzLBB93792o4uAau6NZWpdlaaeuYM2BFQZsALEvC3iKGQg8JpD+0rrEeesZqpy1Ij8eSPlzG0Qpnk2mW55m+z9l2euVM0bV2wvbCS+irLztyVQnTZV8OzXxelzTvXPO6q-lrQwpt9WA9HkuPqDGaqRLGOQC4AgJyE5C5IetYlwKRGUOQOEvqPwAkC+o-GsEIOEpiHsHANgZ4jClINLNgZ7ulCmHsAjkIHlEOMIJeBWMvGhgTinOVKHrTOHsguTqRn0uvoNnBMNqRknuNnvqnmNKzgyMfjWnLOnjyl-gXmttxjfvxuXg-nts-jLhJqIh-g3hdpvCxL-mrvgJQawP8lwLQf8qOLSEgPyAlP3rZPZB4D3hIJ4CdPeojlfBACjKUEED9tLNUOoCEIcCBlDHfIjtUKrPCl7iAIOFIJeO4FPtEggApJeDvhhHPsnLSOOO6LLlocnF6HofaDvsMDEWaqMJARZo1CPiBh9uIJIPquZIav2OIBhEkD9lgYcLGC0XquuOQB9jGAIHfEgYIAVmDC4C4PyDQLGLOPQGlGwfio0rCOoMwUoA8qoDqNItSKOFANMJYFaFarYpsBtsCLZs6MsWLqkpsNkrIOZmbtsGorKseFjK+PKNMJeGkggEIJYGAHEQICimSJcOGHlI4LrAaNAgnG1iAJkdgjke-nkZdvsrWIwHUL5EkSarnACWDB4FEHEHeo2OaBqpIEUWorFn5C4oFO8Z8QIEDkYWsZtNoJMasP1D2J0HivoJ8GACOiOIlnwCBj5LZmAQMCBl0BsAMWaoGLkswORCcEIEuHZNsfInALMYvmHkgo+EsS+CsVvLSYZJsR4NsZQXsVMOVjwEcdEXUG0BqecUUqzFsDcTvPcQdo8SmLwJYOVqsAhtUNMHoAkasI-OkSyFCdkZobCZtgUZtH7KiS4GDoYCCvpswC6cYL7iIKOJ6cgGyYICbqsFqpSKML6ckEqV+CqZiuqeTJqZBNqRsZkHqTsWGiIPscaW2meOaWcQ8hcTadcV-PadkA8U8UQYILBkNKbv1Ihjushv6YTqwcqewUgigumnhmvoXHwR1AIdvnzLvvSqIVNtzhnjNBzqfuIToXfs3goY2Zth2qLvfj2o-iJgdhobXmOiqsrg8tOpPE0MhuCiMITN7H2aKa7kOZmHfECneKcBbtYqMFmM7tYuQBqpBS2H+WoDqHbp4mme+uep4m0FWC8SIChbFOEtUI4H+juJ+aZK3uriBgpmBtDFaoPgiquPEb9LOA9PwHjgsVii0h1lOfMcvrhmqDwYuXHvwQnoIQzuMiQmWgebNiftIYtnRHIZfieaaSLttlvBXn2lLnPPKm-lJivAWD9nYBAskEEFgGUCYHfBGf5IFNSLaIplDKanRQILKQuKZtAFGOOH3tOvoHxZtKBUQF0OaGfGUMIJcD5LGTQPGEGB9pQGMUWEEKijCloMYAkqCByPoDFlvHmoaq2pML8kZZDEIGAJQD-BeCgEuJHGsMRWFDPuuPrDWgAAycDZDCgJ5abYhQBBAAAsDVKs6QyW1QblwgWinIEK9magHAb2Zw+gelPeyJrA+JTgEkCKLVJQl4CUI5b5e645kJMY0JwZ2lwu8JYuCeXQsgVoraS1plUKcAvyuQdkFkwUFVnkkU1VjktiGw-eggwgZ8H1-yuQ8AlQBm0wCSMO-CugtyM4sgTFmJ+AU1Bldh5EDhERBZlURZrFJZycZZ9oFZVOWxNZhpuQDZppJxFppZVp-A7ZegnZYKDpUkTp7SVQtul4lglwAUMQdQK1SU7gm1gZFUMJe1noB1DyLebeyWFNXRTNZJrNhlwQQgqAyglwbVZqXAvglA-Ir1FkHNz1sBViAAyh0BFdZLoOqlBqKbZjAJgEFMVRMFUEIAkj3pqh5oal4KkKjB+brMcMiaOE4i0GhFAHDYPoIEjcmqqcVGjSyBjeGYyTqVWdZLjXWUaYcULmaacZaa2daXaLaZTa2tTcpLTcCAEfLYzeAcKFALBgPg4ZtZhnMaTpwZHtwX1tTsXIJVviMqkaJczmITIZLNWjQsxofjzkwvJVxqefteecpYbKoZXqcneVpfLjpZ-krgLVvNdh6vnRda4rVv8ufH8l8YMYlvyAfL4EuK5o-Hbn7Qjfql4AxRDVupUEXT7TySHDAKMcBqpo5DLIjpZjlhYN4KkK9EsMSnMCZKUb7vDeUMlFEsbXpLFB+VIHLR-f-WfUPtSOaRAD7KujEA2PoJyG0LA4IMGJmu-AipyMCp8ggCtbyW0GtburGqxfGuxQvoWdOThnObxfXbwQJcuUJauYQozhudRh3TJRIZnnudJdubIbzoPQLooe2qXnzqpcJv2tLucjPXXiADJl-k+VvC+Uhnuh+cQ1BkzjEuYNhNoDEn1FEmaPIqgLFRALYoEWajyDELWOblrchdMAY55p4qYyBkhdYjCnY8oL4y2P8eRDeBgckFgd1E45mIRQBjZKA9iA2C-QgAiiKkpnjI49wJmFQ2ObQxCZXZxdXbOVHl5bHo3Zw83fTq3ZRmJWnoI13VnqI33bJRI6tkPYpVtkeePVeWoVPcoyIiGfXo+YvZBFWGFfsPWMwGk1DBCB9iphQ3fE7SBpYCuNAB5bFdoE4yoE7h+SDAsDAZYp4tM3UM9sYMxS+ghbrpRORZ4rYkwJYOEgCc4FaG4G7BhGFtOKoNfUFF8EYUzeQMmR4FvZSUlmXbTAioE+GN8corYgFBhH8U8ihkwS+Nzf0yOqo-kU3pBHQBwFiaE88g6VUapjDmcEYZgPjTEOwDCy4kIIaslvwK1KBS2H1Z41BWELQgII87Dk4OErsJ5v+mwCwGM-YmarYrxMYrlkMQICMfkoGjoMY+YGjsTkw6jU-SnVqZHZWWavqbsXHfjQne6ETS2VvG2enR2QDlTd2Y6U8doNpBVv2TZYyG8YIOZigHlGoKYqwBXRxYw1xTXSvvOaSuw+U8CJSsJdUynvw1uc00I7uVJYHp3Rfm01I8PfzaPV0zwkcmpeoWi3Lqo+owvWGZWOS2SAUGSxS-EBMKKAFOBewI69DGZiYAyDeUS62DwNSyBa49YlgJKBFJmHUBeqSJ0MW9QFOFkBc-zPyKUNybuuRATLBfzB+baOZKoIRe-Q5EsMDPsbcgYa3oauSErQNcsKNSy5sMDZdLFvAH5SILYGAPQEq08TDWzfEevVgQkSRVVW8XUMgJKN6ww8jSq9xSww1Gw-xSGzglwy3Wubw1RqQrRjGw0yIwm-U0myrgpYnUpRm5tPI0-n05pQM3zQAOrKAENaNtA8BPtS2vsWFAuWDb1Un8hPgPXhRPU8CgXAs73fIZAID8hrGpmtG1ZBCsjaAoAoDgNcfz3ryTpWTL2NjUjxP+0eAX2yvFbYRX1vnPCGqXN1tWuttGDLDwNUBf3FG-2K1fC+7ZbNCCuQAdpBgFD6C5mgORHkEY6BVCDBU-F5Skls3NjCnIqIkglc3bVBn3nkyYtdpFEkmonIm+frBadJG44cDgJQ0BJexgqjTQA4iA5ZbfJXD4AdumG1EuHvJufBU9gUS1Jk167nwITeCCB9S3FGXYBpkCzTCbBIpNB3yUeJLGOmodcRCgWTENDKCihVsNAicIBkFV0cFqlqsk2rGavY3VkGl6sHEmmJ1GvquQSmtXEU0WtZ1Ws01PE9v+7xGdAfJYRAlImgmoZNLMGov4fosvjhcInqYebJPdo2WQCBDfJ7C8BPZGejDUmjg-YXeSieXAzmdGHTDGagUndyglZlVLjXwHDQSlChCmrKDLBXyAwPA2XJCRzUnbEQC0vbhcAd4BxQVWRCAxjD7eC3XhI3jqAmSPNQG0wcTE+k+ha21FcINeCgiwp1uQy4PJBwA8DrtBxGdbBBixl2c5fWYgaB1L63eLFzfo1i5Y2ko40recDx3reGvNlbf2g7eoPmu3FLvWspjT5bo+nyIIbgWxwNJglsUYY+sAd+vFN10LmEZLmhsrlQc8Nt377wcgDcqIfxu92h-n756SNF7SM7LptyMT3Zt4dHYqNjpdB-KfOMV67mUS2eBOUrga0vyLxaDInW8ZDf5i50Au0PCORO2RKTx9gCwA51C7i7Okks1cAJL6oOoBrRaoO2D2CLujgoAHwpLICtXMdVU+TaCQOoUwNwMbuGC0xi8F-tArpbpikkNboIpwYl18jQW1j7BwADlIA1s-tIt3fB6Tm+tFNcG9be9lMUr+9VPQdB+bkH5R-0bCMR857f+sZWmaHdphh06ZJ8emk9UTLm1yJz0xwzhTRpBBBzFdcsYzNgBdQCQX8KQWAUNOwDTLcdjMhLO7G20GiUVTUBXJyIrE-LylQUJWORAoiCCjBomJWRtgpB74RZ++qVVBl4EHB65JiCea3vOlHCQtHaUAUoD9hQAIozCa4agj4G+LNg8o2IM9CxWd50NXe-7IOswxKagcfeHDP3pBzf6B8am7daNgAKmiSEe6--MPqh0FroclCF5FSsnwUbqVq8vNWekM1kwjN7QsnD7vqjaDGAz0SQQ+GAH3qOYAWZlUvrZREAtgrUjmX0C2AOZwFqsphCIV0T6qPxXAo-FfhKTPgXgJwRFXRiS1jLaRVg3ffTi6k3bIDgg+xbCMlmmqmpawBmAOlEQrBxFSBl4FTGQyKwRooEKvF3hOTaR38OCnvR-kGzA4v99B1KCNiISjZf8w+klKQshzEaHl5CIAuwWPUza9onBObR7nmxfDa1fc0xFwj4hRIWVfaFfdcEEFCCvQuh86KyoYHramoqwJlUUDNUXZVBpA7gUFhADfgW8HkqwDYMZy8CwNbG+6KQJYDgCVAwAvEGrBEB0bhgDAc1WHOwF4BcAFAPAvRAgFjAhFRWMADYGCIRg5ByA5EMaGQSeJ7MoYCg-wXYGUG9DVB-Q3FIB39Y8UQOT-YiOBzDbcMi0H-GYSHzmHmD5sZ+PPHJWTZx9U2mHcARLhT5QCdhMA9wRo08GbQ3Ac-fEoUHJHIliGfUNjllCBiVBPYszUQMERUQ21iutoMok8E64fR02CnBGoQObAeQDOy-XLB62gzbhbCo4ToIgDiAURbg+wfZvqltDHURY3w1AAihp7gEf07QwmKKCu6Bc8mzBApoMJnIP9V8ownQeyNf6TD3+Rg4PhJX5Gc5BRgAgeiKOvwyNb8EorNlsNT6v4CObgtRorik4Ki1Yu7f-E2BAzFcwxFop5igCtAHxfCOPEOHfG1GWUcs0gQqpZlcDkREAWrGOOl2-oBddmig5JKimFDIkJen9KoVME0jQ0kAIOHoL-UkFaBbM1SHkKJwoZvEuACRCKOQD-a393e9-WuiMKzTBtxhlTTMYYMjZwdcxv-BYZHysEx9ixQqUscoUvKSjKx0otPjWPzb1iJ0jY0rKdUh4uBeBInb2KMH+w6gkgBPbEaOEeynNXshqOEVUVYAg1nQqDALpAm3CjArxczERAsDMqLiuA3kGqhRE6ouIu01IGzj6Gy7VARAn2KcCeNnDQMSWtiUTnkmwbYR6qrEhElcPbA1lPyV4kvjRKsBt8mgtYUYGajkh7BxQ2QfiRQwRQdBqkLpPIGQzIk3dkW5MB7hBKe5hdYJ2A-7PECtCmM8GWEIdl8kMlP0q2qPFMggEdopIghyMSgA5z2B2VMhUzfmEICV4o1neodYEOHRUCLctey3XVrr31b68Kom3ebiazTq7c7SlrU5I8WPCGhEUNADgAADV7EmYf4CAF4AABGQqdoiSKA4AAslqGdB-gQA1gduPyGqlyBqpAAJmkjHggAA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开这条笔记和全部问题 →</a>
