@@ -75,3 +75,25 @@ python tools/verify_site.py
 ```
 
 它扫描 `dist/` 下所有 HTML，检查三件事：每个 `href="#..."` 在同页有对应 `id`、每个站内链接与资源在磁盘上真实存在、没有残留的 `{#literal}` 字面量。
+
+## 给 LLM 用的产物（llms.txt）
+
+原站是 Mintlify 托管的，它会额外输出三样东西；我们的自托管构建也必须自己生成，否则不算复刻：
+
+```bash
+python tools/gen_llms.py --dist dist --base /typesafe/ --url http://<服务器>/typesafe
+```
+
+| 产物 | 说明 | 本站实测大小 |
+| --- | --- | --- |
+| `dist/llms.txt` | 全站索引：站名 + 一句话描述 + 每页的「标题 / 描述 / .md 链接」 | 25 KB / 111 页 |
+| `dist/llms-full.txt` | 全站正文拼接成单个纯文本文件 | 1.15 MB |
+| `dist/<path>.md` | 每个页面额外的原始 Markdown 副本（`llms.txt` 链的就是它） | 111 个 |
+
+`--url` 用来拼 `llms.txt` 里的绝对链接；不给就退化成带 `--base` 前缀的根相对路径。
+
+> **IIS 注意**：IIS 默认不识别 `.md`，不加 MIME 映射会直接 404.3。服务器上已经加过：
+> ```powershell
+> Add-WebConfigurationProperty -Filter "system.webServer/staticContent" -Name "." `
+>   -Value @{fileExtension='.md'; mimeType='text/markdown; charset=utf-8'}
+> ```
