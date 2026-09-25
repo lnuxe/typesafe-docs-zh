@@ -3030,10 +3030,15 @@ const VENDOR_FONTS = [
   'jetbrains-mono-latin-wght-normal.woff2',
 ];
 
-function copyAssets(outDir) {
+// 品牌色以 docs.json 的 colors.primary 为准（线上原站实测 = #E551BA），
+// STYLE_CSS 里的字面量只是 fallback —— 这样 docs.json 和构建产物不会再各说各话。
+function copyAssets(outDir, brand) {
   const assetsDir = path.join(outDir, 'assets');
   mkdirp(assetsDir);
-  writeFileEnsured(path.join(assetsDir, 'style.css'), STYLE_CSS.trimStart());
+  const css = STYLE_CSS.trimStart()
+    .split('--primary: #E551BA;').join('--primary: ' + brand + ';')
+    .split('--primary-light: #E551BA;').join('--primary-light: ' + brand + ';');
+  writeFileEnsured(path.join(assetsDir, 'style.css'), css);
   writeFileEnsured(path.join(assetsDir, 'app.js'), APP_JS.trimStart());
   const mermaidSrc = path.join(__dirname, 'vendor', 'mermaid.min.js');
   if (fs.existsSync(mermaidSrc)) {
@@ -3125,7 +3130,7 @@ function main() {
     pages.push({ page, body: r.body });
   }
 
-  copyAssets(outDir);
+  copyAssets(outDir, (docs.colors && (docs.colors.primary || docs.colors.dark)) || '#E551BA');
 
   // 搜索索引
   const entries = [];
