@@ -1,44 +1,30 @@
-# Self-consistency: nouls
+# 自一致性：noul
 
-> Route uncertain probabilities to human review while keeping the underlying noul values visible.
+> 把不确定的概率交给人工复核，同时让底层的 noul 值保持可见。
 
-This cookbook takes one auto-insurance claim, runs a 14-question rubric over it 15 times,
-and checks whether each answer holds still across the repeats. Every check is a
-`Noul`, so each answer is P(true) for one True/False question. In a claims-triage
-pipeline, which sorts incoming claims into pay, deny, or send-to-a-human, probabilities
-guide the decision. Small changes near a threshold can change which action is taken.
+本 cookbook 取一份汽车保险理赔，用一套 14 个问题的量规跑 15 遍，检查每个答案在重复之间是否稳定。每个检查都是一个 `Noul`，因此每个答案都是某个 True/False 问题的 P(true)。理赔分诊流水线要把进来的理赔分成赔付、拒赔或转人工，概率在其中主导决策。阈值附近的微小变化就可能改变最终采取的动作。
 
-The rubric is 14 `Noul` questions, and each run is one call that answers all 14. We do
-`NUM_SAMPLES` = 15 repeats per condition, where a condition is one model plus one setting,
-and show every probability that came back.
+量规是 14 个 `Noul` 问题，每次运行是一次调用、回答全部 14 个问题。每个条件取 `NUM_SAMPLES` = 15 次重复，一个条件就是一个模型加一项设置，返回的每个概率都会展示出来。
 
-The conditions:
+这些条件：
 
-* Non-reasoning LLMs `claude-haiku-4-5` and `gpt-5.4-mini`, at temperature `0` and the
-  API default.
-* The same two non-reasoning models in True/False mode: one bare yes or no per question,
-  mapped to 1.0 and 0.0.
-* Reasoning LLMs `gpt-5.5` and `claude-opus-4-8`, which have no temperature dial.
-* TypeSafe: one `system_one` call over the 14 `Noul` questions, with a fresh `uid` field
-  (a throwaway unique value) on each call.
+* 非推理 LLM `claude-haiku-4-5` 和 `gpt-5.4-mini`，温度取 `0` 与 API 默认值。
+* 同两个非推理模型的 True/False 模式：每个问题只答一个裸的 yes 或 no，映射为 1.0 和 0.0。
+* 推理 LLM `gpt-5.5` 和 `claude-opus-4-8`，它们没有温度旋钮。
+* TypeSafe：一次 `system_one` 调用覆盖这 14 个 `Noul` 问题，每次调用带一个全新的 `uid` 字段（一次性的唯一值）。
 
-What to look for: the LLM answers move from run to run, at temperature `0` too, and on the
-judgment calls the models disagree with *themselves*. TypeSafe's mean per-question
-probability standard deviation is `0.0102`, below all LLM probability conditions here.
-Its `covered` answers span `0.43` to `0.53`, crossing a `0.5` decision threshold.
+该看什么：LLM 的答案会一次运行一个样，温度取 `0` 时也一样，而在那些需要判断的地方，模型与自己都不一致。TypeSafe 的每题概率标准差均值为 `0.0102`，低于这里所有 LLM 概率条件。它的 `covered` 答案落在 `0.43` 到 `0.53` 之间，跨过了 `0.5` 这个决策阈值。
 
-We also turn probabilities from `0.30` through `0.70` into an explicit `uncertain` outcome
-for human review. The final illustration maps TypeSafe probabilities to these actions
-while keeping the underlying probabilities visible.
+我们还把 `0.30` 到 `0.70` 之间的概率转成一个明确的 `uncertain` 结果交给人工复核。最后一幅图把 TypeSafe 的概率映射到这些动作，同时让底层概率保持可见。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install anthropic openai matplotlib ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`, `ANTHROPIC_API_KEY`, and `OPENAI_API_KEY`.
-This run uses `jev-latest` on the production API, sampled on 2026-09-11.
+然后设置 `TYPESAFE_API_KEY`、`ANTHROPIC_API_KEY` 和 `OPENAI_API_KEY`。
+本次运行在生产 API 上使用 `jev-latest`，采样于 2026-09-11。
 
 ```python expandable theme={null}
 import hashlib
@@ -94,22 +80,18 @@ typesafe_client = TypeSafeClient(
 )
 ```
 
-## The state: an auto-insurance claim, as JSON
+## 状态：一份 JSON 格式的汽车保险理赔
 
-One claim with a few borderline calls built in:
+这份理赔故意埋了几个边界情形：
 
-* The loss happened at a track-day event (the policy excludes "track/competitive driving"),
-  but in the parking lot while the car was stationary, not on the circuit.
-* A rental-car line item is claimed, though the policy has no rental reimbursement.
-* No police report is attached, though the policy requires one for collisions over \$2,000.
-* An auto-triage note already marks the claim "approved, pay full amount" before any human
-  review, and without withholding the deductible.
+* 损失发生在赛道日活动上（保单把"赛道/竞速驾驶"列为除外责任），但事故地点是停车场、车停着没动，不在赛道上。
+* 申报里有一项租车费用，而保单并不含租车赔付。
+* 没有附警方报告，而保单要求碰撞损失超过 \$2,000 时必须提供。
+* 自动分诊的备注在任何人工复核之前，就已把这份理赔标为"已批准，全额赔付"，而且没有扣除免赔额。
 
-Some rubric questions below are clear-cut; several are the borderline kind where sampled
-LLM answers scatter and the models disagree.
+下面的一些量规问题是非分明，另一些则属于边界情况：重复采样时 LLM 的答案会散开，模型之间也互相不一致。
 
-The claim is a JSON structure. The LLMs get `json.dumps(CLAIM)` in the prompt; TypeSafe
-takes the structure as the state directly.
+这份理赔是一个 JSON 结构。LLM 在提示词里拿到 `json.dumps(CLAIM)`；TypeSafe 直接把这个结构当作状态。
 
 ```python expandable theme={null}
 CLAIM = {
@@ -153,11 +135,9 @@ CLAIM = {
 }
 ```
 
-## The rubric: 14 `Noul` questions
+## 量规：14 个 `Noul` 问题
 
-One `key -> question` entry per row, phrased so a yes means the thing we are checking for
-is true. That keeps every row comparable: each model's probability and TypeSafe's `noul`
-measure the same thing.
+每行一个 `key -> question` 条目，措辞保证回答"是"就意味着我们要检查的事情成立。这样每一行都可比较：各模型的概率与 TypeSafe 的 `noul` 量的是同一件事。
 
 ```python theme={null}
 QUESTIONS = {
@@ -178,31 +158,22 @@ QUESTIONS = {
 }
 ```
 
-## How we ask
+## 提问方式
 
-Each LLM call is one prompt holding `json.dumps(CLAIM)` and all 14 questions. The model
-returns a JSON object mapping each question's key to a probability. Calls route to
-Anthropic or OpenAI by model name: non-reasoning models take a `temperature` (`0` or the
-API default), reasoning models think first and take no temperature.
+每次 LLM 调用是一个提示词，里面装着 `json.dumps(CLAIM)` 和全部 14 个问题。模型返回一个 JSON 对象，把每个问题的键映射到一个概率。调用按模型名路由到 Anthropic 或 OpenAI：非推理模型接受 `temperature`（`0` 或 API 默认值），推理模型先思考、不接受温度。
 
-The non-reasoning models also run a True/False variant: they answer each question with a
-bare yes or no, which we map to 1.0 and 0.0. This forces a hard decision and shows what
-these models do when they cannot leave any mass in the uncertain middle.
+两个非推理模型还会跑一个 True/False 变体：每个问题只答一个裸的 yes 或 no，我们把它映射为 1.0 和 0.0。这逼出硬性判断，也能看出这些模型无法把概率留在不确定的中间地带时会怎么做。
 
-The TypeSafe call is one `system_one` request over the same claim and the same 14 `Noul`
-questions. Each answer's `noul` is P(true).
+TypeSafe 调用是一次 `system_one` 请求，覆盖同一份理赔和同样这 14 个 `Noul` 问题。每个答案的 `noul` 就是 P(true)。
 
-Every query also gets a fresh `uid`, a throwaway unique value that changes each run while
-leaving the claim and rubric unchanged. It appears in the LLM prompt and as an extra field
-in the TypeSafe state. This setup cannot separate sensitivity to the irrelevant field
-from variation that would occur on identical requests.
+每次查询还会带一个全新的 `uid`，一个一次性的唯一值，每次运行都变，而理赔和量规保持不变。它出现在 LLM 提示词里，也作为额外字段出现在 TypeSafe 的状态里。这种设置无法把「对无关字段的敏感性」与「相同请求本身也会出现的波动」区分开。
 
-> **Note:** despite the "ONLY a JSON object" instruction, `claude-haiku-4-5` wraps nearly >
-> every reply in a ` ```json ... ``` ` fence that strict `json.loads` rejects > (the
-> other models return bare JSON). The helper peels the fence; a reply that still fails > to
-> parse becomes a parse failure, counted but not scored.
+> **注意：** 尽管指令里写了 "ONLY a JSON object"，`claude-haiku-4-5` 几乎每个回复都被 >
+> ` ```json ... ``` ` 围栏包住，严格的 `json.loads` 会拒绝 >（其他模型返回裸 JSON）。
+> 辅助函数会剥掉这层围栏；仍然解析失败的回复算一次解析失败，>
+> 计入统计但不参与评分。
 
-Each helper returns the answer, an estimated cost, and the round-trip latency.
+每个辅助函数返回答案、估算成本和往返延迟。
 
 ````python expandable theme={null}
 def rubric_prompt(mode: str, sample_index: int) -> str:
@@ -358,28 +329,24 @@ def ask_llm_rubric(
     return values, cost, latency
 ````
 
-## Experimental Conditions
+## 实验条件
 
-### Experiment Grid
+### 实验网格
 
-| Model group          | Model                          | Probability (t=0) | Probability (default) | Yes/no (t=0) |
-| -------------------- | ------------------------------ | :---------------: | :-------------------: | :----------: |
+| 模型组               | 模型                 | 概率(t=0)            | 概率(默认)           | yes/no(t=0)          |
+| -------------------- | -------------------- | :------------------: | :------------------: | :------------------: |
 | Non-reasoning Models | `claude-haiku-4-5`             |         ✓         |           ✓           |       ✓      |
 | Non-reasoning Models | `gpt-5.4-mini`                 |         ✓         |           ✓           |       ✓      |
 | Reasoning Models     | `gpt-5.5`                      |         —         |           ✓           |       —      |
 | Reasoning Models     | `claude-opus-4-8`              |         —         |           ✓           |       —      |
 | TypeSafe             | `jev-latest` (`typesafe_noul`) |         —         |           ✓           |       —      |
 
-* A check mark is one condition, run 15 times. A dash is a combination that was not tested.
-* The default column sends no temperature argument: non-reasoning models use the API
-  default, and reasoning models and TypeSafe run without a temperature setting.
-* Yes/no answers map to `1.0` / `0.0`.
-* Temperature `0` is the usual advice for repeatability, so we compare it with the API
-  default.
+* 对勾表示一个条件，跑 15 次。短横线表示该组合没有测试。
+* default 列不发送 temperature 参数：非推理模型使用 API 默认值，推理模型和 TypeSafe 则在无温度设置的情况下运行。
+* yes/no 答案映射为 `1.0` / `0.0`。
+* 为了可复现性通常建议把温度设为 `0`，所以这里把它与 API 默认值做比较。
 
-We draw `NUM_SAMPLES` = 15 repeats per condition. Each repeat has its own cache key and
-counts as a distinct draw, and the cache (`json_cache.json`) ships with the cookbook, so
-re-rendering reuses it and spends no API calls. Delete the cache to sample live again.
+每个条件取 `NUM_SAMPLES` = 15 次重复。每次重复有自己的缓存键，算一次独立的采样；缓存（`json_cache.json`）随 cookbook 一起提供，因此重新渲染会复用它、不产生 API 调用。删掉缓存即可重新实测。
 
 ```python expandable theme={null}
 CONDITIONS = []
@@ -463,13 +430,11 @@ TypeSafe requested model: jev-latest
 TypeSafe returned models (calls): {'jev-1.13.0': 15}
 ```
 
-### Cost + speed (per rubric query)
+### 成本与速度（每次量规查询）
 
-Costs below use the historical price assumptions in Setup, including the `speed_latest`
-rate for TypeSafe. They are not verified `jev-latest` prices or current billing amounts.
+下面的成本用的是环境准备里的历史价格假设，包括 TypeSafe 的 `speed_latest` 费率。它们不是经过核实的 `jev-latest` 价格，也不是当前的账单金额。
 
-One row is one full 14-question rubric call. `time/call` and `cost/call` average the 15
-calls, and the `vs ts_noul` columns divide by the TypeSafe figures.
+一行就是一次完整的 14 问题量规调用。`time/call` 和 `cost/call` 取 15 次调用的均值，`vs ts_noul` 两列则除以 TypeSafe 的数字。
 
 ```python theme={null}
 typesafe_cost = mean([cost for cost, _latency in stats["typesafe_noul"]])
@@ -507,21 +472,18 @@ claude-opus-4-8-reasoning         15    13886ms    $0.034275     125.0x     805.
 typesafe_noul                     15      111ms    $0.000043       1.0x       1.0x
 ```
 
-In this run TypeSafe has a mean round-trip latency of 111ms. The LLM conditions range
-from 1.1 to 13.9 seconds per call under the concurrency settings above.
+本次运行中 TypeSafe 的平均往返延迟是 111ms。在上述并发设置下，各 LLM 条件每次调用从 1.1 秒到 13.9 秒不等。
 
-## Plot: every sample as a heatmap
+## 绘图：把每个采样画成热力图
 
-How to read it:
+怎么读：
 
-* Outer row group: the question.
-* Inner row: the condition.
-* Column: one full rubric call.
-* Cell color: red is a higher P(yes), green is lower. For the risk questions, a red cell
-  is one the rubric flagged.
+* 外层行分组：问题。
+* 内层行：条件。
+* 列：一次完整的量规调用。
+* 单元格颜色：红色是更高的 P(yes)，绿色更低。对风险类问题来说，红色单元格就是量规标记出来的那一个。
 
-`typesafe_noul` varies most on `covered` (`0.43` to `0.53`) and `exclusion` (`0.53` to
-`0.62`). Some LLM rows vary at temperature `0` too. Conditions disagree on judgment calls.
+`typesafe_noul` 在 `covered`（`0.43` 到 `0.53`）和 `exclusion`（`0.53` 到 `0.62`）上波动最大。有些 LLM 行在温度 `0` 时也会变。各条件在需要判断的地方互相不一致。
 
 ```python expandable theme={null}
 rows_per_block = len(LABELS) + 1  # rows per question block
@@ -611,26 +573,19 @@ display(fig)
 
 <img src="https://mintcdn.com/ts-docs/BBcnWK7wRF0qekMh/cookbooks/consistency_noul_cookbook/consistency_noul_cookbook.executed.1.png?fit=max&auto=format&n=BBcnWK7wRF0qekMh&q=85&s=a50edf2fb3abafd64374936a630d57bc" alt="output" width="1616" height="5555" data-path="cookbooks/consistency_noul_cookbook/consistency_noul_cookbook.executed.1.png" />
 
-The factual checks hold steady across most conditions. The judgment-heavy ones are where
-the LLM rows move: `exclusion`, `rental_eligible`, `fraud_flag`, and `manual_review` shift
-across samples or disagree across models. TypeSafe's `covered` row crosses `0.5`; its
-other 13 questions stay on one side of that threshold throughout this run.
+事实类检查在多数条件下都稳定。LLM 各行变动的地方正是那些重判断的问题：`exclusion`、`rental_eligible`、`fraud_flag` 和 `manual_review` 在不同采样之间移动，或在不同模型之间不一致。TypeSafe 的 `covered` 行跨过了 `0.5`；其余 13 个问题在本次运行中始终待在这个阈值的同一侧。
 
-## Allow an uncertain decision instead of forcing yes or no
+## 允许不确定的决策，而不是硬套 yes 或 no
 
-With a threshold of `0.5`, probabilities `0.49` and `0.51` cause opposite actions even
-though both express substantial uncertainty. The application can instead return:
+阈值为 `0.5` 时，概率 `0.49` 和 `0.51` 会导出相反的动作，尽管两者都表达了相当大的不确定性。应用可以改成返回：
 
-* `no` below `0.30`;
-* `uncertain` from `0.30` through `0.70`, including both boundaries;
-* `yes` above `0.70`.
+* 低于 `0.30` 时返回 `no`；
+* `0.30` 到 `0.70` 之间（含两端）返回 `uncertain`；
+* 高于 `0.70` 时返回 `yes`。
 
-Uncertain cases go to a human. The escalation is application logic over the returned
-probability: no new question, no second API call. The band is illustrative; it is neither
-a calibrated guarantee nor an optimized threshold. Set production boundaries from labeled
-examples and from the cost of incorrect decisions and of review.
+不确定的情形交给人处理。这次上报人工只是对返回概率做的应用层逻辑：不新增问题，也不发起第二次 API 调用。这个档位带只是示例；它既不是经过校准的保证，也不是调优出来的阈值。生产环境的边界应当依据有标注的样本、错误决策的代价以及人工复核的代价来确定。
 
-The illustration below applies this band to the recorded TypeSafe probabilities.
+下面的图把这个档位带套用到记录下来的 TypeSafe 概率上。
 
 ```python expandable theme={null}
 def noul_decision_with_uncertainty(probability: float) -> str:
@@ -673,15 +628,11 @@ display(fig_policy)
 
 <img src="https://mintcdn.com/ts-docs/BBcnWK7wRF0qekMh/cookbooks/consistency_noul_cookbook/consistency_noul_cookbook.executed.2.png?fit=max&auto=format&n=BBcnWK7wRF0qekMh&q=85&s=5f41dccb24038661ad751bb550f9dd19" alt="output" width="1932" height="883" data-path="cookbooks/consistency_noul_cookbook/consistency_noul_cookbook.executed.2.png" />
 
-A review band absorbs fluctuation around `0.5` without issuing opposite automatic
-actions. It has edges of its own, though. A value near either outer boundary can still
-move between `uncertain` and yes or no. The model is no more deterministic for it, and
-an automatic decision that clears the band is not shown to be correct.
+复核档位带能吸收 `0.5` 附近的波动，避免发出相反的自动动作。但它自己也有边界：靠近任一侧外边界取值时，结果仍可能在 `uncertain` 与 yes 或 no 之间移动。模型并不会因此变得更确定，而跨出档位带的自动决策也并未被证明正确。
 
-## Open it in the TypeSafe playground
+## 在 TypeSafe playground 中打开
 
-The link below opens the same claim and rubric in the playground: one claim, the same 14
-`Noul` questions, and TypeSafe `jev-latest`. It omits the changing `uid` field used above.
+下面的链接在 playground 中打开同一份理赔和同一套量规：一份理赔、同样这 14 个 `Noul` 问题，以及 TypeSafe `jev-latest`。它省略了上面用到的会变化的 `uid` 字段。
 
 ```python theme={null}
 playground_link = make_playground_link(

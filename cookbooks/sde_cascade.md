@@ -1,48 +1,43 @@
-# SDE cascade
+# SDE 级联
 
-> Uses a 2-stage structured-data-extraction cascade (mini → verify → reasoning) to get most of the quality of a big reasoning model at a fraction of the cost.
+> 用两阶段的结构化数据抽取级联（mini → verify → reasoning），以一小部分成本拿到大推理模型的大部分质量。
 
-* Overview
-  * big reasoning models extract structured data well, but are slow and expensive
-  * small models are cheap, but make mistakes
-  * a *cascade* gets most of the quality at a fraction of the cost
-  * the models we use, and their price (\$ per 1M tokens, input / output; standard rates
-    checked September 15, 2026):
-    * rung 0 (mini): [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
-      at \$0.75 / \$4.50
-    * rung 1 (reasoning): [`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5)
-      at \$5.00 / \$30.00 (roughly 7x the mini)
-    * verifier: TypeSafe `jev-1.12` at \$0.042 / \$0.00 (output tokens are free;
-      [published Jev pricing](https://typesafe.ai/blog/introducing-system-one-models-and-jev))
-* Algorithm
-  1. **Extract** with a cheap/small model.
-  2. **Verify** with **TypeSafe** primitives: a per-field yes/no ("Noul question")
-     question
-     * (e.g. "is this value absent from the source?", "was it lifted from unrelated
-       text?"), each returning P(something is wrong).
-  3. **Escalate** to an expensive reasoning model if a verifier signal fires; otherwise
-     keep the cheap answer.
-* This Cookbook
-  * walks one real example end-to-end, then shows the tradeoff across 100 prompts
-  * note: the two extraction rungs use text-mode OpenAI
-  * we do *not* use structured outputs, tool calls, or json mode, because:
-    * a *schema following* mistake is not the mistake we expect an LLM to make (it's
-      easy
-      to make synthetic data for this)
-    * if an LLM does fail to follow the schema, it's almost always very confused, so
-      constrained decoding doesn't fix the underlying issue
-    * we encourage you to try them though!
+* 概览
+  * 大推理模型抽取结构化数据的效果好，但慢且贵
+  * 小模型便宜，但会出错
+  * *级联（cascade）*能以一小部分成本拿到大部分质量
+  * 这里用到的模型及其价格（每 100 万 token 的美元价，输入 / 输出；标准费率，
+    查询于 2026 年 9 月 15 日）：
+    * 第 0 级（rung 0，mini）：[`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
+      为 \$0.75 / \$4.50
+    * 第 1 级（rung 1，reasoning）：[`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5)
+      为 \$5.00 / \$30.00（约为 mini 的 7 倍）
+    * 验证器：TypeSafe `jev-1.12` 为 \$0.042 / \$0.00（输出 token 免费；
+      见[已公布的 Jev 定价](https://typesafe.ai/blog/introducing-system-one-models-and-jev)）
+* 算法
+  1. 用便宜的小模型**抽取**。
+  2. 用 **TypeSafe** 原语**验证**：对每个字段提一个是/否问题（"Noul 问题"）
+     * （例如"这个值没有出现在原文里吗？"、"它是从无关文本里搬来的吗？"），每个问题返回"有错"的概率。
+  3. 一旦验证器信号触发，就**升级**到昂贵的推理模型；否则保留便宜模型的答案。
+* 本 cookbook
+  * 完整走一遍一个真实例子，再展示 100 条提示词上的取舍
+  * 注意：抽取的两级都用文本模式的 OpenAI
+  * 这里*不*使用 structured outputs、工具调用或 json 模式，因为：
+    * *schema 遵循*错误不是预期 LLM 会犯的错误（这类错误很容易
+      用合成数据造出来）
+    * 如果 LLM 真的没遵循 schema，它几乎总是已经非常混乱，所以
+      约束解码并不能解决根本问题
+    * 不过还是鼓励你试试它们！
 
-## Setup
+## 环境准备
 
-* install the dependencies (the TypeSafe verifier client is served from TypeSafe's package
-  index):
+* 安装依赖（TypeSafe 验证器客户端由 TypeSafe 的包索引提供）：
 
 ```bash theme={null}
 pip install openai datasets jsonschema ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-* then set `OPENAI_API_KEY` and `TYPESAFE_API_KEY` in your environment
+* 然后在环境里设置 `OPENAI_API_KEY` 和 `TYPESAFE_API_KEY`
 
 ```python theme={null}
 import json
@@ -66,9 +61,9 @@ oai = OpenAI()
 ts = TypeSafeClient(api_key=os.environ["TYPESAFE_API_KEY"], timeout=30.0)
 ```
 
-## Step 1: the data
+## 第 1 步：数据
 
-We choose a huggingface dataset called scrapegraphai
+选用一个叫 scrapegraphai 的 huggingface 数据集
 
 ```python theme={null}
 SCRAPEGRAPHAI_REVISION = "4bb9fba1dff9181c5acdb60a5a26fea62fa54fe9"
@@ -236,23 +231,21 @@ Unless otherwise noted, all content copyright New York University. All rights re
   * [![](https://events.nyu.edu/live/resource/image/_i/themes/global/images/icons/youtube.rev.1773448758.svg)](https://youtube.com/)
 ```
 
-* This row is an **NYU events-calendar page** ("Fall 2024 Census Date"):
-  * the schema asks for just two fields: `registration_open_date` and `description`
-  * the prompt scrape captured only calendar nav and boilerplate: **there is no
-    registration date, or description**
-  * note the schema's `description` field even ships an *example* value ("Registration
-    opens for the fall semester") in its own field description
-* so a well-behaved extractor should *decline* to invent the fields the page doesn't
-  contain
-* let's see if the small model does the right thing!
+* 这一行是 **NYU 活动日历页面**（"Fall 2024 Census Date"）：
+  * schema 只要两个字段：`registration_open_date` 和 `description`
+  * 这次抓取只抓到日历导航和样板文字：**页面里没有注册日期，也没有描述**
+  * 注意 schema 的 `description` 字段在自己的字段描述里就带了一个*示例*值
+    —— 就是上面代码块里那句关于「秋季学期开放注册」的说明
+* 所以一个守规矩的抽取器应当*拒绝*编造页面里并不存在的字段
+* 看看小模型会不会做对。
 
-## Step 2: extract with the mini model (text mode)
+## 第 2 步：用 mini 模型抽取（文本模式）
 
-* note: `gpt-5.4-mini` is very stochastic on this input -- even at `temperature=0` it
-  invents a different `description` on nearly every run. For a reproducible walkthrough we
-  **hard-code** the one canonical fabrication the rest of this notebook explains (and that
-  the verifier flags at P(wrong) > 0.8). A real pipeline would just take `extract(MINI,
-  prompt, schema, content, temperature=0)` directly.
+* 注意：`gpt-5.4-mini` 在这个输入上非常随机——即使 `temperature=0`，它几乎每次都会编造出不同的
+  `description`。为了让这次走查可复现，这里**硬编码**了本 notebook 后面要解释的那一条典型编造
+  （验证器以 P(wrong) > 0.8 把它标出来）。真实流水线会直接调用
+  `extract(MINI,
+  prompt, schema, content, temperature=0)`。
 
 ```python expandable theme={null}
 EXTRACT_SYSTEM = (
@@ -324,34 +317,30 @@ mini extraction:
 schema-valid: True
 ```
 
-* The record is **schema-valid** (the line above prints `True`), yet it's wrong:
-  * `registration_open_date` is left blank, which matches the page: it states no date
-  * but `description` is fabricated: the page never describes a registration date, so
-    mini invents a plausible one. It may parrot the schema's own example, "Registration
-    opens for the fall semester", or narrate "...was not found in the document"
-  * a JSON-Schema check can't see this. A cheap model produces confident,
-    schema-satisfying fabrications of this kind, and catching them is the job of a
-    semantic verifier
+* 这条记录**通过了 schema 校验**（上面打印出 `True`），但它是错的：
+  * `registration_open_date` 留空，这一点和页面对得上：页面没有给出任何日期
+  * 但 `description` 是编造的：页面从未描述注册日期，mini 自己编了一个看似合理的。它可能照抄
+    schema 自带的示例文案（就是上面代码块里那个值），也可能写成「在文档中没有找到」这样的话
+  * JSON Schema 校验看不到这一点。便宜模型会产出这种自信又满足 schema 的编造，
+    抓住它们正是语义验证器的职责
 
-## Step 3: verify with TypeSafe
+## 第 3 步：用 TypeSafe 验证
 
-* the verifier is **TypeSafe**; for each field we build a `Noul` question:
-  * a narrow yes/no, framed so that `true` = something is wrong (escalate)
-* TypeSafe returns a calibrated `noul` = `P(true)` per question, in one system\_one call
-* the question set:
-  * one holistic **`__overall__::judge`** head ("should this record be escalated?"). We
-    compute and display it to contrast a whole-record judgment with the per-field heads,
-    but the gate in Step 4 does **not** use it -- escalation is driven by the per-field
-    battery.
-  * a per-field battery
-    * non-empty fields get the full set of heads
-    * empty fields (null / "" / \[]) get only the `absence_wrong` head
-  * (the full pipeline also has a `spurious` head for whole containers and an overall
-    `difficulty` score; not shown here, to keep this walkthrough to the two gating heads)
-* **The TypeSafe Way: Decomposition**
-  * Notice how everything is *programmatically decomposed*, this is TypeSafe way.
-  * Decomposition maximizes the intelligence of every prompt, and makes the algorithm
-    tunable and interpretable.
+* 验证器是 **TypeSafe**；对每个字段构造一个 `Noul` 问题：
+  * 一个范围很窄的是/否问题，问法上让 `true` 表示"有问题"（需要升级）
+* TypeSafe 在一次 system\_one 调用中为每个问题返回校准过的 `noul` = `P(true)`
+* 问题集合：
+  * 一个整体性的 **`__overall__::judge`** 问题（"这条记录该不该升级？"）。这里计算并展示它，
+    是为了把整条记录的判断与逐字段判断做对比，但第 4 步的门控**不**使用它——
+    是否升级由逐字段的那组问题决定。
+  * 一组逐字段的问题
+    * 非空字段拿到全部问题
+    * 空字段（null / "" / \[\]）只拿 `absence_wrong` 一个问题
+  * （完整流水线还有针对整个容器的 `spurious` 问题和一个整体的 `difficulty` 分数；
+    为了让这次走查只保留两个把关问题，这里不展示）
+* **TypeSafe 之道：分解**
+  * 注意这里的一切都是*在代码里拆开的*，这就是 TypeSafe 的做法。
+  * 分解能让每个提示词发挥出最大的效力，也让算法可调、可解释。
   * <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/sde_cascade/this_is_the_way.jpg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=10bd7d99dc5f679022bb6763dde57330" alt="this is the way" width="100" height="56" data-path="cookbooks/sde_cascade/this_is_the_way.jpg" />
 
 ```python expandable theme={null}
@@ -504,7 +493,7 @@ def verify(record: dict) -> dict[str, float | str]:
     }
 ```
 
-### Run the whole battery over the mini extraction
+### 把整组问题跑一遍 mini 的抽取结果
 
 ```python theme={null}
 checks = verify(mini_record)
@@ -536,20 +525,18 @@ description::name_desc_mismatch              0.08
 description::type_mismatch                   0.02
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAM4CeZKCcA+omWQIYDmCpBpAmhDPlhQAnZlBT5qQmGJhCEYfGGYpm+AGZCIcRdHjIUZAHT4ASghSyk+CEgA2FfADdmtmAjISYABy8QhNBQAjBxQACwR8GmxjADEIW1sIAHd8ZiQHZ1cItT84ZQkvBCgASzVi+XxgyPCJKHC86yF8YoN1ctsFMHcoIWKvFGKbI1IAGnxSYqRJaQGbTnGQAFFsETFqiOmZOQU5KD8FDS1q4o9IWERUUYWyPiEoBDoolHnSAGUAaz7IiHw91H18B8vigfrAhHJUPgvGwIkhmI5iqxlIMkMRiKj0QBtfAAXQAFKEUCgvGRcAB6MlJKmGdIwQzyGBkgCUaIxSFeCGYd1CgJaHHRrOx+MJxNJFKpSRpFDpDOZrNZ+HwACp8NiAIJQZhdODFKBkYVEknkynU2n0sCM0Ra2i6oyEuC2FnoxUq9VgHVMFH6gmGsUmyVm2Vaj1kL2Ge2OhXK1Wmdyc7kG0XGiVSmUWslyMjxurhlAOp1WaPYgCqSGKjgQQlDKAcABlSghE0bxabpebGbYG7n81HXfg1YE+Cgm36U4H08xBzAUN3IwL52y1Ql8AA5bjF+XogDEioAshBAsVbBEV-DEcibOMF0KfUmWwG27KC6yOVy6ryaJvC66NdadXqR2TVs00tTVtVtWcCxdVU1XdE5QyGQD71TdsyWDeCwwjKCizMLM31CJD-RQ2VM2zUJIN7VVS3LStqzrBtCLHR9007NQEAo50iwHIdGOA1DJyHDi2S-JdbFXdcvwASSQHJ1D8L9oIAIVEd5vnwPJJnU5AYEo6TZJyJoFMVItXgsLpUG9EVmyI8dGWoGBzIMITjKLGJRBgWwa14h8QLJNR3M8ihnOMn9XDgMtvOIicwrLYLoMxRY4C8RIKAQdxItsslaGSiBUvcOKiwAYS0OAYDLLzb2spjfL2OBSvKoKsK-L9MVrCBWHwaSm2NUItHYzLn3RPSfgMozXVMhz9Es30gJ81D7Mcu08znb9VTc2BAoy5jGX8jaa2C0L4AiyrRz4oMYuKA7VUSnK8umu8bO2rKkpStKlp7TjXWKuqypaCgtpqkrfv2pqFxatqOq6k6er6qLGUG9kyI-CJX25L8d3wRYKws-BCpcZAlEMhdUffLGpqvRcfHsWMs2eBd4u46d1kx7HWjx48kEJ3FoeQzLste9wM3cW57jIABaNIwDFrMhARUWyUQMBimYCXObF2r6t1C8pjJJXWBaFx1aBstNVmHXforKs-rFhBWfFzUOcJq6Ert3H8c5rl8DQac-GVsSAdQ-ncreoWblkUXValmW5cFxXlcjo2fpN7WyF1xEDdsRPNdNr0yQt2jrdtqb1fdwmyQsEFehcd6VvisxfH8ZomDcRooU0BEunUNKwECFTuasv0zWj3UEDFpBkkMWqyTILwAH5ijAABeMgoDoU26D5OAADJKDIDel4AdgANgATgADjAMAACZmHPwIoDUAAWAAGZ-H6gM+oGfgBmZ+j+-sAZ9H4ICvgfR+CMvwkx5DEI8NAqxu0dlyL8K4EApF4EIVS1FLZ0QpqyRYABHGALh8AAHkfB+AsA1VInNVw2DFgAEROD0YoOo4Rm1SOINcxZ8Bi1XKg-A6DMFlmwX9JuvwSotACGpDSqBmCTEmB1NIAgkAIk0EgC44gwj5GQHsWQMIPCSzktQWi+BMyFDWAZZonNywLyIWJTIbgDE0OYD4TQXgq40HEZzGYqQ4A2EUcuQoVYhjGGkqkZcWCC41gKKIdwYsxZeFCFQLWYlDF6wzvE9x7URB1QUWMUQAwEQDHcPkmhRccZcgiJqcE5QFBDisakKAewhBKCQPcfASQWg8hcclLWgRjz4FsMwFIzAPBJAQMuUZ+BIlW2ib4TsUAKBjCSKEXUPJJhQFcF0DwgQmYnHwOPcQnYdRSJBM0VoK46GMJXr0Vh2tqEKDVKgYoYsAASXJRlkA0fgAACvEXUQVcHolLMeJg1gwiVk6VmA5EAAj5OXH8GgkI9heAoL0VghI+FoL8EImiszAWiVMYiQkHhSKy3kMYMaqooGETwtyOGcpPqqjxklGAHhdwuIDrKPIXhnZkwsoRcpTkBqUUxMVWRaxiz3SqmddMiKClizZc7AA4jRLlE4pwoDJPrBESBWDO2Kqi9FmKt74DcsUJoUrGw80eoDI1xKUAJ38haxVWZnY-N6M4RZ6rGTuPLKIRqy1sI-iae4UMh5OwVQHrNBlohRbhqPH9Z2MRu69ygO8H1ZItxsXkGm94QlmpMsxCg7FGC3asuladOaT5RUDn4PQ0Ik5ijlq8GywitItQMuDdSxterG3NpZa2ytxoyC9oxXIrtha2TxQAISYkFXbBlnYKyhxFggMkLCYRkg3uXeogtWCJF7rYDdeR2Cp11EMPysTBwQHzXIRwhgACMB8D7f0fo-M+B8ACsB9DBkEcKwJkhFdoIBvfmqe3bMRzoXVNJdNFV3h3XZu9g27ii7toPuw9LgT36I3X8VOnYkDvHkJMQw96n0vrfR+79Z8-0AaAzawjxGlZIEnloRlq0oPzptUKowmVl3rszGunDKGd0QsYNqrDx7kOCwvTrTAZHbYUdfe+z9P66OAcIgpiDoroM8cXfx+DQnEMifXWJvdqcD0HmwzJ89+GN1TBUKwHJimH3PpU9R9T-7NM2smNQNgLmdNFr09GikvG4MruM3cJDp6zNofE5h6z0nYt2cvRQIcMBAjsXI+5qjanaPeYY6Fsk6XpyZfYkF4SAoQBjFICveozB5gkBAFkoJxSyBNdIHIfWkhtZ0AgIUJAdAlCfjwPgZr2zmH9BRC8EAaAagjYiFo8Q3WTjCHuQN5AHhLEQvUC4MSWZGBwOMLuYsrw0CVAiJpXbBk8jiDqrrMAJWKAvdiH4AQmBmAvQQGMSxqg9gJAQOwBpu2r7Pyvo-MWYOr5ftqL1eI+BUpcjGC0dSDrLsSD6mEBRgzijEfwM-E+ZJn5frJNDx+xgzAWCEFYVQ-S0iqUkDj0oiO+CpDkPgMqZBZDsSuKQAYKBjyzbMD19b7CyHIHwPQ5QHAasLBrIUWbTO9WkAAL61fAN0Xo025hjYm1rvoZtZtqkqL0BAahFAG511YCAFvdurd6+wzbVhFtvaaFgL7yUfv4AAOQi7WyIJ3g3tvvZu-tiQGHjFCB94YPnIABdC7G6QehVujdy-5xQRXSfyDCAUWr9XCw5CEItfIeYmIutA4D3153w2Zdx8m9rtPOINcJ9l1wEA-vHcogl6idP8fM9t4WAeAAVkUZ4IAC+kEEKsNPBBmsO7Fyifrg3a+jfb-X1PM3s+d8X5eZ3Iemhh+XId9wcD89y5a5oJKBgMDYDG0QUgdB+uW320-3AuBh8OXYJ1-vWf2-jw8jjz82EBmC9Fm0kg8Gxw8GnwKQqF2H2GoSsWaV2HEBgLEBRB4V4RuEQCcBcBbi528AbikSqF2zDmi1bkOS8VuxxzOVILqFoGYDGCLxgBLwUEmFu3uRDBx3eySDUVYDGHe2wOyHaAUEbQSGkEmBlwUHiUx3OQkF6g8iCAiG6BcCkLUlUC+S5DgXUggC6FsFnjj2YTgWVh-xAMH35xqHgJaTESUQ2T8BQI+3W3QN1w138lsCzFm3tyKAQP2X+3sLH0cJny31V0nxAAX0DyXxr0W3f0nCzDaQeF4P8VMIH1mwANsCAMcykGcKmB-zKAmTADoBniKB-2hDCFm3COrxX0WzjwV3MJz16BVz7wb0Ny33b3mwiEW2qHyAqKDy2zkkPxqDcIO0j2O3wFO3Owx2u0GNyHyAe0vme1ezNXew92+1+3ez8MB2BymIiHJyh3B1h3qwgARyRyEBR3u3Ryy0x0QGxz1Vx3x0J2J1J3J0p3MEsFSEqCGSIwkFz1uJZ1K3ZwiAILkFjz72YNYPmDMNCLQICDoDyI6FmzjxkToEIVP1aIWHaPwAAANoT5BYSRDMSxFsoawxgkAPJbABCmglEiSHAAdjxsjjB6EIB3BmYyD2kngvEVBtirEOD2FdtMS4SCiiioACTmissyAxg8hPhbjdtqTTF3APJxBEi9UDCJ8NcjDKwTC9d+cpA6jVAHEIgkgpklSD0HAtBJFS8+83CPDs85BqcyxbjDlVlfiPBkCx988Ndmjrd384REBhtugGATg7s6hki-8Fg0iMjNgzYOstSQABTCjzESjlBQhZtPS08W8Ujs9ldWAN8bkWjdd28TdAgzcLdUyMDbdmYeiyzBtFAZc3cPtPdjwxg-dK8u899g9+jmYhiI8jtKwY848wTtgISdSoSVhYCCiBThcWzd8bd2ydtBjw8T8o9ES5EhsUTqA0Tk8mTICahsTRyxBcSBSCTnUxIzkgyeQbsRCOEsTSjQgCTQ8dzSybACSuT+SRD4yihMTZ5Oo7cHzN8nzCTr8ll8BP8wBgc2AVzqBmZMSbyCSXAbBedVSFh1Sq5TCdTPCdycTxz8SdBmTKCzzOzLyfSIh3sWgPBMTHykBMS48rS6i+TMK8T8iCSzzmSLz8iDkvsIhDFyK-zKL3SFgKL39aiAzNCUBgyYzajUi+B0i+9gCsiozci3yhTEyyjs8KKaiMz28sycyptZ8FhCzizLdczrdrAfyIhKy2zJdXclj3dPtVjfcd8IiLKpgOyj9hiezo8QSNcByLSCBISNd6KJzt8pzHKZy+i5zsgFyRjKxlzJhkTHFdLNyWKMK9yYTDynBBghlPE+TaiRSighltgQcdy4yhTPy1c1TehjDGtxK0Ls86KUqDzsKER4gZdtyOi8rKkFBMScrqLq5aLkqnDUrsK-hbtICfhdsuhNkOqsTuqJ9QiBLcAyo5BRkbBJxE858M9QzSBwyZLMjQChgFL8j3yoBlLkzVKeL1LNr6i88mjzrs99LygSyeKTKKzgqNtqyrK4gbKGzvdmzRcQrrBZz7yIrj8oqPL+yEBi9Byxs-KFgAqRDJy-q3qwqga9sQb3KYrVz4qNyQAICoK4bGLrAkAltG1xBVAlqbg4R+kIggkKaOkpKFBKDG0KxAixyXLVkyLirzFSrELSBkLNT1r48ar28ybOQKbVrqbaJLwkh6aYVxAmblD6qFAoDcCsger3C+qFaBqMD9lyaVqqa+LSB5qxDXASg2EfLxsNq6jtqNdZK9qciYzObiiYybyUzbr0zLqtKbqjKEqQB7rzdDKdKyzTK5TEbeiXdazrL6y7Lfqq8w6D9OzIr3K+zQSIaWCobfLhz-LFaGL4SgrQ6qzkaBjga3LT9oq+8kS1yfbca6qBqGqCaCDyF-AKhggKTUhAg4jxBDg4AxhSC11IhBAVTQi+aqqBazD0KIhdza6sKCbfD8BjaJC2EMCZDKDudG7iCgL1j26AQu6e6ahWSltBA1brT28a6Z866OhnyPBV6iDm6Qg96+6ngDbNdvaUR39bc1BHguR2Bx9R6NKwypKIyQDsjoyBbHbjrnakzXaX6XD5c-66sfjsyvbA78y9LTcHqA7G8g6Xr86nKayaA6yVivcmyHKkbnLwrUaS6o9k6vLU7wTobM7Ybs7Ar28SG462bi7uzS6hAMa4rUSUHErWrMdEN+7sA9sjw1J2BSTJgJkHA5AiDmYbiOo+SwHcrcyxSxgbhmZ9SOkplW1AcDgr8kCF59BiEnhB7yq+QULqq3Bx6hHyDIBcLYV8BJGWCibqYskO5ib9kBTMCtG8CDTdGySKgu6jHHJTHD7LTerbH97nHtJpHqY5GKFtzvH4bZqPSeL387Dvs18Lbf8raAGdrIywCHbFKEyIGVL281K+8JLMyEHtLMH+Hfa0H-aKLnqvCcHQrw78HI7CHGz7LXq2HyGuzFy4FqHC9aH07IgGGp8mHUmWGBmC6yGUbhnQaeHK7sbGSkqJ78aL6xGTzQQXFqdOKVaW5e7hHr6kn8A8RDkDTwgIUi6sSVGxFMTvKwBMSmRzGkKKqNSR7cmx7arBjLz9ljTqZqSSSyTW6uDbi9T-GWS+6Ln-BozXComAXhC2LNR+gedBHtGznyCEWDAn75qeS6AmrMq0Tmsan-8CmbbdrgGDqOgjqTqoHkHe93a6jPb0noHe8CzmnHquW2nLCFncGPrljbKiH+mOmAbC6E60auGxmK9IbzaYaZmp6c6wAEbY7Fn47XLOGlzy6VzeH1zGnNnBHJ6z7p7dnSWZdOyZjxB3t8N1tJhWgWFelb6oKKLMTd6Nh6CGguqB9PWHlmZoTtbaWoyrn2J9U8HshbWxhgZxTlF4AtI4AssqxVkvAPmyqvnLH+a-mhb5d+rzW1WCSrWaBBGXXOxgnbXW4HWRAnWkWFgaLbGzWxyi2JBkQyA8jBGeTA2a2VyCXZrVcL8XFigAA1AuGwe-RwR9CfIAA" target="_blank" rel="noreferrer" className="text-primary">Open this verification in the TypeSafe playground →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAM4CeZKCcA+omWQIYDmCpBpAmhDPlhQAnZlBT5qQmGJhCEYfGGYpm+AGZCIcRdHjIUZAHT4ASghSyk+CEgA2FfADdmtmAjISYABy8QhNBQAjBxQACwR8GmxjADEIW1sIAHd8ZiQHZ1cItT84ZQkvBCgASzVi+XxgyPCJKHC86yF8YoN1ctsFMHcoIWKvFGKbI1IAGnxSYqRJaQGbTnGQAFFsETFqiOmZOQU5KD8FDS1q4o9IWERUUYWyPiEoBDoolHnSAGUAaz7IiHw91H18B8vigfrAhHJUPgvGwIkhmI5iqxlIMkMRiKj0QBtfAAXQAFKEUCgvGRcAB6MlJKmGdIwQzyGBkgCUaIxSFeCGYd1CgJaHHRrOx+MJxNJFKpSRpFDpDOZrNZ+HwACp8NiAIJQZhdODFKBkYVEknkynU2n0sCM0Ra2i6oyEuC2FnoxUq9VgHVMFH6gmGsUmyVm2Vaj1kL2Ge2OhXK1Wmdyc7kG0XGiVSmUWslyMjxurhlAOp1WaPYgCqSGKjgQQlDKAcABlSghE0bxabpebGbYG7n81HXfg1YE+Cgm36U4H08xBzAUN3IwL52y1Ql8AA5bjF+XogDEioAshBAsVbBEV-DEcibOMF0KfUmWwG27KC6yOVy6ryaJvC66NdadXqR2TVs00tTVtVtWcCxdVU1XdE5QyGQD71TdsyWDeCwwjKCizMLM31CJD-RQ2VM2zUJIN7VVS3LStqzrBtCLHR9007NQEAo50iwHIdGOA1DJyHDi2S-JdbFXdcvwASSQHJ1D8L9oIAIVEd5vnwPJJnU5AYEo6TZJyJoFMVItXgsLpUG9EVmyI8dGWoGBzIMITjKLGJRBgWwa14h8QLJNR3M8ihnOMn9XDgMtvOIicwrLYLoMxRY4C8RIKAQdxItsslaGSiBUvcOKiwAYS0OAYDLLzb2spjfL2OBSvKoKsK-L9MVrCBWHwaSm2NUItHYzLn3RPSfgMozXVMhz9Es30gJ81D7Mcu08znb9VTc2BAoy5jGX8jaa2C0L4AiyrRz4oMYuKA7VUSnK8umu8bO2rKkpStKlp7TjXWKuqypaCgtpqkrfv2pqFxatqOq6k6er6qLGUG9kyI-CJX25L8d3wRYKws-BCpcZAlEMhdUffLGpqvRcfHsWMs2eBd4u46d1kx7HWjx48kEJ3FoeQzLste9wM3cW57jIABaNIwDFrMhARUWyUQMBimYCXObF2r6t1C8pjJJXWBaFx1aBstNVmHXforKs-rFhBWfFzUOcJq6Ert3H8c5rl8DQac-GVsSAdQ-ncreoWblkUXValmW5cFxXlcjo2fpN7WyF1xEDdsRPNdNr0yQt2jrdtqb1fdwmyQsEFehcd6VvisxfH8ZomDcRooU0BEunUNKwECFTuasv0zWj3UEDFpBkkMWqyTILwAH5ijAABeMgoDoU26D5OAADJKDIDel4AdgANgATgADjAMAACZmHPwIoDUAAWAAGZ-H6gM+oGfgBmZ+j+-sAZ9H4ICvgfR+CMvwkx5DEI8NAqxu0dlyL8K4EApF4EIVS1FLZ0QpqyRYABHGALh8AAHkfB+AsA1VInNVw2DFgAEROD0YoOo4Rm1SOINcxZ8Bi1XKg-A6DMFlmwX9JuvwSotACGpDSqBmCTEmB1NIAgkAIk0EgC44gwj5GQHsWQMIPCSzktQWi+BMyFDWAZZonNywLyIWJTIbgDE0OYD4TQXgq40HEZzGYqQ4A2EUcuQoVYhjGGkqkZcWCC41gKKIdwYsxZeFCFQLWYlDF6wzvE9x7URB1QUWMUQAwEQDHcPkmhRccZcgiJqcE5QFBDisakKAewhBKCQPcfASQWg8hcclLWgRjz4FsMwFIzAPBJAQMuUZ+BIlW2ib4TsUAKBjCSKEXUPJJhQFcF0DwgQmYnHwOPcQnYdRSJBM0VoK46GMJXr0Vh2tqEKDVKgYoYsAASXJRlkA0fgAACvEXUQVcHolLMeJg1gwiVk6VmA5EAAj5OXH8GgkI9heAoL0VghI+FoL8EImiszAWiVMYiQkHhSKy3kMYMaqooGETwtyOGcpPqqjxklGAHhdwuIDrKPIXhnZkwsoRcpTkBqUUxMVWRaxiz3SqmddMiKClizZc7AA4jRLlE4pwoDJPrBESBWDO2Kqi9FmKt74DcsUJoUrGw80eoDI1xKUAJ38haxVWZnY-N6M4RZ6rGTuPLKIRqy1sI-iae4UMh5OwVQHrNBlohRbhqPH9Z2MRu69ygO8H1ZItxsXkGm94QlmpMsxCg7FGC3asuladOaT5RUDn4PQ0Ik5ijlq8GywitItQMuDdSxterG3NpZa2ytxoyC9oxXIrtha2TxQAISYkFXbBlnYKyhxFggMkLCYRkg3uXeogtWCJF7rYDdeR2Cp11EMPysTBwQHzXIRwhgACMB8D7f0fo-M+B8ACsB9DBkEcKwJkhFdoIBvfmqe3bMRzoXVNJdNFV3h3XZu9g27ii7toPuw9LgT36I3X8VOnYkDvHkJMQw96n0vrfR+79Z8-0AaAzawjxGlZIEnloRlq0oPzptUKowmVl3rszGunDKGd0QsYNqrDx7kOCwvTrTAZHbYUdfe+z9P66OAcIgpiDoroM8cXfx+DQnEMifXWJvdqcD0HmwzJ89+GN1TBUKwHJimH3PpU9R9T-7NM2smNQNgLmdNFr09GikvG4MruM3cJDp6zNofE5h6z0nYt2cvRQIcMBAjsXI+5qjanaPeYY6Fsk6XpyZfYkF4SAoQBjFICveozB5gkBAFkoJxSyBNdIHIfWkhtZ0AgIUJAdAlCfjwPgZr2zmH9BRC8EAaAagjYiFo8Q3WTjCHuQN5AHhLEQvUC4MSWZGBwOMLuYsrw0CVAiJpXbBk8jiDqrrMAJWKAvdiH4AQmBmAvQQGMSxqg9gJAQOwBpu2r7Pyvo-MWYOr5ftqL1eI+BUpcjGC0dSDrLsSD6mEBRgzijEfwM-E+ZJn5frJNDx+xgzAWCEFYVQ-S0iqUkDj0oiO+CpDkPgMqZBZDsSuKQAYKBjyzbMD19b7CyHIHwPQ5QHAasLBrIUWbTO9WkAAL61fAN0Xo025hjYm1rvoZtZtqkqL0BAahFAG511YCAFvdurd6+wzbVhFtvaaFgL7yUfv4AAOQi7WyIJ3g3tvvZu-tiQGHjFCB94YPnIABdC7G6QehVujdy-5xQRXSfyDCAUWr9XCw5CEItfIeYmIutA4D3153w2Zdx8m9rtPOINcJ9l1wEA-vHcogl6idP8fM9t4WAeAAVkUZ4IAC+kEEKsNPBBmsO7Fyifrg3a+jfb-X1PM3s+d8X5eZ3Iemhh+XId9wcD89y5a5oJKBgMDYDG0QUgdB+uW320-3AuBh8OXYJ1-vWf2-jw8jjz82EBmC9Fm0kg8Gxw8GnwKQqF2H2GoSsWaV2HEBgLEBRB4V4RuEQCcBcBbi528AbikSqF2zDmi1bkOS8VuxxzOVILqFoGYDGCLxgBLwUEmFu3uRDBx3eySDUVYDGHe2wOyHaAUEbQSGkEmBlwUHiUx3OQkF6g8iCAiG6BcCkLUlUC+S5DgXUggC6FsFnjj2YTgWVh-xAMH35xqHgJaTESUQ2T8BQI+3W3QN1w138lsCzFm3tyKAQP2X+3sLH0cJny31V0nxAAX0DyXxr0W3f0nCzDaQeF4P8VMIH1mwANsCAMcykGcKmB-zKAmTADoBniKB-2hDCFm3COrxX0WzjwV3MJz16BVz7wb0Ny33b3mwiEW2qHyAqKDy2zkkPxqDcIO0j2O3wFO3Owx2u0GNyHyAe0vme1ezNXew92+1+3ez8MB2BymIiHJyh3B1h3qwgARyRyEBR3u3Ryy0x0QGxz1Vx3x0J2J1J3J0p3MEsFSEqCGSIwkFz1uJZ1K3ZwiAILkFjz72YNYPmDMNCLQICDoDyI6FmzjxkToEIVP1aIWHaPwAAANoT5BYSRDMSxFsoawxgkAPJbABCmglEiSHAAdjxsjjB6EIB3BmYyD2kngvEVBtirEOD2FdtMS4SCiiioACTmissyAxg8hPhbjdtqTTF3APJxBEi9UDCJ8NcjDKwTC9d+cpA6jVAHEIgkgpklSD0HAtBJFS8+83CPDs85BqcyxbjDlVlfiPBkCx988Ndmjrd384REBhtugGATg7s6hki-8Fg0iMjNgzYOstSQABTCjzESjlBQhZtPS08W8Ujs9ldWAN8bkWjdd28TdAgzcLdUyMDbdmYeiyzBtFAZc3cPtPdjwxg-dK8u899g9+jmYhiI8jtKwY848wTtgISdSoSVhYCCiBThcWzd8bd2ydtBjw8T8o9ES5EhsUTqA0Tk8mTICahsTRyxBcSBSCTnUxIzkgyeQbsRCOEsTSjQgCTQ8dzSybACSuT+SRD4yihMTZ5Oo7cHzN8nzCTr8ll8BP8wBgc2AVzqBmZMSbyCSXAbBedVSFh1Sq5TCdTPCdycTxz8SdBmTKCzzOzLyfSIh3sWgPBMTHykBMS48rS6i+TMK8T8iCSzzmSLz8iDkvsIhDFyK-zKL3SFgKL39aiAzNCUBgyYzajUi+B0i+9gCsiozci3yhTEyyjs8KKaiMz28sycyptZ8FhCzizLdczrdrAfyIhKy2zJdXclj3dPtVjfcd8IiLKpgOyj9hiezo8QSNcByLSCBISNd6KJzt8pzHKZy+i5zsgFyRjKxlzJhkTHFdLNyWKMK9yYTDynBBghlPE+TaiRSighltgQcdy4yhTPy1c1TehjDGtxK0Ls86KUqDzsKER4gZdtyOi8rKkFBMScrqLq5aLkqnDUrsK-hbtICfhdsuhNkOqsTuqJ9QiBLcAyo5BRkbBJxE858M9QzSBwyZLMjQChgFL8j3yoBlLkzVKeL1LNr6i88mjzrs99LygSyeKTKKzgqNtqyrK4gbKGzvdmzRcQrrBZz7yIrj8oqPL+yEBi9Byxs-KFgAqRDJy-q3qwqga9sQb3KYrVz4qNyQAICoK4bGLrAkAltG1xBVAlqbg4R+kIggkKaOkpKFBKDG0KxAixyXLVkyLirzFSrELSBkLNT1r48ar28ybOQKbVrqbaJLwkh6aYVxAmblD6qFAoDcCsger3C+qFaBqMD9lyaVqqa+LSB5qxDXASg2EfLxsNq6jtqNdZK9qciYzObiiYybyUzbr0zLqtKbqjKEqQB7rzdDKdKyzTK5TEbeiXdazrL6y7Lfqq8w6D9OzIr3K+zQSIaWCobfLhz-LFaGL4SgrQ6qzkaBjga3LT9oq+8kS1yfbca6qBqGqCaCDyF-AKhggKTUhAg4jxBDg4AxhSC11IhBAVTQi+aqqBazD0KIhdza6sKCbfD8BjaJC2EMCZDKDudG7iCgL1j26AQu6e6ahWSltBA1brT28a6Z866OhnyPBV6iDm6Qg96+6ngDbNdvaUR39bc1BHguR2Bx9R6NKwypKIyQDsjoyBbHbjrnakzXaX6XD5c-66sfjsyvbA78y9LTcHqA7G8g6Xr86nKayaA6yVivcmyHKkbnLwrUaS6o9k6vLU7wTobM7Ybs7Ar28SG462bi7uzS6hAMa4rUSUHErWrMdEN+7sA9sjw1J2BSTJgJkHA5AiDmYbiOo+SwHcrcyxSxgbhmZ9SOkplW1AcDgr8kCF59BiEnhB7yq+QULqq3Bx6hHyDIBcLYV8BJGWCibqYskO5ib9kBTMCtG8CDTdGySKgu6jHHJTHD7LTerbH97nHtJpHqY5GKFtzvH4bZqPSeL387Dvs18Lbf8raAGdrIywCHbFKEyIGVL281K+8JLMyEHtLMH+Hfa0H-aKLnqvCcHQrw78HI7CHGz7LXq2HyGuzFy4FqHC9aH07IgGGp8mHUmWGBmC6yGUbhnQaeHK7sbGSkqJ78aL6xGTzQQXFqdOKVaW5e7hHr6kn8A8RDkDTwgIUi6sSVGxFMTvKwBMSmRzGkKKqNSR7cmx7arBjLz9ljTqZqSSSyTW6uDbi9T-GWS+6Ln-BozXComAXhC2LNR+gedBHtGznyCEWDAn75qeS6AmrMq0Tmsan-8CmbbdrgGDqOgjqTqoHkHe93a6jPb0noHe8CzmnHquW2nLCFncGPrljbKiH+mOmAbC6E60auGxmK9IbzaYaZmp6c6wAEbY7Fn47XLOGlzy6VzeH1zGnNnBHJ6z7p7dnSWZdOyZjxB3t8N1tJhWgWFelb6oKKLMTd6Nh6CGguqB9PWHlmZoTtbaWoyrn2J9U8HshbWxhgZxTlF4AtI4AssqxVkvAPmyqvnLH+a-mhb5d+rzW1WCSrWaBBGXXOxgnbXW4HWRAnWkWFgaLbGzWxyi2JBkQyA8jBGeTA2a2VyCXZrVcL8XFigAA1AuGwe-RwR9CfIAA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开这次验证 →</a>
 
-* TypeSafe concentrates the signal on the fields that are actually wrong.
-* Our results are calibrated: high on the field that is wrong, low on the field that is
-  correct, medium on a field that looks off without being clearly wrong
-* This is what a typesafe verifier buys you over a blunt "is this whole thing good?"
-  judge
+* TypeSafe 把信号集中在真正出错的字段上。
+* 结果经过校准：错的字段分数高，对的字段分数低，看起来可疑但并不明确出错的字段居中
+* 相比一句粗放的"整条记录好不好？"判断，这就是 TypeSafe 验证器带来的差别
 
-## Step 4: the escalation gate
+## 第 4 步：升级门控
 
-* now we gate on **`any_flag`**: escalate if *any* field flag exceeds `FIRE_T` (0.7, set
-  above and shared with the `<== FIRES` marker in Step 3)
-* this is a `max`-style gate (escalate if *any* field fires), not a mean, so one confident
-  red flag is enough instead of being averaged into silence
+* 现在门控只看 **`any_flag`**：只要有*任何*字段的标记超过 `FIRE_T`（0.7，在前文设定，与第 3 步的
+  `<== FIRES` 标记共用）就升级
+* 这是一个 `max` 式的门控（*任何*字段触发就升级），而不是取平均，所以一个自信的红旗就足以升级，
+  不会被平均掉而归于沉默
 
 ```python theme={null}
 # any_flag is a per-field gate: the holistic __overall__ head is shown above but not part of it
@@ -573,9 +560,9 @@ any_flag gate (threshold 0.7): ESCALATE
   fired: description::off_target  (P=0.85)
 ```
 
-## Step 5: escalate to the reasoning model
+## 第 5 步：升级到推理模型
 
-Since a signal fired, we pay for the strong model (`gpt-5.5`, `reasoning_effort="high"`)
+既然有信号触发，就要为强模型付费（`gpt-5.5`，`reasoning_effort="high"`）
 
 ```python theme={null}
 final_record = (
@@ -600,55 +587,46 @@ field-level diff (mini -> final):
   description: 'Registration opens for the fall semester'  ->  ''
 ```
 
-* **The improvement**
-  * The reasoning model drops the fabricated `description`, returning `""`
-  * It recognized the page never describes a registration date, and declined to invent one
-  * The cascade turned a confident, schema-valid fabrication into an honest empty field
-  * And it only spent reasoning-model dollars on this one item *because the verifier told
-    it to*
+* **改进之处**
+  * 推理模型丢掉了编造的 `description`，返回 `""`
+  * 它看出页面从未描述注册日期，于是拒绝编造
+  * 级联把一个自信、能通过 schema 校验的编造，变成了诚实的空字段
+  * 而且它只在这一条上花了推理模型的钱，*因为验证器让它这么做*
 
-## Step 6: what this looks like on 100 prompts
+## 第 6 步：在 100 条提示词上的表现
 
-* **These are internal TypeSafe results**, produced with the general method above:
-  * the same `extract → verify → escalate` loop, `gpt-5.4-mini → gpt-5.5-reasoning`,
-    `any_flag` gate over the per-field heads, run over 100 scrapegraphai prompts
-  * each item's cheap-rung extraction is scored by TypeSafe; the gate threshold ("cut") is
-    swept 0→1, and every resulting config is plotted in (cost, quality) space
-  * the chart is a historical snapshot; its costs have not been recalculated at the
-    current Jev rate listed above
+* **这些是 TypeSafe 的内部结果**，用上面的通用方法得到：
+  * 同样的 `extract → verify → escalate` 循环，`gpt-5.4-mini → gpt-5.5-reasoning`，
+    逐字段问题上的 `any_flag` 门控，跑 100 条 scrapegraphai 提示词
+  * 每条数据在便宜那一级的抽取结果由 TypeSafe 打分；门控阈值（"cut"）从 0 扫到 1，
+    得到的每种配置都画在（成本，质量）空间里
+  * 这张图是历史快照；其中的成本没有按上面列出的 Jev 当前费率重新计算
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/sde_cascade/pareto_100prompts.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=ca6731507e07b501a6627616ba0b767a" alt="internal results: cost/quality frontier over 100 prompts" width="1299" height="655" data-path="cookbooks/sde_cascade/pareto_100prompts.png" />
 
-* how to read it:
-  * **black diamonds** = the four models run on their own (cost climbs with capability; the
-    strongest, `gpt-5.5-reasoning`, sits top-right at ≈0.81 quality for ≈\$0.10/extraction)
-  * **blue points** = the cascade at many gate thresholds; the dashed line is the **pareto
-    frontier**
-  * the cascade frontier sits **up-and-left of every single model**: sweeping the gate buys
-    you most of the top model's quality at a fraction of its cost
-  * the cheap rung handles the easy items for near-free, and only the flagged items pay for
-    the reasoning model
+* 怎么读这张图：
+  * **黑色菱形** = 四个模型各自单独运行（成本随能力上升；最强的 `gpt-5.5-reasoning`
+    位于右上角，质量约 0.81，每次抽取约 \$0.10）
+  * **蓝色点** = 不同门控阈值下的级联；虚线是 **pareto 前沿**
+  * 级联的前沿**位于每一个单独模型的左上方**：扫一遍门控阈值，就能以一小部分成本拿到
+    最强模型的大部分质量
+  * 便宜那一级几乎免费地处理简单数据，只有被标记的数据才为推理模型付费
 
-## Appendix A: what makes a good verifier signal
+## 附录 A：什么样的验证器信号才算好
 
-* the cascade is only as good as its verifier; what separates a useful signal from a
-  useless one:
-  * **Narrow and grounded.**
-    * one checkable yes/no about one field against the source (e.g. "is this value absent
-      from the source?"), not a vague "is this extraction good?"
-    * vague questions give mushy, uncalibrated scores
-  * **Bad = TRUE, with explicit criteria.**
-    * frame each question so the *escalate* case is the `true` case, and state what
-      `true`/`false` mean
-  * **Per-field, then aggregate with `max`.**
-    * a per-field flag localizes the error and stays sparse and strong
-    * `max` ("any flag fires") ensures one confident red flag escalates, instead of being
-      averaged into silence
-  * **Independent and cheap.**
-    * a dedicated verifier (here, TypeSafe) judging the output catches the extractor's own
-      blind spots
-    * it has to be cheap, or there are no savings left to capture
-  * **Separating / calibrated.**
-    * a good signal is high on real errors and low on correct ones, so a single threshold
-      cleanly splits accept vs escalate
-    * that separation is what pushes the pareto curve up-and-left
+* 级联的好坏只取决于它的验证器；有用的信号和没用的信号区别在这几点：
+  * **范围窄，且有依据。**
+    * 针对一个字段、对着原文做一次可核对的是/否判断（例如"这个值在原文里没有出现吗？"），
+      而不是含糊的"这次抽取好不好？"
+    * 含糊的问题只会给出糊成一团、未经校准的分数
+  * **坏 = TRUE，并写明判据。**
+    * 把每个问题都写成*升级*的情形对应 `true`，并说明 `true`/`false` 各表示什么
+  * **逐字段，再用 `max` 汇总。**
+    * 逐字段的标记能定位错误，并且保持稀疏而强
+    * `max`（"任何标记触发"）保证一个自信的红旗就能升级，而不是被平均掉而归于沉默
+  * **独立且便宜。**
+    * 一个专门判断输出的验证器（这里是 TypeSafe）能抓住抽取器自己的盲区
+    * 它必须便宜，否则就没有省下来的钱可拿
+  * **有区分度、经过校准。**
+    * 好信号在真错误上分数高、在正确答案上分数低，因此一个阈值就能干净地分开接受与升级
+    * 正是这种区分把 pareto 曲线推向左上方

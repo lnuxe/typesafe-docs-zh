@@ -1,18 +1,12 @@
-# Double-checking citations
+# 复核引用
 
-> Catch wrong or hallucinated citations by checking against the source document. One Choice question decides whether the quote's context supports the claim.
+> 对照源文档检查，抓出错误或凭空捏造的引用。一个 Choice 问题判断引文的上下文是否支持该论断。
 
-An LLM answers a question and attaches citations: for each claim, a section of a source
-document and the quote it rests on. Some of those citations are wrong or hallucinated:
-the quote can be missing from the document altogether, or sit in it word for word while
-its context says the opposite of the claim.
+LLM 回答问题时会附上引用：每条论断给出源文档的某一节，以及支撑它的引文。这些引用有的错误、有的是凭空捏造：引文可能根本不在文档里，也可能逐字出现在文档中，而它所在的上下文恰恰与论断相反。
 
-Checking one by hand is slow: find the document, find the quote inside it, then read
-enough of its context to tell whether it backs the claim up.
+人工核查很慢：先找到文档，再在文档里找到引文，然后读足够多的上下文，才能判断它是否支持这条论断。
 
-To automate that check, we first look for missing quotes with an ordinary string match,
-and then we use a `Choice` question to read each surviving quote's context and decide
-whether it supports the claim.
+要把这一步自动化，先用普通的字符串匹配找出文档里根本没有的引文，再用一个 `Choice` 问题阅读每条剩余引文的上下文，判断它是否支持该论断。
 
 ```mermaid actions={true} theme={null}
   %%{init: {"flowchart": {"wrappingWidth": 330}}}%%
@@ -41,26 +35,19 @@ flowchart LR
     gate --> review
 ```
 
-Below, eight citations from an LLM's answer about RFC 7519 (JSON Web Token) go through the
-check. The four accurate ones came back `verified` at confidence 0.93 or higher. All four
-planted failures were caught: a fabricated quote, a contradicted claim, and two unsupported
-citations sent to a human.
+下面让 LLM 关于 RFC 7519（JSON Web Token）的答案里的八条引用走一遍检查。四条正确的引用都以 0.93 以上的置信度返回 `verified`。四条刻意埋下的问题全被抓出：一条编造的引文、一条被文档否定的论断，以及两条没有依据、被送交人工的引用。
 
-`check_citation()`, the function you build here, takes a source document and one citation
-and returns one of four verdicts: `verified`, `unsupported`, `contradicted`, or
-`fabricated`. It also returns a confidence that flags the ones a human should look at.
+本文要构建的 `check_citation()` 接收一份源文档和一条引用，返回四种判定之一：`verified`、`unsupported`、`contradicted` 或 `fabricated`。它还会返回置信度，用来标出需要人工过目的那几条。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`. Every API call is cached in `json_cache.json`, which ships
-with the cookbook, so re-running replays the published numbers instead of calling the
-API. Delete that file to run everything live.
+然后设置 `TYPESAFE_API_KEY`。每次 API 调用都会缓存到随 cookbook 一起提供的 `json_cache.json` 里，因此重跑时直接回放已发布的数字，不会再调用 API。删掉该文件即可全部实时运行。
 
-Numbers below came from `jev-1.12` on 2026-08-16.
+下面的数字来自 2026-08-16 的 `jev-1.12`。
 
 ```python theme={null}
 import json
@@ -84,14 +71,11 @@ client = TypeSafeClient(
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-## Load the source and the citations
+## 加载源文档与引用
 
-The source is [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html) (JSON Web Token),
-fetched from rfc-editor.org and committed next to this cookbook as `rfc7519.txt`. The code
-below strips the page headers and footers, then splits the text into numbered sections.
+源文档是 [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html)（JSON Web Token），从 rfc-editor.org 抓取后与这篇 cookbook 放在一起，保存为 `rfc7519.txt`。下面的代码去掉页眉和页脚，再把正文切成带编号的各节。
 
-The eight citations in `citations.json` were written by an LLM against the RFC. Four are
-accurate; we edited the other four to fail the check.
+`citations.json` 里的八条引用都由 LLM 针对这份 RFC 写出。其中四条准确，另外四条被改成通不过检查的样子。
 
 ```python expandable theme={null}
 def load_source() -> str:
@@ -150,15 +134,11 @@ A claim-only citation:
 }
 ```
 
-## Find each quote in the source
+## 在源文档中查找每条引文
 
-A quote that is not in the source is fabricated, and no model is needed to find that out.
-Normalize whitespace and curly quotes so a quote still matches across the RFC's line
-wraps, then look for it as a substring. A match also says which section the quote came
-from, and that section is the text the model reads in the next step.
+源文档里找不到的引文就是编造的，这一步不需要模型。先把空白和弯引号归一化，让引文跨过 RFC 的换行也能匹配，再按子串查找。匹配结果还告诉你引文出自哪一节，那一节的文本就是下一步交给模型读的内容。
 
-A citation can name a section without quoting anything from it. There is nothing to match
-in that case, so take the section the citation names and go straight to the model.
+有的引用只指明某一节，并没有摘引其中的内容。这种情况没有可匹配的字符串，直接取它指出的那一节交给模型。
 
 ```python theme={null}
 def normalize(text: str) -> str:
@@ -203,21 +183,16 @@ iat_future        section-only  section of 270 chars
 duplicate_names   found         section of 918 chars
 ```
 
-## Verify whether the source supports the claim
+## 验证源文档是否支持该论断
 
-A citation that still has a quote at this point matches the source word for word. That is
-not enough: the quote can be accurate and the claim built on top of it still wrong.
-Deciding that takes the quote's context, the section step 1 found.
+走到这一步还带着引文的引用，说明它的引文与源文档逐字一致。这还不够：引文可能准确，而建立在它之上的论断仍然是错的。要判断这一点，需要看引文的上下文，也就是第 1 步找到的那一节。
 
-One `Choice` question per surviving citation covers the three ways a section can relate
-to a claim.
-The option with the highest probability is the verdict, and `AUTO_ACCEPT` (0.8 in the
-code above) decides what happens to it:
+每条存活的引用问一个 `Choice` 问题，覆盖某一节与论断之间可能的三种关系。概率最高的选项就是判定结果，`AUTO_ACCEPT`（上面代码里是 0.8）决定它接下来怎么处理：
 
-* confidence at or above 0.8: the verdict stands on its own;
-* below 0.8: a human confirms the verdict before anything acts on it.
+* 置信度不低于 0.8：判定直接生效；
+* 低于 0.8：先由人工确认，再据此行动。
 
-Start high, and lower the threshold as you see how the model does on your own documents.
+先把阈值设高一点，看到模型在自己文档上的表现之后再逐步下调。
 
 ```python expandable theme={null}
 QUESTIONS = {
@@ -275,9 +250,9 @@ def check_citation(sections: dict[str, str], citation: dict) -> dict:
     return {"id": citation["id"], "status": status, "answer": answer, **verdict(status, answer)}
 ```
 
-## Check every citation
+## 检查全部引用
 
-All eight citations through the same check:
+八条引用都走同一套检查：
 
 ```python theme={null}
 print(f"{'citation':<18}{'quote':<14}{'relation':<14}{'conf':>6}  {'verdict':<13}{'action':>7}")
@@ -305,32 +280,20 @@ iat_future        section-only  says_nothing    0.56  unsupported   review
 duplicate_names   found         supports        0.99  verified        auto
 ```
 
-Four citations came back `verified`, one `fabricated`, one `contradicted`, and two
-`unsupported`.
+四条引用返回 `verified`，一条返回 `fabricated`，一条返回 `contradicted`，两条返回 `unsupported`。
 
-* `epoch_seconds`, `aud_reject`, `clock_skew`, and `duplicate_names` are the accurate four.
-  All of them came back `verified` at confidence 0.93 or higher, well above `AUTO_ACCEPT`.
-* `sig_reporting` never reached the model. Its quote is not in the RFC, so the string
-  match alone marks it `fabricated`.
-* `exp_required` quotes section 4.1.4 word for word, and the same section says "Use of
-  this claim is OPTIONAL", so it is `contradicted`, at confidence 0.99.
-* `pii_encryption` and `iat_future` came back `unsupported` at 0.27 and 0.56, both under
-  the threshold, so both went to a human. `pii_encryption` shows why the string match is
-  not enough on its own: its quote is in the source word for word, and the section it
-  came from says nothing about the claim.
+* `epoch_seconds`、`aud_reject`、`clock_skew` 和 `duplicate_names` 就是准确的那四条，都以 0.93 以上的置信度返回 `verified`，远高于 `AUTO_ACCEPT`。
+* `sig_reporting` 根本没到模型那里。它的引文不在 RFC 中，仅靠字符串匹配就判定为 `fabricated`。
+* `exp_required` 逐字摘引了 4.1.4 节，而同一节写着 "Use of this claim is OPTIONAL"，因此被判为 `contradicted`，置信度 0.99。
+* `pii_encryption` 和 `iat_future` 以 0.27 和 0.56 返回 `unsupported`，都低于阈值，因此都转给了人工。`pii_encryption` 说明了为什么光靠字符串匹配不够：它的引文与源文档逐字一致，但引文所在的那一节对这条论断只字未提。
 
-To point this at your own data, replace `rfc7519.txt` and `citations.json`.
-`load_source()` and `split_sections()` are written for an RFC's layout, so a document of
-another shape needs its own parsing.
+要用在自己的数据上，替换 `rfc7519.txt` 和 `citations.json` 即可。`load_source()` 和 `split_sections()` 是按 RFC 的排版写的，换成别的格式的文档就得自己写解析。
 
-The string match is exact after normalization: a quote that is truncated or lightly
-reworded comes back as `fabricated`. A production system that tolerates sloppy quoting
-would need fuzzy matching instead.
+归一化之后字符串匹配是精确匹配：被截断或稍有改写的引文都会判成 `fabricated`。如果生产系统要容忍不严谨的引用方式，就得改用模糊匹配。
 
-## Open it in the playground
+## 在 TypeSafe playground 中打开
 
-The link holds one citation's claim and section, plus the question. Open it to run the same
-call live in the browser.
+链接里装着一条引用的论断和它所在的小节，还有那个问题。打开即可在浏览器里实时跑同一次调用。
 
 ```python theme={null}
 example = next(c for c in CITATIONS if c["id"] == "exp_required")
@@ -341,4 +304,4 @@ playground_link = make_playground_link(
 display(Markdown(f"🔗 [Open one citation's claim + section in the TypeSafe playground]({playground_link})"))
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiFADYCGAlnKQaQKIBuCATgJ74BSA6mvjgwAzinzUkFGGAT5KSfFgAO1NpRTUICjYgDcc-CggBrZPgDu1FAAsIMMcUchlj0uOH4kEMc0rlqYAB0pAA0+KTCCFAaWvThIAAsgQCMgUn44U4uTvgAFIyYKmoxCmi0CACU+ADCVLSOSA0Z+GjWsq7OhR15yqrqmtrlVRQ0cOIyqNQAZtQIHjayvcUDhuX4scQKGRBsclMo7BbW1FDWhm08-PgAsgCqAMoCAHIA8gIARrKUUFAISgdgfBTHb4JRsaBzYQSADmgQyrQQTQyYIhwihSGh6ym53aWS6ORGtHwbAQAEcYKo5ud1Dj8LA2CTUPgwOoEAB6HSIzbNO6PfCffkIYEk2lLfpaZmsjlrfyiBCAiS0jrZNyEuDBTZI-AASTgSnICEQqHYHmuAEEAJqg8HMAKyYX4YQQRCOuB+cj4A0IcyUDhhEQwd1cLyCHayGzyLWUIHewQSexzMJGOQ-OxMh0UaDGR2mcxwnUoDy+cgwWS8j5fTzwT5sLVQLQoGhIGEGJ7wdgnAAirPwxdL+dukSx52oHjV7nwLwACmhtS8nmaADLBEAAXxAYRAKL1hYw2DwhBIIBJVBKcSPKA4SkRB9IpwgJxvYVIElEbBg0QGwjipAAEhBzGZCAqQWR0ohKYkEFPcMIFpNUAH5QniKA2CsDtKHPCIYCUJQdkLH8QARMDPwlURWXmC5xxBMBKWicguFofVZgomkrAnFB3yfZCGzUGjom-W9CIuSISIUMiDgo2QIBwiAoQOYdQKo3ZGP8Kk2NHIE-EiJCIl9YQAH0vBsGECKIkSIMgKkjLkMAwBJNEjhpRS6jGSg0XYQswgQKw2l2H0OFIVcgo3QhKBUAA1E0BgPEBmGSEKQEiA1onla4IBkchhAPABtEAACsEGYABaVJkgAJhAABdVcgA" target="_blank" rel="noreferrer" className="text-primary">Open one citation's claim + section in the TypeSafe playground →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiFADYCGAlnKQaQKIBuCATgJ74BSA6mvjgwAzinzUkFGGAT5KSfFgAO1NpRTUICjYgDcc-CggBrZPgDu1FAAsIMMcUchlj0uOH4kEMc0rlqYAB0pAA0+KTCCFAaWvThIAAsgQCMgUn44U4uTvgAFIyYKmoxCmi0CACU+ADCVLSOSA0Z+GjWsq7OhR15yqrqmtrlVRQ0cOIyqNQAZtQIHjayvcUDhuX4scQKGRBsclMo7BbW1FDWhm08-PgAsgCqAMoCAHIA8gIARrKUUFAISgdgfBTHb4JRsaBzYQSADmgQyrQQTQyYIhwihSGh6ym53aWS6ORGtHwbAQAEcYKo5ud1Dj8LA2CTUPgwOoEAB6HSIzbNO6PfCffkIYEk2lLfpaZmsjlrfyiBCAiS0jrZNyEuDBTZI-AASTgSnICEQqHYHmuAEEAJqg8HMAKyYX4YQQRCOuB+cj4A0IcyUDhhEQwd1cLyCHayGzyLWUIHewQSexzMJGOQ-OxMh0UaDGR2mcxwnUoDy+cgwWS8j5fTzwT5sLVQLQoGhIGEGJ7wdgnAAirPwxdL+dukSx52oHjV7nwLwACmhtS8nmaADLBEAAXxAYRAKL1hYw2DwhBIIBJVBKcSPKA4SkRB9IpwgJxvYVIElEbBg0QGwjipAAEhBzGZCAqQWR0ohKYkEFPcMIFpNUAH5QniKA2CsDtKHPCIYCUJQdkLH8QARMDPwlURWXmC5xxBMBKWicguFofVZgomkrAnFB3yfZCGzUGjom-W9CIuSISIUMiDgo2QIBwiAoQOYdQKo3ZGP8Kk2NHIE-EiJCIl9YQAH0vBsGECKIkSIMgKkjLkMAwBJNEjhpRS6jGSg0XYQswgQKw2l2H0OFIVcgo3QhKBUAA1E0BgPEBmGSEKQEiA1onla4IBkchhAPABtEAACsEGYABaVJkgAJhAABdVcgA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开一条引用的论断和所在小节 →</a>

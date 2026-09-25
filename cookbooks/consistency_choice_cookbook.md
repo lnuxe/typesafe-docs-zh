@@ -1,49 +1,31 @@
-# Self-consistency: choices
+# 自一致性：choice
 
-> Add an uncertain outcome to moderation decisions and compare label agreement with the share of automatic actions.
+> 给审核决策加一个不确定结果，并把标签一致率与自动动作的占比放在一起比较。
 
-This cookbook takes one borderline user post, runs a moderation rubric over it 15 times,
-and checks whether each answer holds still across the repeats. Every check is a
-`Choice`, so each answer is one label from a fixed set. In a moderation pipeline
-that label is the routing decision: remove or leave up, escalate or auto-resolve, send to
-the threat, spam, or general queue. When the label wobbles from one run to the next, the
-same post routes to different places for no good reason.
+本 cookbook 取一条边界性的用户帖子，用一套审核量规跑 15 遍，检查每个答案在重复之间是否稳定。每个检查都是一个 `Choice`，因此每个答案都是固定标签集里的一个标签。在审核流水线里，这个标签就是路由决策：删除还是保留、上报人工还是自动解决、送往威胁队列、垃圾信息队列还是一般队列。当标签在一次运行与下一次之间摇摆时，同一条帖子就会毫无理由地路由到不同地方。
 
-The rubric is 8 `Choice` questions, and each run is one call that answers all 8. We do
-15
-repeats per condition, where a condition is one model plus one setting, and plot every
-label that came back.
+量规是 8 个 `Choice` 问题，每次运行是一次调用、回答全部 8 个问题。每个条件做 15 次重复，一个条件就是一个模型加一项设置，返回的每个标签都会画出来。
 
-The conditions:
+这些条件：
 
-* Non-reasoning LLMs `claude-haiku-4-5` and `gpt-5.4-mini`, at temperature `0` and the
-  API default.
-* Reasoning LLMs `gpt-5.5` and `claude-opus-4-8`, which have no temperature dial.
-* TypeSafe: one `system_one` call over the 8 `Choice` questions, with a fresh `uid`
-  field (a
-  throwaway unique value) on each call, matching the noul cookbook setup.
+* 非推理 LLM `claude-haiku-4-5` 和 `gpt-5.4-mini`，温度取 `0` 与 API 默认值。
+* 推理 LLM `gpt-5.5` 和 `claude-opus-4-8`，它们没有温度旋钮。
+* TypeSafe：一次 `system_one` 调用覆盖这 8 个 `Choice` 问题，每次调用带一个全新的 `uid` 字段（一次性的唯一值），与 noul cookbook 的设置保持一致。
 
-What to look for: picked labels can flip inside a single condition, including TypeSafe,
-and conditions disagree with each other.
+该看什么：在同一个条件内部，选中的标签就可能翻转，TypeSafe 也不例外；各条件之间也互相不一致。
 
-In this run the LLM distribution settings repeat their plurality labels 87.5% to 100% of
-the time, compared with TypeSafe's 90.8%. TypeSafe has lower mean probability variation
-than five of the six LLM distribution conditions; Haiku at temperature 0 varies less.
-Close probabilities still permit routing changes: TypeSafe flips on 2 of the 8 questions.
+本次运行中，LLM 分布设置重复其多数标签的比例为 87.5% 到 100%，TypeSafe 是 90.8%。TypeSafe 的概率平均波动低于六个 LLM 分布条件中的五个；温度取 0 的 Haiku 波动更小。概率接近时路由仍会改变：TypeSafe 在 8 个问题里有 2 个发生翻转。
 
-For application decisions, we also require a top probability of at least `0.60`; otherwise
-the result is `uncertain` and goes to human review. TypeSafe's agreement then rises to
-99.2%, with automatic labels on 74.2% of answers. We show the raw outputs and apply the
-same threshold to LLM probability conditions, keeping abstentions and changes visible.
+在应用决策上，我们还要求最高概率至少为 `0.60`；否则结果就是 `uncertain`，交给人工复核。这样 TypeSafe 的一致率升到 99.2%，74.2% 的答案带有自动标签。我们展示原始输出，并把同一个阈值套用到 LLM 的概率条件上，让弃权和变化都保持可见。
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install anthropic openai matplotlib ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-then set `TYPESAFE_API_KEY`, `ANTHROPIC_API_KEY`, and `OPENAI_API_KEY`.
-This run uses `jev-latest` on the production API, sampled on 2026-09-11.
+然后设置 `TYPESAFE_API_KEY`、`ANTHROPIC_API_KEY` 和 `OPENAI_API_KEY`。
+本次运行在生产 API 上使用 `jev-latest`，采样于 2026-09-11。
 
 ```python expandable theme={null}
 import hashlib
@@ -99,17 +81,13 @@ typesafe_client = TypeSafeClient(
 )
 ```
 
-## The state: a borderline user post, as JSON
+## 状态：一条边界性的用户帖子，JSON 格式
 
-The post below is built to sit on the fence. The language is heated and insulting, aimed
-partly at one person and partly at the argument and the community. It carries an
-off-platform invite (a link pulling people to another site), one prior strike on the
-account, and four user reports, and the threat-like wording is never cleanly phrased.
+下面这条帖子就是故意做得骑墙。语言激烈、带侮辱，一部分针对某个人，一部分针对争论本身和社区。它带有一次站外邀请（一个把人拉去另一个网站的链接）、该账号的一次既往处罚和四条用户举报，而带有威胁意味的措辞始终没有说死。
 
-There is no single obvious answer here, and that is the point: small wording differences
-should not randomly move the same post between enforcement paths.
+这里没有唯一明显的答案，而这正是重点：措辞上的细微差异不该让同一条帖子在执行路径之间随机漂移。
 
-The LLMs get `json.dumps(POST)` in the prompt. TypeSafe gets the Python dict directly.
+LLM 在提示词里拿到 `json.dumps(POST)`。TypeSafe 直接拿到那个 Python 字典。
 
 ```python theme={null}
 POST = {
@@ -140,13 +118,9 @@ POST = {
 }
 ```
 
-## The rubric: 8 `Choice` questions
+## 量规：8 个 `Choice` 问题
 
-Each question has a `key`, a line of instructions, and a fixed label set. The labels
-within a question are mutually exclusive (exactly one applies), and each carries a
-short description. TypeSafe returns a picked `choice` plus a `probabilities`
-distribution over the labels. The LLMs are asked to use the same label sets, which
-keeps every row comparable.
+每个问题有一个 `key`、一行指令和一个固定的标签集。同一个问题内的标签互斥（恰好一个适用），每个标签带一句简短描述。TypeSafe 返回选中的 `choice`，以及标签上的 `probabilities` 分布。LLM 也被要求使用同样的标签集，这样每一行都可比较。
 
 ```python expandable theme={null}
 QUESTIONS = {
@@ -230,22 +204,15 @@ QUESTIONS = {
 }
 ```
 
-## How we ask
+## 提问方式
 
-Each LLM call is one prompt holding `json.dumps(POST)`, all 8 questions, and every allowed
-label. There are two answer formats. In distribution mode the model returns one JSON object
-per question with a probability on each label. In single-pick mode it returns one bare
-label per question, and our analysis puts all the probability mass on that label.
+每次 LLM 调用是一个提示词，里面装着 `json.dumps(POST)`、全部 8 个问题和所有允许的标签。答案有两种格式。分布模式下，模型对每个问题返回一个 JSON 对象，给出各标签上的概率。单选模式下，它每个问题只返回一个裸标签，我们的分析把全部概率留量都放在那个标签上。
 
-The TypeSafe call is one `system_one` request over the same post and the same 8
-`Choice` questions, returning one distribution per question.
+TypeSafe 调用是一次 `system_one` 请求，覆盖同一条帖子和同样这 8 个 `Choice` 问题，每个问题返回一个分布。
 
-Every query also gets a fresh `uid`, a throwaway unique value that changes each run while
-leaving the post and rubric unchanged. It appears in the LLM prompt and as an extra field
-in the TypeSafe state. This setup cannot separate sensitivity to the irrelevant field
-from variation that would occur on identical requests.
+每次查询还会带一个全新的 `uid`，一个一次性的唯一值，每次运行都变，而帖子和量规保持不变。它出现在 LLM 提示词里，也作为额外字段出现在 TypeSafe 的状态里。这种设置无法把「对无关字段的敏感性」与「相同请求本身也会出现的波动」区分开。
 
-Each helper returns the answer, an estimated cost, and the round-trip latency.
+每个辅助函数返回答案、估算成本和往返延迟。
 
 ````python expandable theme={null}
 def argmax_label(values: list, labels: list[str]) -> str | None:
@@ -467,29 +434,24 @@ def ask_llm_rubric(
     return distributions, cost, latency
 ````
 
-## Experimental Conditions
+## 实验条件
 
-### Experiment Grid
+### 实验网格
 
-| Model group          | Model                            | Distribution (t=0) | Distribution (default) | Single-pick (t=0) |
-| -------------------- | -------------------------------- | :----------------: | :--------------------: | :---------------: |
+| 模型组               | 模型                 | 分布(t=0)            | 分布(默认)           | 单选(t=0)            |
+| -------------------- | -------------------- | :------------------: | :------------------: | :------------------: |
 | Non-reasoning Models | `claude-haiku-4-5`               |          ✓         |            ✓           |         ✓         |
 | Non-reasoning Models | `gpt-5.4-mini`                   |          ✓         |            ✓           |         ✓         |
 | Reasoning Models     | `gpt-5.5`                        |          —         |            ✓           |         —         |
 | Reasoning Models     | `claude-opus-4-8`                |          —         |            ✓           |         —         |
 | TypeSafe             | `jev-latest` (`typesafe_choice`) |          —         |            ✓           |         —         |
 
-* A `✓` marks a condition tested with 15 repeats; a `—` marks a combination that is not
-  tested.
-* The default column sends no temperature argument: non-reasoning models use the API
-  default, and reasoning models and TypeSafe run without a temperature setting.
-* Single-pick conditions return one label per question.
-* Temperature `0` is commonly suggested for repeatability, so it is compared with the API
-  default.
+* `✓` 表示该条件测试了 15 次重复；`—` 表示该组合没有测试。
+* default 列不发送 temperature 参数：非推理模型使用 API 默认值，推理模型和 TypeSafe 则在无温度设置的情况下运行。
+* 单选条件每个问题只返回一个标签。
+* 为了可复现性通常建议把温度设为 `0`，所以这里把它与 API 默认值做比较。
 
-We draw `NUM_SAMPLES` = 15 repeats per condition. Each repeat has its own cache key and
-counts as a distinct draw, and the cache (`json_cache.json`) ships with the cookbook, so
-re-rendering reuses it and spends no API calls. Delete the cache to sample live again.
+每个条件取 `NUM_SAMPLES` = 15 次重复。每次重复有自己的缓存键，算一次独立的采样；缓存（`json_cache.json`）随 cookbook 一起提供，因此重新渲染会复用它、不产生 API 调用。删掉缓存即可重新实测。
 
 ```python expandable theme={null}
 CONDITIONS = []
@@ -577,14 +539,11 @@ TypeSafe requested model: jev-latest
 TypeSafe returned models (calls): {'jev-1.13.0': 15}
 ```
 
-### Cost + speed (per rubric query)
+### 成本与速度（每次量规查询）
 
-Costs below use the historical price assumptions in Setup, including the `speed_latest`
-rate for TypeSafe. They are not verified `jev-latest` prices or current billing amounts.
+下面的成本用的是环境准备里的历史价格假设，包括 TypeSafe 的 `speed_latest` 费率。它们不是经过核实的 `jev-latest` 价格，也不是当前的账单金额。
 
-One row is one full 8-question rubric call. `time/call` and `cost/call` average the 15
-calls, and the `vs ts_choice` columns divide by the TypeSafe figures. The LLMs run in a
-16-way pool.
+一行就是一次完整的 8 问题量规调用。`time/call` 和 `cost/call` 取 15 次调用的均值，`vs ts_choice` 两列则除以 TypeSafe 的数字。LLM 在 16 路并发池里运行。
 
 ```python theme={null}
 typesafe_cost = mean([cost for cost, _latency in stats["typesafe_choice"]])
@@ -622,24 +581,22 @@ claude-opus-4-8-reasoning              15    10376ms    $0.028375      90.9x    
 typesafe_choice                        15      114ms    $0.000046       1.0x       1.0x
 ```
 
-In this run `typesafe_choice` has a mean round-trip latency of 114ms. The LLM conditions
-range from 826ms to 13.0 seconds per call under the concurrency settings above.
+本次运行中 `typesafe_choice` 的平均往返延迟是 114ms。在上述并发设置下，各 LLM 条件每次调用从 826ms 到 13.0 秒不等。
 
-## Plot: every sample's decision as a heatmap
+## 绘图：把每个采样的决策画成热力图
 
-How to read it:
+怎么读：
 
-* Outer row group: the question.
-* Inner row: the condition.
-* Column: one full rubric call.
-* Cell text: the application decision plus the probability on the top label.
-* Cell color: the label's position within that question, so the same color all the way
-  across a row means the same decision every time.
-* Gray `uncertain`: the top probability is below `0.60`, so the case goes to human review.
-* Hatched `n/a`: the reply did not parse into usable labels (a parse failure).
-* Blank rows are just spacers.
+* 外层行分组：问题。
+* 内层行：条件。
+* 列：一次完整的量规调用。
+* 单元格文字：应用决策，加上最高标签上的概率。
+* 单元格颜色：标签在该问题中的位置，因此一行里颜色始终相同，就表示每次决策都相同。
+* 灰色 `uncertain`：最高概率低于 `0.60`，因此该情形交给人工复核。
+* 带斜线的 `n/a`：回复没有解析出可用的标签（一次解析失败）。
+* 空行只是间隔。
 
-Single-pick conditions keep their returned labels: they provide no uncertainty estimate.
+单选条件保留它们返回的标签：它们不提供不确定性估计。
 
 ```python expandable theme={null}
 GAP = 1  # blank spacer row(s) between question blocks
@@ -774,24 +731,13 @@ display(fig)
 
 <img src="https://mintcdn.com/ts-docs/BBcnWK7wRF0qekMh/cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.1.png?fit=max&auto=format&n=BBcnWK7wRF0qekMh&q=85&s=558e5110fcd6836f92e02741374061c3" alt="output" width="2230" height="4044" data-path="cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.1.png" />
 
-The clearer questions hold steady: `target` reads Person and `severity` reads High across
-the board. The borderline ones split across conditions: `category`, `primary_risk`,
-`action`, `review_path`, and `link_handling`. Some conditions also flip within their
-own 15 repeats. Before abstention, TypeSafe changes its top label on `primary_risk`
-(Harassment 11 times, Violence 4 times) and `link_handling` (RmLink 8 times, Brigade 7
-times). Both rows now show `uncertain` throughout because their top probabilities are
-below `0.60`.
+比较清楚的问题始终稳定：`target` 一路读出 Person，`severity` 一路读出 High。边界性的那些则在各条件之间分裂：`category`、`primary_risk`、`action`、`review_path` 和 `link_handling`。有些条件在自己那 15 次重复内部也会翻转。在弃权之前，TypeSafe 在 `primary_risk`（Harassment 11 次、Violence 4 次）和 `link_handling`（RmLink 8 次、Brigade 7 次）上换过最高标签。现在这两行全程都是 `uncertain`，因为它们的最高概率低于 `0.60`。
 
-## Probability std dev
+## 概率标准差
 
-This looks at the full probability vectors, not just the picked label. For each condition
-we collect all 15 distributions for every question, take the standard deviation of each
-label's probability across the repeats (how much it moves from run to run), then average
-those std devs over all labels and questions. We also report the single largest label std
-dev, and count parse failures separately.
+这里看的是完整的概率向量，而不只是被选中的标签。对每个条件，我们收集每个问题的全部 15 个分布，计算每个标签概率在重复之间的标准差（它在运行之间移动多少），再把这些标准差在所有标签和问题上取平均。我们还会报告单个最大的标签标准差，并单独统计解析失败。
 
-The table compares every probability-output LLM condition against TypeSafe. The single-pick
-rows are left out, since they emit hard labels rather than probability distributions.
+这张表把每个输出概率的 LLM 条件与 TypeSafe 对比。单选的行不列入，因为它们给出的是硬标签而不是概率分布。
 
 ```python expandable theme={null}
 def probability_std_stats(samples: list) -> tuple[float, float, float]:
@@ -845,19 +791,13 @@ claude-opus-4-8-reasoning                  0.0245        0.0693         0%      
 typesafe_choice                            0.0098        0.0515         0%        1.00x
 ```
 
-In this run TypeSafe has a mean probability std dev of `0.0098` and a max single-label std
-dev of `0.0515`. Haiku at temperature 0 has a lower mean std dev of `0.0012`. The other
-five LLM probability conditions range from `0.0245` to `0.0543`, about `2.5x` to `5.6x`
-the TypeSafe mean. Small changes can still switch the top label when two labels are close.
+本次运行中 TypeSafe 的概率标准差均值为 `0.0098`，单个标签的最大标准差为 `0.0515`。温度取 0 的 Haiku 标准差均值更低，为 `0.0012`。另外五个 LLM 概率条件在 `0.0245` 到 `0.0543` 之间，约为 TypeSafe 均值的 `2.5x` 到 `5.6x`。当两个标签接近时，微小的变化仍然可能换掉最高标签。
 
-## Plot: decision agreement with an uncertain outcome
+## 绘图：带不确定结果的决策一致率
 
-Return `uncertain` when the top probability is below `0.60`. For each probability-output
-condition and question, count the most common application decision, including `uncertain`,
-and divide by all 15 draws. Parse failures count against agreement. Each bar averages the
-score over all 8 questions, with the highest agreement first.
+最高概率低于 `0.60` 时返回 `uncertain`。对每个输出概率的条件和每个问题，统计最常见的应用决策（`uncertain` 也算在内），再除以全部 15 次采样。解析失败计入对一致率的不利一侧。每根柱子是该分数在全部 8 个问题上的平均值，一致率最高的排在最前。
 
-Single-pick LLM conditions are excluded because they provide no uncertainty estimate.
+单选 LLM 条件被排除，因为它们不提供不确定性估计。
 
 ```python expandable theme={null}
 # Compute policy decisions and agreement once for both this chart and the comparison table.
@@ -922,26 +862,15 @@ display(fig_bar)
 
 <img src="https://mintcdn.com/ts-docs/BBcnWK7wRF0qekMh/cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.2.png?fit=max&auto=format&n=BBcnWK7wRF0qekMh&q=85&s=3bf99796df3faa60d1db45f626a7caee" alt="output" width="1052" height="651" data-path="cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.2.png" />
 
-Under the same `0.60` rule, Haiku at temperature 0 scored 100%. TypeSafe scored 99.2%, and
-the other LLM conditions landed between 84.2% and 94.2%. TypeSafe returned `uncertain` on
-25.8% of answers and acted automatically on the other 74.2%; Haiku at temperature 0 never
-abstained. These percentages measure repeatability only. The table below sets raw agreement
-and abstention rates next to the policy agreement in this chart.
+在同样的 `0.60` 规则下，温度取 0 的 Haiku 得分为 100%。TypeSafe 为 99.2%，其余 LLM 条件落在 84.2% 到 94.2% 之间。TypeSafe 对 25.8% 的答案返回 `uncertain`，其余 74.2% 自动执行；温度取 0 的 Haiku 从不弃权。这些百分比只衡量可重复性。下表把原始一致率和弃权率与本图中按策略计算的一致率并排放置。
 
-## Let uncertain probabilities produce an uncertain decision
+## 让不确定的概率产生不确定的决策
 
-A small probability change can swap two close labels. The application does not have to
-act on the winner: return `uncertain` when the top probability is below `0.60`, and send
-that case to a human. At exactly `0.60`, select the top label. This uses the returned
-probabilities, not the API's separate `confidence` field, and adds no model calls.
+概率的一点小变化就可能让两个接近的标签互换位置。应用不必按胜出的那个标签行动：最高概率低于 `0.60` 时返回 `uncertain`，把这个情形交给人。恰好等于 `0.60` 时，选中最高标签。这里用的是返回的概率，不是 API 单独的 `confidence` 字段，也不增加模型调用。
 
-The threshold is an illustrative application policy, not a calibrated guarantee or a
-threshold chosen to maximize this run's agreement. Choose production thresholds using
-labeled examples and the cost of incorrect actions and human review.
+这个阈值是示例性的应用策略，既不是经过校准的保证，也不是为了让本次运行的一致率最大而选的阈值。生产阈值应当依据有标注的样本、错误动作的代价以及人工复核的代价来确定。
 
-We apply the same rule to every probability-output condition. Single-pick LLM responses
-have no probability estimate; their synthetic one-hot vectors cannot measure uncertainty,
-so they are excluded from the agreement chart and table.
+我们把同一条规则套用到每个输出概率的条件上。单选 LLM 的回复没有概率估计；它们合成的 one-hot 向量无法衡量不确定性，因此被排除在一致率图和表之外。
 
 ```python expandable theme={null}
 def agreement_rate(samples: list) -> float:
@@ -997,18 +926,9 @@ claude-opus-4-8-reasoning               92.5%        94.2%      33.3%      66.7%
 typesafe_choice                         90.8%        99.2%      25.8%      74.2%          0
 ```
 
-`policy agree` counts `uncertain` as a decision; parse failures count against agreement.
-`automatic` is the share of all answers that select a label. `conflicts` counts questions
-with more than one concrete label across the repeats, ignoring abstentions. These measures
-describe repeatability and how often the application acts, not whether its actions are
-right.
+`policy agree` 把 `uncertain` 当作一种决策；解析失败计入对一致率的不利一侧。`automatic` 是选中了某个标签的答案占比。`conflicts` 统计在重复之间出现一个以上具体标签的问题数，弃权不计入。这些指标描述的是可重复性和应用自动执行的比例，而不是它的动作是否正确。
 
-TypeSafe's agreement rose from 90.8% to 99.2%. Of the answers, 25.8% were uncertain and
-74.2% automatic. `primary_risk` and `link_handling` came back uncertain on every repeat;
-`category` alternated between Violence and `uncertain`, crossing the action threshold on
-some repeats and not others. No question produced two different concrete TypeSafe labels.
-None of this shows accuracy or superiority: Haiku at temperature 0 had 100% agreement
-here, with no abstentions.
+TypeSafe 的一致率从 90.8% 升到 99.2%。答案中有 25.8% 是不确定、74.2% 是自动执行。`primary_risk` 和 `link_handling` 在每次重复里都是不确定；`category` 在 Violence 与 `uncertain` 之间交替，有些重复跨过了动作阈值、有些没有。没有任何问题产生两个不同的 TypeSafe 具体标签。这一切都不说明准确率或优劣：温度取 0 的 Haiku 在这里一致率是 100%，而且从不弃权。
 
 ```python theme={null}
 # Show every TypeSafe decision while retaining the top probability behind it.
@@ -1043,15 +963,12 @@ display(fig_policy)
 
 <img src="https://mintcdn.com/ts-docs/BBcnWK7wRF0qekMh/cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.3.png?fit=max&auto=format&n=BBcnWK7wRF0qekMh&q=85&s=257663537c99b735f9f07609732d1a69" alt="output" width="1932" height="584" data-path="cookbooks/consistency_choice_cookbook/consistency_choice_cookbook.executed.3.png" />
 
-This policy does not make the model deterministic. Abstaining can replace competing
-labels with the same human-review outcome, but a probability near `0.60` can still move
-between a concrete label and `uncertain`. The probability statistics and the table's `raw
-agree` column still report the original model outputs.
+这条策略并不会让模型变得确定。弃权可以把互相竞争的标签替换成同一个人工复核结果，但接近 `0.60` 的概率仍然可能在某个具体标签与 `uncertain` 之间移动。概率统计和表里的 `raw
+agree` 列报告的仍然是模型的原始输出。
 
-## Open it in the TypeSafe playground
+## 在 TypeSafe playground 中打开
 
-The link below opens the same post and rubric in the playground: one post, the same 8
-`Choice`s, and TypeSafe `jev-latest`.
+下面的链接在 playground 中打开同一条帖子和同一套量规：一条帖子、同样这 8 个 `Choice`，以及 TypeSafe `jev-latest`。
 
 ```python theme={null}
 playground_link = make_playground_link(

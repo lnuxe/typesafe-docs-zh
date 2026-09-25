@@ -1,6 +1,6 @@
 # Noul
 
-> A Noul question asks the TypeSafe model to evaluate a yes/no question and return the probability that the answer is yes.
+> Noul 问题让 TypeSafe 模型评估一个是非问题，并返回答案为「是」的概率。
 
 export function TypesafeExample({example, display, title}) {
   const keyStrUriSafe = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$";
@@ -231,19 +231,19 @@ export function TypesafeExample({example, display, title}) {
     </div>;
 }
 
-Use a Noul when the answer is yes or no. For example, does this message ask for a refund, does this resume mention distributed systems, does this comment contain personal data. If the answer is one of several options, use a [Choice](/primitives/choice). If it's a position on a spectrum, use a [Score](/primitives/score). [Choose a question type](/primitives#choose-a-question-type) compares all three.
+当答案只有「是」或「否」时，就用 Noul。比如这条消息是不是在要求退款、这份简历有没有提到分布式系统、这条评论里有没有个人数据。如果答案是若干选项之一，就用 [Choice](/primitives/choice)；如果答案是一条谱系上的位置，就用 [Score](/primitives/score)。[选择问题类型](/primitives#choose-a-question-type)对这三者做了比较。
 
-A Noul answer is a single number representing the probability that the answer is yes where 0 means no and 1 means yes.
+Noul 的答案是一个数字，表示答案为「是」的概率：0 表示否，1 表示是。
 
-## Request structure
+## 请求结构
 
-The POST request body to the [TypeSafe API](/api) has the same three top-level fields as any other question type: `state`, which is the content to evaluate; `model`; and `questions`. Each Noul question has the following fields:
+发往 [TypeSafe API](/api) 的 POST 请求体和其他问题类型一样，有三个顶层字段：要评估的内容 `state`、`model` 和 `questions`。每个 Noul 问题包含以下字段：
 
-* `type`: Always `"noul"`.
-* `instructions`: The yes/no question the model answers, or a statement for it to judge.
-* `criteria`: Optional. An object with `true` and `false` descriptions of what a yes and a no mean.
+* `type`：始终是 `"noul"`。
+* `instructions`：模型要回答的是非问题，或者一句让它判断的陈述。
+* `criteria`：可选。一个对象，用 `true` 和 `false` 两条描述说明什么算「是」、什么算「否」。
 
-Below is a request where the state is a support message and the two questions are whether the customer wants a person and whether they have contacted support before:
+下面这个请求里，状态是一条客服消息，两个问题分别是：客户是不是想找真人，以及客户之前有没有联系过客服：
 
 <TypesafeExample
   display="request"
@@ -267,9 +267,9 @@ questions: {
 }}
 />
 
-You choose the question ids, `is_human_escalation` and `is_repeat_contact` here. The ids are not sent to the model. Each answer is returned under the same id. The first question relies on `instructions` alone. The second adds `criteria` to say what counts as a yes and what counts as a no.
+问题 id 由你决定，这里是 `is_human_escalation` 和 `is_repeat_contact`。这些 id 不会发给模型，每个答案都以同一个 id 返回。第一个问题只靠 `instructions`；第二个额外加了 `criteria`，说明什么算「是」、什么算「否」。
 
-With the [Python SDK](/sdk/python), the same questions are `Noul` objects:
+用 [Python SDK](/sdk/python) 时，同样的问题写成 `Noul` 对象：
 
 ```python theme={null}
 from typesafe_sdk import Noul, NoulCriteria, TypeSafeClient
@@ -296,17 +296,17 @@ with TypeSafeClient() as client:
     print(response.answers["is_repeat_contact"].noul)
 ```
 
-The `system_one` method and the `https://api.typesafe.ai/v1/systemone` endpoint are both named after [System One](/concepts/system-one), TypeSafe's AI model. [How to build with TypeSafe](/concepts/how-to-build-with-system-one) covers where to use it in your code.
+`system_one` 方法和 `https://api.typesafe.ai/v1/systemone` 端点都取自 TypeSafe 的 AI 模型 [System One](/concepts/system-one) 的名字。[如何用 TypeSafe 构建](/concepts/how-to-build-with-system-one)讲了在代码里该在哪里用它。
 
-If you're using a coding agent, install the [TypeSafe agent skill](/agent-skill#installation) first so it knows the request and response shapes.
+如果你用编码智能体来写，先装好 [TypeSafe 智能体技能](/agent-skill#installation)，它就知道请求与响应长什么样了。
 
 <Note>
-  `instructions` can be a string, an object, or an array. Start with a string. Use an object when the question needs data alongside it, such as a record to compare the state against, or when part of the question is built by your code. [Use structure in the questions](/concepts/how-to-build-with-system-one#use-structure-in-the-questions) explains when structure helps, and [the example below](#structured-instructions) shows it with questions built in code.
+  `instructions` 可以是字符串、对象或数组。先用字符串。当问题需要把数据带在身边时（比如一条用来和状态比对的记录），或者当问题的某部分由你的代码生成时，再用对象。[在问题里使用结构](/concepts/how-to-build-with-system-one#use-structure-in-the-questions)说明了什么时候结构化有帮助，[下面的例子](#structured-instructions)演示了用代码生成问题的情况。
 </Note>
 
-## Response structure
+## 响应结构
 
-The response has one entry in `answers` per question, under the ids from the request:
+响应里 `answers` 每个问题一个条目，键就是你请求里用的那组 id：
 
 ```json theme={null}
 {
@@ -328,28 +328,28 @@ The response has one entry in `answers` per question, under the ids from the req
 }
 ```
 
-Both answers here are close to 1. The customer says "talk to a real person", so `is_human_escalation` is 0.99. "I have asked three times now" matches the `true` description of `is_repeat_contact`, so it is 0.93.
+这里两个答案都接近 1。客户说了"跟真人说句话"，所以 `is_human_escalation` 是 0.99；"我已经问过三次了"命中 `is_repeat_contact` 的 `true` 描述，所以是 0.93。
 
-## Reading a Noul
+## 如何解读 Noul
 
-The number is the answer and the certainty in one. A value near 1 is a strong yes. A value near 0 is a strong no. A value near 0.5 means the model gives yes and no similar probability.
+这个数字同时是答案和确定性。接近 1 就是强烈的「是」，接近 0 就是强烈的「否」，接近 0.5 说明模型给「是」和「否」的概率差不多。
 
-The table below shows recorded `jev-1.13.0` answers to the `is_human_escalation` question for different customer messages:
+下表是 `jev-1.13.0` 对不同客户消息在 `is_human_escalation` 这个问题上的实际回答记录：
 
-| State                                                                  | `noul` |
+| 状态                                                                   | `noul` |
 | ---------------------------------------------------------------------- | ------ |
-| Thanks, that fixed it!                                                 | 0.02   |
-| How do I reset my password?                                            | 0.07   |
-| I need this sorted today, whatever it takes.                           | 0.26   |
-| Are you a bot?                                                         | 0.40   |
-| Is there any way to speak to someone about my invoice?                 | 0.84   |
-| I have asked three times now. Can I please just talk to a real person? | 0.99   |
+| 谢谢，这下好了！                                                       | 0.02   |
+| 怎么重置我的密码？                                                     | 0.07   |
+| 今天必须给我解决，不管用什么办法。                                     | 0.26   |
+| 你是机器人吗？                                                         | 0.40   |
+| 有没有办法找个人问问我的账单？                                         | 0.84   |
+| 我已经问过三次了。能不能让我跟真人说句话？                             | 0.99   |
 
-The first two and the last two are clear. "I need this sorted today" is urgent but never asks for a person, and gets 0.26. "Are you a bot?" hints at wanting a human without asking for one, and the model splits almost evenly at 0.40. Both are the kind of message where a decision needs to be made based on a threshold in your code.
+前两条和后两条都很清楚。"今天必须给我解决"很急，但并没有要找人，得 0.26；"你是机器人吗"暗示想要真人，却没有明说，模型几乎对半分，给了 0.40。这两条都属于要靠代码里的阈值来决定的类型。
 
-There is no separate `confidence` value for a Noul, unlike a [Choice](/primitives/choice) or a [Score](/primitives/score). A Noul's probability distribution has only two outcomes, yes and no, so the single `noul` value describes it completely. A Choice or Score spreads probability over several options or levels, and `confidence` summarizes that spread.
+和 [Choice](/primitives/choice)、[Score](/primitives/score) 不同，Noul 没有单独的 `confidence` 值。Noul 的概率分布只有「是」和「否」两种结果，所以单个 `noul` 值就把它完整描述了。Choice 和 Score 会把概率摊在多个选项或档位上，`confidence` 就是对这种分散程度的概括。
 
-Most often your code thresholds `noul` into a boolean:
+最常见的是在代码里给 `noul` 设阈值，转成布尔值：
 
 ```python theme={null}
 wants_human = response.answers["is_human_escalation"].noul > 0.9
@@ -360,36 +360,35 @@ else:
     route_to_bot(ticket)
 ```
 
-Where to set the threshold depends on the cost of being wrong. Use 0.5 when yes and no are equally easy to act on. Raise it when acting on a false yes is expensive, such as paging someone or issuing a refund. Lower it when missing a true yes is expensive, such as failing to flag a safety issue. Values in the middle can go to a person rather than either code path. That is the same three-way split the [Confidence](/confidence#three-paths-for-using-confidence-in-your-code) page describes for Choice and Score answers.
+阈值定在哪里取决于判断错的代价。当「是」和「否」都同样容易处理时，用 0.5；当错误地当成「是」代价很高时（比如半夜把人叫起来、或者退款），就调高；当漏掉一个真正的「是」代价很高时（比如没标出一个安全问题），就调低。中间那些值可以交给人工，而不走任何一条代码路径。这就是[置信度](/confidence#three-paths-for-using-confidence-in-your-code)页面为 Choice 和 Score 答案描述的同一种三分法。
 
-A Noul value runs from 0 to 1, but it's not a scale of the thing you asked about. It is the probability that the answer is yes. If the question is really about degree, the value does not measure the degree. Below, "Is the candidate strong in Python?" is asked about four candidates, next to a [Score](/primitives/score) with four levels: no experience, some familiarity, regular use in a job, deep expertise.
+Noul 的值在 0 到 1 之间，但它并不是你所问之事的刻度，而是「答案为是」的概率。如果问题本质上问的是程度，这个值并不衡量程度。下面把"这位候选人的 Python 强吗？"问在四位候选人身上，旁边配一个四档的 [Score](/primitives/score)：没有经验、略知一二、工作中经常使用、精通。
 
-| Candidate                                                                                   | Noul: "Is the candidate strong in Python?" | Score: "How much Python experience does the candidate have?" |
+| 候选人                                                                                      | Noul："这位候选人的 Python 强吗？"          | Score："这位候选人有多少 Python 经验？"                      |
 | ------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
-| My experience is in Java and Go. I have not used Python.                                    | 0.03                                       | 0.0 (No experience)                                          |
-| I have used Python occasionally for small scripts alongside my main Java work.              | 0.14                                       | 1.0 (Some familiarity)                                       |
-| I used Python every day for two years in my last job, mostly data pipelines.                | 0.81                                       | 2.05 (Regular use in a job)                                  |
-| I have written Python daily for eight years, including maintaining a large Django codebase. | 0.92                                       | 2.89 (Deep expertise)                                        |
+| 我的经验在 Java 和 Go 上，没用过 Python。                                                   | 0.03                                       | 0.0（没有经验）                                              |
+| 我做 Java 的间隙偶尔用 Python 写点小脚本。                                                  | 0.14                                       | 1.0（略知一二）                                              |
+| 上一份工作里我每天用 Python，用了两年，主要是数据流水线。                                   | 0.81                                       | 2.05（工作中经常使用）                                       |
+| 我每天写 Python 已经八年了，包括维护一个大型 Django 代码库。                                | 0.92                                       | 2.89（精通）                                                 |
 
-The Noul judges one proposition, "strong", and the values are how likely it is. You could create levels in the 0 to 1 range in your code, such as 0.3 to 0.7 for "some experience", but the model will not see them, so nothing in the answer was judged against them. A middle value can mean medium experience or an unclear case, and the spacing between candidates is not something you chose. The Score judges each level description on its own, so every candidate landed on or near a level you wrote, and the returned probabilities show how the model divided its judgment between levels. If you disagree, reword a level and run it again. [Choose a question type](/primitives#choose-a-question-type) explains the distinction.
+Noul 判断的是一个命题——"强"，返回值是它为真的可能性。你可以在代码里自己划出 0 到 1 之间的档位，比如把 0.3 到 0.7 叫作"有些经验"，但模型看不到这些档位，所以答案里没有任何东西是针对它们判断出来的。中间值既可能意味着经验中等，也可能意味着情况不明；候选之间的间距也不是你选的。Score 则对每条档位描述单独判断，所以每位候选人都落在你写的某个档位之上或附近，返回的概率显示模型如何在各档位之间分配判断。如果你不认同，就改写某个档位再跑一次。[选择问题类型](/primitives#choose-a-question-type)解释了两者的区别。
 
-## Writing a Noul question
+## 怎么写 Noul 问题
 
-Ask one yes/no question per Noul. If a question has two conditions, such as "Is the customer angry and asking for a refund?", the model has to judge both at once and the value means less. Ask two Nouls and combine them in code.
+一个 Noul 只问一个是非问题。如果一个问题里塞了两个条件，比如"客户很生气并且在要求退款吗？"，模型就得同时判断两件事，这个值的意义就下降了。拆成两个 Noul，在代码里组合。
 
-Phrase the question so that a high value means yes. "Does the message contain personal data?" is clear. "Is the message free of personal data?" inverts the meaning, and code that reads it later will get it backwards.
+提问的措辞要让高值代表「是」。"这条消息里包含个人数据吗？"很清楚；"这条消息不含个人数据吗？"把含义反了过来，后面读它的代码很容易弄反。
 
-A statement works as well as a question. For "The customer is requesting a refund", a value near 1 means the statement is true. Try both phrasings with your own data to see which works better.
+写成陈述句和写成问题一样可以。对"客户正在要求退款"这句陈述，值接近 1 表示这句话为真。两种措辞都在你自己的数据上试一下，看哪种更好。
 
-Make the boundary between yes and no unambiguous. "Does this candidate have any Python experience?" works well because "any" leaves no middle ground. When the boundary is subtle, add `criteria` with `true` and `false` descriptions, as the `is_repeat_contact` question above does. The instruction is enough for most Nouls, so try your questions with and without `criteria` and keep whichever gives better answers on your documents.
+让「是」和「否」的界线不含糊。"这位候选人有没有任何 Python 经验？"效果不错，因为"任何"没有留下中间地带。当界线很微妙时，就加上带 `true` 和 `false` 描述的 `criteria`，就像上面那个 `is_repeat_contact` 问题那样。多数 Noul 光靠指令就够了，所以带不带 `criteria` 都试一遍，在你自己的文档上哪种答案更好就留哪种。
 
-## Good practice: ask more than one question per call
+## 好做法：一次调用问不止一个问题
 
-For a checklist of conditions, ask many Noul questions in one request: one question per condition, and the code decides what the combination means. Questions are evaluated in parallel, so adding Nouls barely changes the response time. [Ask multiple questions together](/primitives#ask-multiple-questions-together) explains this in more detail.
+要核对一串条件，就在一次请求里问多个 Noul：一个条件一个问题，由代码决定这个组合意味着什么。问题是并行评估的，所以多几个 Noul 几乎不改变响应时间。[一次提多个问题](/primitives#ask-multiple-questions-together)讲得更细。
 
-## Handling multiple Noul answers in code
-
-The two-question request above gives the code enough to route the message. The example below escalates to a person when the customer asks for one, and raises the priority when they have been in touch before. A value in the middle on either question goes to a reviewer instead of a code path:
+## 在代码里处理多个 Noul 答案 {#handling-multiple-noul-answers-in-code}
+上面那个两问请求已经够代码把这条消息路由走了。下面的例子在客户要求找人时报给人工，在客户之前联系过时提高优先级；任一问题的值落在中间，就交给复核者，而不是走任何代码路径：
 
 ```python theme={null}
 from typesafe_sdk import Noul, NoulCriteria, TypeSafeClient
@@ -435,13 +434,12 @@ def route(message: str) -> None:
         route_to_bot(message, priority=priority)
 ```
 
-For the message above, the noul answer value for `is_human_escalation` is 0.99 and `is_repeat_contact` is 0.93, so the code routes it to an agent at high priority. The message "How do I reset my password?" is 0.07 on both questions and is routed to the bot.
+对上面那条消息，`is_human_escalation` 的 noul 答案是 0.99，`is_repeat_contact` 是 0.93，所以代码以高优先级把它路由给人工坐席。"怎么重置我的密码？"这条消息在两个问题上的值都是 0.07，被路由给机器人。
 
-The thresholds live in your code. If reviewers see too many messages, narrow the gap between `NO` and `YES`. If too many wrong routes get through, widen it. If you later need to know whether the message mentions a payment, or whether it contains personal data, add another Noul to `SUPPORT_QUESTIONS`. The request count stays at one.
+阈值就在你的代码里。如果复核者看到的待审消息太多，就把 `NO` 和 `YES` 之间的间隔收窄；如果太多错误路由漏了过去，就把间隔放宽。以后需要知道消息里有没有提到付款、有没有包含个人数据，就往 `SUPPORT_QUESTIONS` 里再加一个 Noul，请求次数仍然是一次。
 
-## Structured instructions
-
-Instructions can be an object instead of a string, with the question in one field and supplementary data in the others. [Use structure in the questions](/concepts/how-to-build-with-system-one#use-structure-in-the-questions) covers when that helps. Here it's used for a question built using code: a resume that has just arrived is compared against records in a candidate database that might be the same person. Each record goes into a `potential_duplicate` field as it is, the `question` is the same for every record, and all the records are checked in one request. The code-generated question keys contain each record's database ID:
+## 结构化的指令 {#structured-instructions}
+指令可以是对象而不是字符串：问题放一个字段，补充数据放其他字段。[在问题里使用结构](/concepts/how-to-build-with-system-one#use-structure-in-the-questions)讲了什么时候这样做有帮助。这里用它来处理由代码生成的问题：一份刚到的简历，要和候选人库里可能同一个人的记录逐一比对。每条记录原样放进一个 `potential_duplicate` 字段，`question` 对所有记录都一样，所有记录在一次请求里全部检查完。由代码生成的问题键里带着每条记录的数据库 ID：
 
 <TypesafeExample
   display="request"
@@ -484,7 +482,7 @@ questions: {
 }}
 />
 
-The response:
+响应：
 
 ```json theme={null}
 {
@@ -510,9 +508,9 @@ The response:
 }
 ```
 
-Each answer is the probability that the resume is for the person in that record. Record 18 spells the name differently but matches on location and employer, and gets 0.74. Record 42 has the same name in a different city with a different employer, and gets 0.09. Record 77 is a similar name at the same location with a different employer, and gets 0.08. Threshold each value in your code, as in [Handling multiple Noul answers in code](#handling-multiple-noul-answers-in-code), and send the middle values to a person.
+每个答案都是「这份简历和那条记录是同一个人」的概率。18 号记录名字拼写不同，但地点和雇主对得上，得 0.74；42 号记录名字相同，但城市和雇主都不同，得 0.09；77 号记录名字相近、地点相同，雇主不同，得 0.08。在代码里给每个值设阈值，做法见[在代码里处理多个 Noul 答案](#handling-multiple-noul-answers-in-code)，中间值交给人工。
 
-With the Python SDK, the questions are built from the candidate records. The question text is fixed and the record changes:
+用 Python SDK 时，这些问题由候选记录生成：问题文本固定不变，记录在换：
 
 ```python theme={null}
 from typesafe_sdk import Noul, TypeSafeClient
@@ -551,14 +549,14 @@ def find_duplicates(resume: dict, candidates: list[dict]) -> list[str]:
     ]
 ```
 
-The [structured-data-extraction cascade cookbook](/cookbooks/sde_cascade) uses structured instructions to verify an extracted record. Every field gets the same set of questions. Each question's `instructions` object has the question text in the `main_question` property. There are also `field_spec` and `extracted_field` properties that change for each field.
+[结构化数据抽取级联 cookbook](/cookbooks/sde_cascade)用结构化的指令来校验抽出来的记录。每个字段都拿到同一组问题，每个问题的 `instructions` 对象把问题文本放在 `main_question` 属性里，另外还有随字段变化的 `field_spec` 和 `extracted_field` 属性。
 
-## Noul in the cookbooks
+## cookbook 里的 Noul
 
-Take a look at our cookbooks to see apps using Noul questions:
+看看我们的 cookbook，里面有使用 Noul 问题的应用：
 
-* [Parallel questions](/cookbooks/parallel_questions) runs a 13-question regulatory checklist over one article in a single request.
-* [Self-consistency: nouls](/cookbooks/consistency_noul_cookbook) scores an insurance claim against a 15-question rubric and measures how stable the values are across runs.
-* [Re-ranking](/cookbooks/rerank_typesafe) uses the probability itself, not a threshold: one Noul per query-candidate pair, then sorts candidates by the value.
-* [Line-by-line search](/cookbooks/semantic_find) pairs a Choice that finds the matching line with a Noul that checks whether the document contains an answer at all.
-* [Structure recovery](/cookbooks/autoformat) asks one Noul per pair of lines, whether a line break split a sentence, to rebuild paragraphs from plain text.
+* [并行问题](/cookbooks/parallel_questions) 在一次请求里对一篇文章跑完一份 13 个问题的合规检查清单。
+* [自一致性：noul](/cookbooks/consistency_noul_cookbook) 用一份 15 个问题的量规给保险理赔打分，并衡量多次运行之间这些值有多稳定。
+* [重排](/cookbooks/rerank_typesafe) 用的是概率本身而不是阈值：每个「查询-候选」对一个 Noul，再按值给候选排序。
+* [逐行搜索](/cookbooks/semantic_find) 把「找出匹配的行」的 Choice 和「文档里到底有没有答案」的 Noul 配对使用。
+* [结构恢复](/cookbooks/autoformat) 对每一对相邻行问一个 Noul——这里是不是把一个句子断开了——从而从纯文本重建段落。

@@ -1,17 +1,17 @@
-# Client SDKs
+# 客户端 SDK
 
-> Install a TypeSafe client SDK and use typed questions and answers in your application.
+> 安装 TypeSafe 客户端 SDK，在应用里使用类型化的问题与答案。
 
-Our client SDKs provide typed questions and answers for the TypeSafe API and handle retries automatically with their default retry policy.
+我们的客户端 SDK 为 TypeSafe API 提供类型化的问题与答案，并按各自的默认重试策略自动处理重试。
 
-Choose a client SDK for installation instructions, examples, and API details.
+选一个客户端 SDK，查看安装说明、示例和 API 细节。
 
 <Card title="Python" href="/sdk/python">
-  Install the Python client SDK and make your first request.
+  安装 Python 客户端 SDK，发出你的第一个请求。
 </Card>
 
 <Card title="JavaScript / TypeScript" href="/sdk/javascript">
-  Install the JavaScript client SDK and make your first typed request.
+  安装 JavaScript 客户端 SDK，发出你的第一个类型化请求。
 </Card>
 
-You can also call the [HTTP API](/api) directly from any language.
+你也可以用任何语言直接调用 [HTTP API](/api)。

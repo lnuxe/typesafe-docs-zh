@@ -1,32 +1,14 @@
-# Classifying RAG passages
+# 对 RAG 段落分类
 
-> Score each retrieved passage with one TypeSafe request, then decide in code which ones reach the answering model.
+> 用一个 TypeSafe 请求给每个检索回来的段落打分，再由代码决定哪些能进入作答模型。
 
-The retrieval step of a RAG pipeline ranks passages by how much their wording resembles
-the query, and hands the top few to a language model. These may include noisy or
-irrelevant passages, or worse yet, may lump together contradicting facts, prompt
-injections, or model instructions together with what is nominally evidence to assist with
-generating an answer.
+RAG 流水线的检索步骤按段落措辞与查询的相似程度排序，把最靠前的几段交给语言模型。这些段落里可能混着噪声或无关内容，更糟的是可能把互相矛盾的事实、提示词注入或给模型的指令，跟名义上用来辅助生成答案的证据混在一起。
 
-Between retrieval and generation, add a second stage that classifies each retrieved
-passage. For each one, send TypeSafe one request carrying multiple questions about the
-query–passage pair: is it relevant, does it state something usable in an answer, does it
-contradict something the query takes for granted, and is it trying to instruct the model.
-The answers to those questions decide what happens to each passage, with simple branching
-logic: add it to the prompt as evidence, add it to the prompt as conflicting information,
-or drop it. Evidence and conflicts arrive in separate blocks, so the generator can react
-appropriately.
+在检索和生成之间加一个第二阶段，对每个检索回来的段落做分类。对每个段落，向 TypeSafe 发一次请求，带上针对「查询—段落」这一对的多个问题：它切题吗？它给出了能直接用于回答的信息吗？它与查询默认成立的前提冲突吗？它在试图指挥模型吗？这些问题的答案用简单的分支逻辑决定每个段落的去向：作为证据加进提示词、作为冲突信息加进提示词，或者丢掉。证据和冲突放在不同的块里到达，生成模型才能做出恰当反应。
 
-To exercise the pipeline, we run it over some tricky questions against real auth
-documentation full of pages that read alike, and a planted passage carrying a prompt
-injection. Two questions contain false assumptions, which are flagged before being handed
-to the model generating answers.
+为了检验这条流水线，我们拿几个棘手的问题去跑真实的认证文档——里面全是读起来很像的页面，还植入了一段带提示词注入的段落。其中两个问题含有错误假设，它们在交给作答模型之前就会被标记出来。
 
-The pipeline, in the order the sections build it: the 81-passage corpus, a
-cosine-similarity search that keeps the top 12 passages per query, the four
-`Noul` questions sent to TypeSafe for each of those passages, the thresholds in `route()`
-that label each one, the prompt assembled from separate evidence and conflict blocks, and
-the answers `claude-sonnet-5` writes from it.
+流水线按各小节的顺序搭起来：81 段的语料库、每个查询保留前 12 段的余弦相似度检索、为这些段落各自发往 TypeSafe 的四个 `Noul` 问题、`route()` 里给每段打标签的阈值、由证据块和冲突块分别拼出的提示词，以及 `claude-sonnet-5` 据此写出的答案。
 
 ```mermaid actions={true} theme={null}
   %%{init: {"flowchart": {"rankSpacing": 90}}}%%
@@ -61,20 +43,15 @@ flowchart LR
     style GEN fill:none,stroke:#71717a,stroke-width:1.5px,stroke-dasharray: 6 4
 ```
 
-## Setup
+## 环境准备
 
 ```bash theme={null}
 pip install anthropic openai matplotlib ipython 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-Set `TYPESAFE_API_KEY`, `ANTHROPIC_API_KEY` and `OPENAI_API_KEY`. We use TypeSafe to score
-each retrieved passage, OpenAI to embed the corpus for the search step, and Claude to write
-the final answer out of whatever survives the scoring.
+设置 `TYPESAFE_API_KEY`、`ANTHROPIC_API_KEY` 和 `OPENAI_API_KEY`。TypeSafe 负责给每个检索回来的段落打分，OpenAI 负责为检索步骤把语料库向量化，Claude 则从打分后剩下的内容里写出最终答案。
 
-None of the three needs a key to reproduce this page. `json_cache.json` ships with the
-cookbook and replays every recorded call, so a re-render costs nothing. Delete the file to
-run the pipeline live instead. The numbers here came out of `jev-1.12` and
-`claude-sonnet-5` on 2026-08-27.
+要复现本页，这三者都不需要 key。`json_cache.json` 随 cookbook 一起提供，会重放记录下来的每次调用，因此重新渲染不花一分钱。想实际跑一遍流水线，删掉该文件即可。这里的数字出自 2026-08-27 的 `jev-1.12` 和 `claude-sonnet-5`。
 
 ```python expandable theme={null}
 import json
@@ -121,24 +98,16 @@ embedder = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "cache-only"))
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-## Load the docs corpus
+## 加载文档语料库
 
-The corpus file `corpus.json` holds 81 passages. We copied 80 of them straight from the
-Supabase auth docs at commit `2440b06`, one passage per heading, verbatim and used under
-Apache 2.0:
+语料文件 `corpus.json` 里有 81 个段落。其中 80 段直接抄自 Supabase 认证文档的 `2440b06` 提交，每个标题一段，逐字保留，依据 Apache 2.0 使用：
 [https://github.com/supabase/supabase/tree/2440b06/apps/docs/content/guides/auth](https://github.com/supabase/supabase/tree/2440b06/apps/docs/content/guides/auth)
 
-Each passage carries `id`, `title`, `text` and `source_type`, and every request sends all
-four. Near-misses fill the set. Rotation, expiry, sessions and signing keys each get their
-own page, and those pages read alike. Refresh-token rotation and JWT signing-key rotation
-are different things described in nearly the same words.
+每个段落带 `id`、`title`、`text` 和 `source_type`，每次请求都会把四个字段全部发出去。这份集合里塞满了「差一点就对」的干扰项。轮换、过期、会话和签名密钥各有自己的页面，而这些页面读起来差不多。刷新令牌轮换和 JWT 签名密钥轮换是两码事，描述它们的措辞却几乎一样。
 
-We wrote the last one ourselves, `forum-injection`, marked `community_forum`: it reads as
-an ordinary forum answer until its final paragraph, which is an instruction aimed at the
-model.
+语料里最后那个段落是我们自己写的，`forum-injection`，标为 `community_forum`：它读起来像一条普通的论坛回答，直到最后一段——那是一条冲着模型来的指令。
 
-We also wrote two of the six queries to state a premise the docs contradict, so the
-injection and conflict routes both have something to catch.
+六个查询里还有两个是我们故意写的，它们的说法与文档相矛盾，这样注入和冲突两条路由都有东西可抓。
 
 ```python theme={null}
 PASSAGES = json.loads(Path("corpus.json").read_text(encoding="utf-8"))
@@ -171,12 +140,9 @@ One passage, as the model will see it (sessions-01):
 A session is represented by the Supabase Auth access token in t...
 ```
 
-## Retrieve the top passages
+## 检索最靠前的段落
 
-Rank the passages by cosine similarity over embeddings, using `text-embedding-3-small` at
-256 dimensions, and keep the best `TOP_K = 12` for each query. Short vectors keep the
-shipped cache small, and the embedding calls are cached with everything else, so the
-vectors travel inside `json_cache.json`.
+用 `text-embedding-3-small` 的 256 维向量，按余弦相似度给段落排序，每个查询保留最好的 `TOP_K = 12` 段。短向量让随附的缓存体积更小；向量化调用跟其他调用一样会被缓存，因此向量就存放在 `json_cache.json` 里。
 
 ```python expandable theme={null}
 @json_cache
@@ -222,7 +188,7 @@ QUERIES = [
 ]
 ```
 
-The 12 passages retrieved for the first query:
+第一个查询检索回来的 12 个段落：
 
 ```python theme={null}
 for passage in retrieve(HEADLINE_QUERY, TOP_K):
@@ -247,15 +213,11 @@ for passage in retrieve(HEADLINE_QUERY, TOP_K):
   0.455  signing-keys-54-a     official_docu  JWT Signing Keys: Lifetime of a signing key
 ```
 
-The forum post carrying the injected instruction, `forum-injection`, ranks 1st at 0.584.
-The passage that refutes the premise, `sessions-01`, ranks 7th at 0.509. All 12 scores
-fall between 0.584 and 0.455, a spread too narrow to separate the passage that corrects
-the query from the one trying to hijack the answer.
+带着注入指令的论坛帖子 `forum-injection` 以 0.584 排第 1，纠正前提的那个段落 `sessions-01` 以 0.509 排第 7。12 个分数全都落在 0.584 到 0.455 之间，这个跨度太窄，分不出哪个段落在纠正查询、哪个在试图劫持答案。
 
-## Ask four questions about each passage
+## 对每个段落提四个问题
 
-Put the query and one passage in the state together, so every question is about the pair
-rather than the passage alone. Shape:
+把查询和一个段落一起放进状态里，这样每个问题针对的都是这一对，而不只是这个段落。状态长这样：
 
 ```json theme={null}
 {
@@ -269,17 +231,16 @@ rather than the passage alone. Shape:
 }
 ```
 
-Use the same four questions for every query. Only the state changes between calls.
+每个查询都用同样的四个问题。调用之间只有状态在变。
 
-Four `Noul` questions, and what each answer drives:
+四个 `Noul` 问题，以及每个答案驱动什么：
 
-* `is_relevant`: the relevance floor.
-* `contains_answer_evidence`: include, or drop.
-* `contradicts_query_premise`: promotes to the conflict block.
-* `contains_prompt_injection`: excludes outright.
+* `is_relevant`：切题的下限。
+* `contains_answer_evidence`：纳入还是丢弃。
+* `contradicts_query_premise`：提升到冲突块。
+* `contains_prompt_injection`：直接排除。
 
-None of the four asks whether to include the passage. That call sits in the code below,
-where changing it means editing a number instead of rewording a question.
+四个问题都没有问要不要纳入这个段落。这个决定放在下面的代码里，要改它只需改一个数字，而不用重新措辞一个问题。
 
 ```python expandable theme={null}
 PASSAGE_QUESTIONS = {
@@ -330,31 +291,22 @@ def gate_all(query: str, passages: list[dict]) -> list[dict]:
         return list(pool.map(lambda passage: gate(query, passage["id"]), passages))
 ```
 
-## Route each passage in code
+## 用代码给每个段落做路由
 
-Every answer comes back as a probability, and there are plenty of ways to turn four of
-them into one decision. A plain run of comparisons worked here. Test the four
-probabilities against their thresholds in a fixed order and stop at the first match. That
-match labels the passage, and the label decides what happens to it: evidence in the
-prompt, a conflict in the prompt, or dropped.
+每个答案都以概率的形式返回，把四个概率合成一个决策的办法有很多。这里用的是一串朴素的比较：按固定顺序拿四个概率去比各自的阈值，命中第一个就停。命中的那条给段落打上标签，标签决定它的去向：作为证据进提示词、作为冲突进提示词，或者被丢掉。
 
-The tests, in order:
+判断顺序如下：
 
 1. `contains_prompt_injection > 0.70` -> exclude
 2. `contradicts_query_premise > 0.70` -> conflicting\_evidence
 3. `is_relevant < 0.45` -> exclude
 4. `contains_answer_evidence > 0.55` -> include
-5. otherwise exclude
+5. 其余情况 -> exclude
 
-Injection comes first because it is a security decision, not an evidence one. The
-contradiction test comes before the evidence test because a passage that denies the
-query's premise usually states something usable too; tested the other way round, it would
-land in the accepted block instead of the conflict one.
+注入排在最前面，因为它是安全决策，而不是证据决策。冲突判断排在证据判断之前，因为否定查询前提的段落通常也确实说了点能用的东西；顺序反过来，它就会落进已采纳块而不是冲突块。
 
 <Info>
-  We picked these four numbers for this corpus. Treat them as a starting point, not
-  defaults. Moving one is cheap: `THRESHOLDS` holds all four and `route()` reads only the
-  stored answers, so re-routing every passage costs no API calls.
+  这四个数字是就这份语料挑的。把它们当作起点，而不是默认值。改动其中一个很便宜：`THRESHOLDS` 存放着四个阈值，而 `route()` 只读已保存的答案，因此重新给所有段落做路由不花任何 API 调用。
 </Info>
 
 ```python expandable theme={null}
@@ -418,15 +370,11 @@ exclude                0.04  0.05   0.10  0.16  signing-keys-55-b
 exclude                0.04  0.05   0.10  0.13  signing-keys-54-a
 ```
 
-The premise-contradiction question scores `sessions-01` at 0.92 and sends it to the
-conflict block. Relevance reads 0.49 and answer evidence 0.51, so those two alone would
-have dropped it.
+前提冲突问题给 `sessions-01` 打了 0.92，把它送进冲突块。切题度只有 0.49，答案证据是 0.51，光看这两个就会把它丢掉。
 
-Similarity ranked `forum-injection` first and its relevance clears the floor at 0.71. The
-injection score of 0.99 is what drops it.
+相似度把 `forum-injection` 排在第一，它的切题度以 0.71 越过了下限；真正让它出局的是 0.99 的注入分。
 
-Nothing reaches the prompt as evidence, which is right for a question built on a false
-premise. Below, the same table for a query the docs do answer.
+没有任何段落作为证据进入提示词，对一个建立在错误前提上的问题来说这是对的。下面是文档确实能回答的查询的同一张表。
 
 ```python theme={null}
 print(f'"{QUERIES[5]}"\n')
@@ -451,26 +399,17 @@ include                0.79  0.57   0.06  0.31  sessions-09
 exclude                0.12  0.11   0.07  0.20  sessions-07-b
 ```
 
-Four passages reach the evidence block here, and the answer below cites all four. The
-rows print in retrieval order, which shows the reshuffle: ranks 2, 3 and 4 all read
-*Lifetime of a signing key*, the wrong kind of lifetime in almost the query's own words,
-and all three score 0.08 or less on relevance. Three of the four that made it sat 8th,
-9th and 11th. `forum-injection` is excluded again at 0.99.
+这里有四个段落进入证据块，下面的答案引用了全部四个。表格按检索顺序打印，正好显出这次重排：排第 2、3、4 的都写着 *Lifetime of a signing key*，是另一种「生命周期」，措辞几乎就是查询自己的话，而这三段的切题度都只有 0.08 或更低。最终入选的四段里有三段原本排在第 8、9、11 位。`forum-injection` 又以 0.99 被排除。
 
-The injection question is a filter, and only one. A passage that scores under the
-threshold still reaches the prompt, so the generator prompt has to treat every passage as
-untrusted text regardless of its score. Nothing here is a security boundary.
+注入问题只是一道过滤器，而且只是其中一道。得分低于阈值的段落仍然会进入提示词，因此生成用的提示词必须把所有段落都当作不可信文本，不管它得多少分。这里没有任何东西构成安全边界。
 
-One request per passage, so cost scales with `k`. Nothing batches passages into one
-request, because each question is about one pair.
+每个段落一次请求，因此成本随 `k` 增长。这里没有把多个段落合并进一次请求，因为每个问题针对的都是一对。
 
-## Build the prompt from the accepted evidence
+## 用已采纳的证据拼出提示词
 
-TypeSafe scores the passages and the routing labels them. An LLM still writes the answer,
-here `claude-sonnet-5`. Keep accepted and conflicting evidence in separate blocks.
+TypeSafe 给段落打分，路由给它们打标签。答案仍然由 LLM 写出，这里是 `claude-sonnet-5`。把已采纳证据和冲突证据放在不同的块里。
 
-Two blocks let the answer push back. Merge them into one and the generator has no way to
-tell a passage that answers the query from one that denies its premise.
+分成两块，答案才有反驳的余地。合并成一块，生成模型就分不清哪个段落在回答查询、哪个在否定它的前提。
 
 ```python expandable theme={null}
 PROMPT = """Answer the query using only the supplied evidence.
@@ -559,10 +498,7 @@ A session is represented by the Supabase Auth access token in the form of a JWT,
    ...
 ```
 
-The first answer is to the false-premise query, *Refresh tokens expire after 30 days -
-how do I
-extend that window?*; the second is to an ordinary question the docs do answer, whose 12
-retrieved passages included `forum-injection` and its injected instruction.
+第一个答案针对的是那个错误前提的查询——*Refresh tokens expire after 30 days - how do I extend that window?*；第二个针对的是文档确实能回答的普通问题，它检索回来的 12 个段落里包含 `forum-injection` 及其注入指令。
 
 ```python theme={null}
 SHOWN = [HEADLINE_QUERY, QUERIES[5]]
@@ -610,14 +546,11 @@ Since this passage is marked as conflicting/unverified evidence rather than acce
 **No conflicts** were found between the passages — they consistently point to a default/recommended value of 1 hour, with an acceptable range of roughly 5 minutes to 1 hour, and caution against going much shorter or longer without specific need.
 ```
 
-The first answer arrived with an empty accepted block and one conflicting passage. It
-opens with "I don't have sufficient accepted evidence", names the conflict, and quotes
-`sessions-01` on refresh tokens never expiring rather than inventing a 30-day setting.
+第一个答案拿到的已采纳块是空的，只有一个冲突段落。它开头就说 "I don't have sufficient accepted evidence"，点明冲突所在，并引用 `sessions-01` 关于刷新令牌永不过期的说法，而不是凭空编出一个 30 天的设置。
 
-The second had 4 accepted passages and no conflict, and cites all four. Nothing of the
-injected instruction reaches the text.
+第二个拿到 4 个已采纳段落、没有冲突，并且四个都引用了。注入指令没有任何内容进入文本。
 
-## Compare the six queries
+## 对比这六个查询
 
 ```python expandable theme={null}
 SURFACE, INK, INK2, MUTED = "#fcfcfb", "#0b0b0b", "#52514e", "#898781"
@@ -706,15 +639,11 @@ plt.close(fig)
 
 <img src="https://mintcdn.com/ts-docs/5iZnRWRIxyU5JBux/cookbooks/classifying_rag_passages/classifying_rag_passages.executed.1.png?fit=max&auto=format&n=5iZnRWRIxyU5JBux&q=85&s=9257008675e09b97950eaa31f2eec173" alt="output" width="1335" height="525" data-path="cookbooks/classifying_rag_passages/classifying_rag_passages.executed.1.png" />
 
-Each bar holds the 12 passages retrieved for one query, 72 in all. At least two thirds of
-every bar is excluded. Only the two false-premise queries route anything to conflict, and
-two queries accept nothing at all: the one about a 30-day expiry, and *how are refresh
-tokens rotated?*
+每根柱子都装着某个查询检索回来的 12 个段落，一共 72 个。每根柱子里至少有三分之二被排除。只有那两个错误前提的查询有内容被路由到冲突块，而两个查询什么都没采纳：一个是关于 30 天过期的那个，另一个是 *how are refresh tokens rotated?*
 
-## Open it in the playground
+## 在 TypeSafe playground 中打开
 
-Open the link below to re-run one call live: the first query against the passage that
-routed to the conflict block, plus the four questions.
+打开下面的链接即可在线重跑一次调用：第一个查询对上被路由到冲突块的那个段落，外加那四个问题。
 
 ```python theme={null}
 linked = next(r for r in ROUTED[HEADLINE_QUERY] if r["route"] == "conflicting_evidence")
@@ -726,4 +655,4 @@ deeplink = make_playground_link(
 display(Markdown(f"🔗 [Open the query + passage and its four questions]({deeplink})"))
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAI4wIBOAnqQaQEoIBmVCAzgBb4oQDWyDviwAHAJbt8AQxYpq+AMwAGfGGk1hAWnxcIAdzUR8ASRHZkYXl2kp8+8Ukj6A-KQA0+UqOkcO0gHMEenwSEHEwENIOTg5xCCQOLWUARg8vEBRxFAAbYLwMgFUYqnwYv3jEggB1GztxYWky2Mq3EE9SeWwokABBZoqE-Ab8KHZbBCt9LmQZfBgSsvEAxOGkADp8ACEaNVZpGByUT2z8HN8UYUcwVkdshBzd6Sc5hYUoZ91pADcEGSR5kgcuI4PcrEh4AAjBQQFgyKBZX4DOIJYRDXz4ODPXY3b7iKCcdbEYhIYlIfrlFEAkbsUTsGKoSb4SG7FAzfAAZRgPkhvj+vRgbPhBL8vAEs0c1j+LAgVDg+FhcwAUtU0J5nlYmuw2JweHxBADpvieCMmjAkOIKH8OCgqI4AkSSWTelARcJ9UIZFIbnEVky+MzrXoqHZgb8wJ4FjBpDlHoGUPoELMAKyYxyCzj-KwpXQQGClI15fDa+l68WrJAIX6lMSSP6QwWjT4JOPQ+YxKwJAmbACaeabAKwUBsSCCcxLurFBoVQN2Xb+AaCdialcM0ldsSzxdYpansx8kkdpJJaC4Izp0E3Iw+saZACo7xPuPapcjKusH2TnW+hvI5Y4Jg4TwblESwXyGKAEhYZZ81sSpPGmZBcDJHRTz+N5SigYEoH4YRfQBPMUCPVD2Qw0YRyCd0ZkkfAfD8fRZU7UpQKoGU5UaZpYDtFBdgZOJET+dcsgSYjTDsLJEDRRswEoMU1iE8Q8R40STDscZh0zbJhCxTAQXgM5xBYBAJIQUT+jI-CrgIgFnggNkFFxfFTPSaI8yoAkAH0eNAnpYWgqBxBjDzIFgRBUDghJSAAXyi9pCAvOBREuDBsAKIhSAaDz2Dyb5nhQEIwm8-IGBAJA8xyFzwkSW0YARSoOB6AARCBMzZc9fH8MdpDAMB6So60YEhAArBAEQVOF7PwK1aDaKKOhASDwscDgPOeDhEyoDyqwiZACQKzoaB8gpSDKw5KuWmq6tRJqWqo9q-ECa0UAmNY2KxYSAQWaRISLSUmjAOsxrWjbZvmxbbW6-FLg86aaA8ukEFBGJ9syQ7ioyU6KrijLqqoWqPoa46QGa1qz2EOjOr+RaWGwuwHCFJoWCE6Mclo9gkaeiYrElSbYdBjJwekZb4aoCBEpQDzHBGq7SQKQq0Z6THztx-H6pu0n7spmQUHkcW5PB0XWcmjhNF1-51uoF9ecoGbotizwQGkCQADVqCpNLvhSOKQBiPIEUmABZCAbhyDgCgAbRAEbvi0FJ1hSAAmEAAF0oqAA" target="_blank" rel="noreferrer" className="text-primary">Open the query + passage and its four questions →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAI4wIBOAnqQaQEoIBmVCAzgBb4oQDWyDviwAHAJbt8AQxYpq+AMwAGfGGk1hAWnxcIAdzUR8ASRHZkYXl2kp8+8Ukj6A-KQA0+UqOkcO0gHMEenwSEHEwENIOTg5xCCQOLWUARg8vEBRxFAAbYLwMgFUYqnwYv3jEggB1GztxYWky2Mq3EE9SeWwokABBZoqE-Ab8KHZbBCt9LmQZfBgSsvEAxOGkADp8ACEaNVZpGByUT2z8HN8UYUcwVkdshBzd6Sc5hYUoZ91pADcEGSR5kgcuI4PcrEh4AAjBQQFgyKBZX4DOIJYRDXz4ODPXY3b7iKCcdbEYhIYlIfrlFEAkbsUTsGKoSb4SG7FAzfAAZRgPkhvj+vRgbPhBL8vAEs0c1j+LAgVDg+FhcwAUtU0J5nlYmuw2JweHxBADpvieCMmjAkOIKH8OCgqI4AkSSWTelARcJ9UIZFIbnEVky+MzrXoqHZgb8wJ4FjBpDlHoGUPoELMAKyYxyCzj-KwpXQQGClI15fDa+l68WrJAIX6lMSSP6QwWjT4JOPQ+YxKwJAmbACaeabAKwUBsSCCcxLurFBoVQN2Xb+AaCdialcM0ldsSzxdYpansx8kkdpJJaC4Izp0E3Iw+saZACo7xPuPapcjKusH2TnW+hvI5Y4Jg4TwblESwXyGKAEhYZZ81sSpPGmZBcDJHRTz+N5SigYEoH4YRfQBPMUCPVD2Qw0YRyCd0ZkkfAfD8fRZU7UpQKoGU5UaZpYDtFBdgZOJET+dcsgSYjTDsLJEDRRswEoMU1iE8Q8R40STDscZh0zbJhCxTAQXgM5xBYBAJIQUT+jI-CrgIgFnggNkFFxfFTPSaI8yoAkAH0eNAnpYWgqBxBjDzIFgRBUDghJSAAXyi9pCAvOBREuDBsAKIhSAaDz2Dyb5nhQEIwm8-IGBAJA8xyFzwkSW0YARSoOB6AARCBMzZc9fH8MdpDAMB6So60YEhAArBAEQVOF7PwK1aDaKKOhASDwscDgPOeDhEyoDyqwiZACQKzoaB8gpSDKw5KuWmq6tRJqWqo9q-ECa0UAmNY2KxYSAQWaRISLSUmjAOsxrWjbZvmxbbW6-FLg86aaA8ukEFBGJ9syQ7ioyU6KrijLqqoWqPoa46QGa1qz2EOjOr+RaWGwuwHCFJoWCE6Mclo9gkaeiYrElSbYdBjJwekZb4aoCBEpQDzHBGq7SQKQq0Z6THztx-H6pu0n7spmQUHkcW5PB0XWcmjhNF1-51uoF9ecoGbotizwQGkCQADVqCpNLvhSOKQBiPIEUmABZCAbhyDgCgAbRAEbvi0FJ1hSAAmEAAF0oqAA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开这个查询、段落及其四个问题 →</a>

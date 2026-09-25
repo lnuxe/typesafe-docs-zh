@@ -47,7 +47,7 @@ Content-Type: application/json
 }
 ```
 
-## 问题类型
+## 问题类型 {#question-types}
 
 一个 `Question` 是三种类型之一，由其 `type` 字段设定。三者共享 `type` 和 `instructions`；各自添加自己的 `criteria`。
 
@@ -214,7 +214,7 @@ Content-Type: application/json
 }
 ```
 
-## 答案类型
+## 答案类型 {#answer-types}
 
 每个答案都带有与其问题匹配的 `type`。Choice 和 Score 答案还带有 0 到 1 之间的 `confidence`，由答案的概率分布推导而来。见[置信度](/confidence)。
 

@@ -1,13 +1,13 @@
-# Legal
+# 法律
 
-> Legal documents and policies for TypeSafe.
+> TypeSafe 的法律文件与政策。
 
-These documents cover how TypeSafe handles your data when you have an account with us, including data retention, our commitment not to train models on user data, and the general customer agreements that govern your use of TypeSafe.
+这些文件说明你拥有 TypeSafe 账户时我们如何处理你的数据，包括数据保留、我们不用用户数据训练模型的承诺，以及约束你使用 TypeSafe 的一般客户协议。
 
-## Legal documents
+## 法律文件
 
-* [Data Processing Agreement](https://typesafe.ai/legal/data-processing) — how we process customer data on your behalf, including data retention.
-* [Master Customer Agreement](https://typesafe.ai/legal/mca) — the general terms that apply to your TypeSafe account.
-* [Privacy Policy](https://typesafe.ai/legal/privacy-policy) — what data we collect and how we use it, including our commitment not to train models on user data.
+* [数据处理协议](https://typesafe.ai/legal/data-processing) —— 我们如何代你处理客户数据，包括数据保留。
+* [主客户协议](https://typesafe.ai/legal/mca) —— 适用于你 TypeSafe 账户的一般条款。
+* [隐私政策](https://typesafe.ai/legal/privacy-policy) —— 我们收集哪些数据、如何使用，包括我们不用用户数据训练模型的承诺。
 
-We also offer zero data retention (ZDR) for enterprise customers. Contact [privacy@typesafe.ai](mailto:privacy@typesafe.ai) to learn more.
+面向企业客户，我们还提供零数据保留（ZDR）。想了解更多请联系 [privacy@typesafe.ai](mailto:privacy@typesafe.ai)。

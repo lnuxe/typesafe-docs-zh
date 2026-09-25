@@ -1,44 +1,33 @@
-# Re-ranking
+# 重排
 
-> Builds 30-passage BM25 shortlists for 40 CLERC legal queries, then uses one TypeSafe question per query-candidate pair to raise top-1 accuracy from 5% to 18% and top-10 accuracy from 38% to 62%.
+> 对 40 条 CLERC 法律查询各构建一份含 30 个段落（passage）的 BM25 候选列表，再用一个 TypeSafe 问题评估每个「查询—候选」对，把 top-1 准确率从 5% 提到 18%，top-10 准确率从 38% 提到 62%。
 
-You have thousands of documents, and you need to find the one that answers a specific
-question. So how do you find it?
+你手上有几千份文档，需要找出能回答某个具体问题的那一份。该怎么找？
 
-First, use a quick method such as keyword matching to cut those thousands of candidates
-down to a shortlist of plausible ones. We call this fast search.
+先用关键词匹配这类快速方法，把这上千个候选缩减成一份看起来靠谱的候选列表。这一步叫做快速检索（fast search）。
 
-Fast search is good at that, but it can't tell you which candidate on the shortlist is
-correct. That's where re-ranking comes in. It scores every candidate on the shortlist
-against the query directly, and puts the best one first.
+快速检索擅长这件事，但它说不出候选列表上哪个候选才是对的。重排（re-ranking）就是为此而生：它把候选列表上的每个候选直接与查询比对打分，把最好的那个排到最前。
 
-Both steps run below on 3,565 court opinion passages from the CLERC dataset: BM25 builds a
-fast search shortlist of 30 candidates for each of 40 queries, then TypeSafe re-ranks each
-shortlist. With re-ranking, the correct passage lands in first place for 18% of queries, up
-from 5% with fast search alone.
+下面两步都在 CLERC 数据集的 3,565 条法院判决段落上运行：BM25 为 40 条查询各构建一份含 30 个候选的快速检索候选列表，TypeSafe 再对每份候选列表重排。加上重排之后，18% 的查询能把正确段落排到第一位，而只用快速检索时只有 5%。
 
-**Along the way, you're going to learn:**
+**你会顺带学到：**
 
-* What fast search does, and why it isn't the whole answer
-* What re-ranking is, and how it fits after a fast search step
-* How TypeSafe scores one candidate against a query, and how much that improves the result
+* 快速检索做了什么，以及为什么它给不出完整答案
+* 重排是什么，以及它如何接在快速检索之后
+* TypeSafe 如何给单个候选与查询打分，以及这能把结果改善多少
 
-## Try it yourself
+## 自己动手试试
 
-[Open a query, candidate, and re-ranking question in the TypeSafe Playground](https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAI4wIBOAngPpZTUAOKpBpUANgIYCWcfADMIVfADc+EXiilIAzvghD8AaWQoYUANY18UPpK75mVaAjAwqCADT4UACwR6h-Yygj55KHigT4efV4BfBhmCCR8AHcHPigHfGsuPgQVKB5IgCN-AHMqDL8wADp8NCd8AFk+bUVIfCQIFHw+MA0+IRpAFAIMsCUrRIR5BB4qePxIQfrGgfFhrm79HhghpRUeKFkI4VEJKRk5RWU1DS1dfUM+YwByEzMmS2sSitEECFmqOwAxazAwFMr1tEeIoGk1AswRig9B57OURNZuBB5FZ-OtNpEeoskKD8Nl8E4uL1rPJwgo+JkuP54QEkHpTOYHjxjK0hAgNoo+JFHP56UwLJycvISmhPNz8Fg-KhYb5Yf4qjUvAgENp7J5MlQBQEgvxBNTJNJfAdVrK+GJLDy7oNFBqcg4UIoYEhWmIxZ92o58ABBRBOn1NGFigCqSD4hXwAGUfH5FABhCLeUMwdF2bkuNyqrxR1HakJhLYxOIJJIpNIZXG5fKoCzl9LLfzfCx-OWAvgg6aBHJvahIP0BDY7GKedJZfwE3rJHgUqk7KDx2SadFM3YG9FC-AASUi+AASgBRAAinpjaAP+FlEbC1kQ+DjViagx8FNbTl6gSE+UQUVEKuprT8VDgTlNRiZAtU7d4ew0ABaEl4xeXpZyocJ8nRZpFA7LsqEgqU0R2alZwUeckzkJdmCscIhjXdcmjHaUmkAHAIQOsfAilY88AHFMOwpooGsXxJkCRDkMNLZMj0Ek2T4JdeCiOxqTFIQ7ycSsmGNcDuz9JcIEyAArNlZFmeQ7ExawfE5RRqVDIYuBUZhqDgDINACJMHFEUNoU8HhmHCTkwXwBydLcqFjTFP4EQ8KhDhURwZSE0QRKQFNyjilC5DQkxISgkLyk4iDe2pMikKRSYjldU1vC9H0wD9IpAFwCDdigCJoAGYAE5WrsABGTqAFYIyKGMUBKVqADZOqKOxg2dc8ABkEHVABnyJ3x4T9vy+H4mwBKB0pxDC8qc3CxEHLFy3xBBCXwCcp22MR9X2eNsvrd0Em9ZBqo0QBMAkUfdKHwAAFS15FjXg6xKcMlTsBAihyCbKpKAAhDJtGoRRnioFBYZvURmBKcQSk+CwSgACQga8ZogMt0cxko4yQuGAHY+s+Ipmt6TqABYAAZOq67mRqgrnWvwAAKVqPRjU0ik69qRoASlIOxOB6Fp+LoCFgZ4HIEHYfBSB8bRNWUFQtjjUR5E+gIwHeWR5GA2IxjrRQxXkLgIByMsjkADAJw0ud58ARmAuEpFBLcs+1y2oLEjPPPxsFuaBgjgZ2HBlM3IvSr2yn8X2uH9wPg4Qf1U7BARFGz-BPhGHc+FtUPFHCZJZHSYwtfewIZTFJxIWNN6NXSIpLfqgAObrK-BsJcfwdrmrsdq+pF8N9wAOQATXwGXWuauWSm9FB8m0b7dlU0xBhaJy-nkLz6VmXoxR4a3qFthA-TsTlxAgQ2kBySr954Q+G7SDiDQN+SBlKhmrO+MmzQI6n1aEwYGOxgRXR6G7KgvQjj-WQJESMCUkr+CwdieQNA84ZCkjuNwZgH7YzgBCWkdh6IxSaKGaIlxjB7WDhAKIJggHNyXA-G2rYjZcnKAAbXDDpOyGx1hB2rgIp+Qjv5eFrkgOqXpvIlAAEzDx6iUOai0RGgSEJcasyIWFa34IRX+B8aS9DQPudcdhuA6gFKA-8AQJxJU7uUawikr7uE8MwXgqlYjoUfhjVsL8nJbDFOGKRPhYC8DEKnXo91+K9FCZXcqYInRZKEB6N6vonI2jtGuT0+So5YDsn8MMl9ZzvBAeefcrZ95xCaLeDGiQg7ViYdY-+dhsi1hWEcKyQRir2BSM7UU5RCbOiXLlDSGg7BRGQYEBZWFexHWMk0SkwImjUjdJFJohSPpSkKhRQYxlcm9NGdYPSGw0pHH0WYJAR96QXNfOE5+myHQKBgKGSclJbrjFbEEngehOQA2wRGKMaUUnLhkD0mZ2TKrvRqqUZKEA7z4DyAUaszylo0maEgHSjoHlbExKIZ01Y942MxPY9cGZL5gr0M8iIR95ERKGL2GJ5Q4n6RkUk4U5RgwQN6Lg6M2NsVHE9N5OYFkdixLZBEXoktRj-KaNYd4QxGqdU0ePfAbNDXD2HqLTe29hU8kclwI+EBmBAS2MYo5Uwwy9Npf-IEMcxKx3slFc8lIcitgeiI2KfEwyhjsHtfA6zuLilQO5N+xRtmGtalzAA3LY2UkQCLcBgK0O+JdzyzOoPMrivYVltiaPITw79pC31YQUuAf8VS9LFDIf8R94FCMerOIOvQ8QETttS3orI5mt3JYlZoSamops6lBNqmjaaxFSPgAAUnm7W+Bl4ICiA5SIl8hhVkagAdQrHihCCj4oahKD1MegZwYlG6lzBem8OY7w3Iy09+IeCzHOpdCITA7CBwxlsfG+Bj2XEAt-DwkR-ojC-j-T0LkgqNOaiNPq97+r4AZr1M1o1Opyyub0K+LR-IZGhAIS5dE+yrmNKYQw-E43zkmadatiBZCIEUHiawHt0HVmQepDZGh+ETuBYOoii5jDnOKmuCGthxQlFhnYcMZZvgZAMPIWcXoMaKAAGRekcCHOIMdNxQDxiUUVYYJWTAAPJcBoLQuINC4Bww5sPZq+BMPhhvZozRdgeocxGnh4eDM5YZoRlweAEgSirxGEXeQug7Acx6gzTzD7p6tV5hvLmXMObBc0WFyoEBxkUzAJu5eEBH1c1S2B9cVBJAx25qlrzj6Rqzw3gzfVIsZadffdRdKrhTQZivtCQt9EsViHSJRcYkk-hKJApEej4hGNojSoBOuZ1WhRILTKUq5RvCMdTr+nE2RkCkAAL4gDsCAektD7QYGwHgQgJAQCtjoAYQodBq1WCYLrF7UI7K61IA0IOis9avcIlQLQq4gcgArhQagehGAsB4mTSYUDBCBEDOGYQFgS3GF7Z0u1DqMS5IrdEDUKBJTNDgIgP4-F7MBDMI6V85xYUxM8rcNkePUAZrFB9hKMDrIqFTlxpUkQrxdkareS6-OVZgEYxrK+m68QY+ox96sp97hOU6OMCAkwWEPkBc+c8EkDDGJ2gG0iZgKKhjSmKBHtBxSYCYEhZhSAP4o3QswiOAvUI+VQAAfjB5wSn1ApJ-f1lDnWT3SAV2HH8BXfgMqa03QdyVOwjdPnkE4FO-gzftCc1DykdgDtOhGGAOwrlCSuKUGIVwGwMpU+7NRh3lAnfI7d01VpmQkyTBhLcl+Uu2cJSKCHkArguBDFh-H+XivgTK-8K2fy1ALp6ApcowCSTVT2p2jsSAGwNRIAQBmlhExK1eEnozl2UjC87XeUiO3vL-CO6Ry7lHAxkglVURd87l3rteR8AABqqMcgT2IA4gnUV2hA1k+kFgzwrQU+T2oiIAEkFgdAiK3gIAAAuudkAA)
+[在 TypeSafe Playground 中打开一条查询、一个候选和一个重排问题](https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAI4wIBOAngPpZTUAOKpBpUANgIYCWcfADMIVfADc+EXiilIAzvghD8AaWQoYUANY18UPpK75mVaAjAwqCADT4UACwR6h-Yygj55KHigT4efV4BfBhmCCR8AHcHPigHfGsuPgQVKB5IgCN-AHMqDL8wADp8NCd8AFk+bUVIfCQIFHw+MA0+IRpAFAIMsCUrRIR5BB4qePxIQfrGgfFhrm79HhghpRUeKFkI4VEJKRk5RWU1DS1dfUM+YwByEzMmS2sSitEECFmqOwAxazAwFMr1tEeIoGk1AswRig9B57OURNZuBB5FZ-OtNpEeoskKD8Nl8E4uL1rPJwgo+JkuP54QEkHpTOYHjxjK0hAgNoo+JFHP56UwLJycvISmhPNz8Fg-KhYb5Yf4qjUvAgENp7J5MlQBQEgvxBNTJNJfAdVrK+GJLDy7oNFBqcg4UIoYEhWmIxZ92o58ABBRBOn1NGFigCqSD4hXwAGUfH5FABhCLeUMwdF2bkuNyqrxR1HakJhLYxOIJJIpNIZXG5fKoCzl9LLfzfCx-OWAvgg6aBHJvahIP0BDY7GKedJZfwE3rJHgUqk7KDx2SadFM3YG9FC-AASUi+AASgBRAAinpjaAP+FlEbC1kQ+DjViagx8FNbTl6gSE+UQUVEKuprT8VDgTlNRiZAtU7d4ew0ABaEl4xeXpZyocJ8nRZpFA7LsqEgqU0R2alZwUeckzkJdmCscIhjXdcmjHaUmkAHAIQOsfAilY88AHFMOwpooGsXxJkCRDkMNLZMj0Ek2T4JdeCiOxqTFIQ7ycSsmGNcDuz9JcIEyAArNlZFmeQ7ExawfE5RRqVDIYuBUZhqDgDINACJMHFEUNoU8HhmHCTkwXwBydLcqFjTFP4EQ8KhDhURwZSE0QRKQFNyjilC5DQkxISgkLyk4iDe2pMikKRSYjldU1vC9H0wD9IpAFwCDdigCJoAGYAE5WrsABGTqAFYIyKGMUBKVqADZOqKOxg2dc8ABkEHVABnyJ3x4T9vy+H4mwBKB0pxDC8qc3CxEHLFy3xBBCXwCcp22MR9X2eNsvrd0Em9ZBqo0QBMAkUfdKHwAAFS15FjXg6xKcMlTsBAihyCbKpKAAhDJtGoRRnioFBYZvURmBKcQSk+CwSgACQga8ZogMt0cxko4yQuGAHY+s+Ipmt6TqABYAAZOq67mRqgrnWvwAAKVqPRjU0ik69qRoASlIOxOB6Fp+LoCFgZ4HIEHYfBSB8bRNWUFQtjjUR5E+gIwHeWR5GA2IxjrRQxXkLgIByMsjkADAJw0ud58ARmAuEpFBLcs+1y2oLEjPPPxsFuaBgjgZ2HBlM3IvSr2yn8X2uH9wPg4Qf1U7BARFGz-BPhGHc+FtUPFHCZJZHSYwtfewIZTFJxIWNN6NXSIpLfqgAObrK-BsJcfwdrmrsdq+pF8N9wAOQATXwGXWuauWSm9FB8m0b7dlU0xBhaJy-nkLz6VmXoxR4a3qFthA-TsTlxAgQ2kBySr954Q+G7SDiDQN+SBlKhmrO+MmzQI6n1aEwYGOxgRXR6G7KgvQjj-WQJESMCUkr+CwdieQNA84ZCkjuNwZgH7YzgBCWkdh6IxSaKGaIlxjB7WDhAKIJggHNyXA-G2rYjZcnKAAbXDDpOyGx1hB2rgIp+Qjv5eFrkgOqXpvIlAAEzDx6iUOai0RGgSEJcasyIWFa34IRX+B8aS9DQPudcdhuA6gFKA-8AQJxJU7uUawikr7uE8MwXgqlYjoUfhjVsL8nJbDFOGKRPhYC8DEKnXo91+K9FCZXcqYInRZKEB6N6vonI2jtGuT0+So5YDsn8MMl9ZzvBAeefcrZ95xCaLeDGiQg7ViYdY-+dhsi1hWEcKyQRir2BSM7UU5RCbOiXLlDSGg7BRGQYEBZWFexHWMk0SkwImjUjdJFJohSPpSkKhRQYxlcm9NGdYPSGw0pHH0WYJAR96QXNfOE5+myHQKBgKGSclJbrjFbEEngehOQA2wRGKMaUUnLhkD0mZ2TKrvRqqUZKEA7z4DyAUaszylo0maEgHSjoHlbExKIZ01Y942MxPY9cGZL5gr0M8iIR95ERKGL2GJ5Q4n6RkUk4U5RgwQN6Lg6M2NsVHE9N5OYFkdixLZBEXoktRj-KaNYd4QxGqdU0ePfAbNDXD2HqLTe29hU8kclwI+EBmBAS2MYo5Uwwy9Npf-IEMcxKx3slFc8lIcitgeiI2KfEwyhjsHtfA6zuLilQO5N+xRtmGtalzAA3LY2UkQCLcBgK0O+JdzyzOoPMrivYVltiaPITw79pC31YQUuAf8VS9LFDIf8R94FCMerOIOvQ8QETttS3orI5mt3JYlZoSamops6lBNqmjaaxFSPgAAUnm7W+Bl4ICiA5SIl8hhVkagAdQrHihCCj4oahKD1MegZwYlG6lzBem8OY7w3Iy09+IeCzHOpdCITA7CBwxlsfG+Bj2XEAt-DwkR-ojC-j-T0LkgqNOaiNPq97+r4AZr1M1o1Opyyub0K+LR-IZGhAIS5dE+yrmNKYQw-E43zkmadatiBZCIEUHiawHt0HVmQepDZGh+ETuBYOoii5jDnOKmuCGthxQlFhnYcMZZvgZAMPIWcXoMaKAAGRekcCHOIMdNxQDxiUUVYYJWTAAPJcBoLQuINC4Bww5sPZq+BMPhhvZozRdgeocxGnh4eDM5YZoRlweAEgSirxGEXeQug7Acx6gzTzD7p6tV5hvLmXMObBc0WFyoEBxkUzAJu5eEBH1c1S2B9cVBJAx25qlrzj6Rqzw3gzfVIsZadffdRdKrhTQZivtCQt9EsViHSJRcYkk-hKJApEej4hGNojSoBOuZ1WhRILTKUq5RvCMdTr+nE2RkCkAAL4gDsCAektD7QYGwHgQgJAQCtjoAYQodBq1WCYLrF7UI7K61IA0IOis9avcIlQLQq4gcgArhQagehGAsB4mTSYUDBCBEDOGYQFgS3GF7Z0u1DqMS5IrdEDUKBJTNDgIgP4-F7MBDMI6V85xYUxM8rcNkePUAZrFB9hKMDrIqFTlxpUkQrxdkareS6-OVZgEYxrK+m68QY+ox96sp97hOU6OMCAkwWEPkBc+c8EkDDGJ2gG0iZgKKhjSmKBHtBxSYCYEhZhSAP4o3QswiOAvUI+VQAAfjB5wSn1ApJ-f1lDnWT3SAV2HH8BXfgMqa03QdyVOwjdPnkE4FO-gzftCc1DykdgDtOhGGAOwrlCSuKUGIVwGwMpU+7NRh3lAnfI7d01VpmQkyTBhLcl+Uu2cJSKCHkArguBDFh-H+XivgTK-8K2fy1ALp6ApcowCSTVT2p2jsSAGwNRIAQBmlhExK1eEnozl2UjC87XeUiO3vL-CO6Ry7lHAxkglVURd87l3rteR8AABqqMcgT2IA4gnUV2hA1k+kFgzwrQU+T2oiIAEkFgdAiK3gIAAAuudkAA)
 
-## How do we find one document in thousands?
+## 如何在上千份文档里找到那一份？
 
-You have a pile of documents, and a query, a piece of text describing what you're looking
-for. Somewhere in the pile is the one document that answers it.
+你有一堆文档，还有一条查询——一段描述你想找什么的文本。这堆文档里，有一份能回答它。
 
-Checking every document against the query one at a time works, at one comparison per
-document: millions of documents means millions of comparisons per query. You can improve
-performance with a two-step approach:
+把每份文档逐一与查询比对是可行的，每份文档一次比对：几百万份文档就意味着每条查询几百万次比对。可以用两步走的办法提升性能：
 
-1. Cut the pile down to a short list of likely candidates, using a method fast enough to
-   run on the whole pile.
-2. Apply a more accurate step to that short list, to find the exact right answer.
+1. 用一种快到能在整堆文档上跑的方法，把它缩减成一份可能的候选列表。
+2. 对这份候选列表再做一步更精确的处理，找出确切的那一个答案。
 
 <img
   src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/rerank_typesafe/two-step-search-intro-diagram.svg?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=796d5d4efd82f8396f380f2e1e14a9de"
@@ -50,27 +39,17 @@ top"
   data-path="cookbooks/rerank_typesafe/two-step-search-intro-diagram.svg"
 />
 
-This cookbook tests that setup on a dataset of court opinions, in
-[A re-ranking example](#a-re-ranking-example) below.
+本 cookbook 在法院判决数据集上测试这套做法，见下文[一个重排示例](#a-re-ranking-example)。
 
-## What is fast search?
+## 什么是快速检索？
 
-Fast search is any method that can compare a query against every document in a large corpus
-and quickly return a ranked shortlist. Common methods include keyword search, such as BM25,
-and dense embeddings, which compare passages by meaning. Systems often combine both
-methods.
+快速检索泛指一切能把查询与大型语料库中的每份文档比对、并快速返回一份排好序的候选列表的方法。常见做法有关键词搜索（例如 BM25）和按语义比较段落的稠密向量（dense embeddings）。系统常常把两种方法结合使用。
 
-The first step here is BM25 and nothing else. BM25 ranks passages by shared words.
-Keeping this step simple leaves the attention on re-ranking, which is the point of the
-cookbook. The choice of fast search method is a side issue: re-ranking only ever sees
-the passages that make the shortlist.
+这里的第一步只用 BM25。BM25 按共现的词给段落排序。把这一步保持简单，注意力才能留在重排上，而重排才是本 cookbook 的重点。选哪种快速检索方法是次要问题：重排永远只能看到进了候选列表的那些段落。
 
-## What is re-ranking?
+## 什么是重排？
 
-Re-ranking takes the shortlist fast search already produced and puts it in a better order.
-Instead of comparing the query against the whole corpus at once, it compares the query
-against each candidate on the shortlist individually, and sorts the shortlist by that
-score.
+重排拿快速检索已经产出的候选列表，把它排成更好的顺序。它不再把查询与整个语料库一次性比对，而是把查询与候选列表上的每个候选单独比对，再按得分给候选列表排序。
 
 <img
   src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/rerank_typesafe/rerank-diagram.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=f302253df43240e6ad7ea788cf3ba02e"
@@ -82,38 +61,25 @@ top"
   data-path="cookbooks/rerank_typesafe/rerank-diagram.png"
 />
 
-The score can come from a language model. Give it the query and one candidate together
-and ask how well the candidate answers the query. Re-ranking then finds the best match
-on the shortlist even when its wording differs from the query's.
+得分可以来自语言模型。把查询和一个候选一起交给它，问这个候选有多好地回答了查询。这样即使候选的措辞与查询不同，重排也能在候选列表上找到最佳匹配。
 
-## Re-ranking with TypeSafe
+## 用 TypeSafe 做重排
 
-A re-ranker needs a comparable score for every query-candidate pair. A general-purpose
-language model can produce these scores, or rank the whole shortlist directly. For
-independent pair scoring, however, you need to define a scoring scale and prompt the model
-to apply the same standard to every candidate. Repeated calls can still produce different
-scores for the same pair, while general-purpose generation adds time and cost to a task
-that only needs one number.
+重排器需要为每个「查询—候选」对给出可比的分数。通用语言模型可以产出这些分数，也可以直接给整份候选列表排序。但要做独立的逐对打分，你得自己定义一套评分尺度，并提示模型对每个候选都用同一把尺子。重复调用仍可能给同一个对给出不同的分数，而通用式生成会给一个只需要一个数字的任务额外增加时间和成本。
 
-### What TypeSafe returns
+### TypeSafe 返回什么
 
-With TypeSafe, the scoring request can remain a yes/no question:
+用 TypeSafe，打分请求可以就是一个是/否问题：
 
 ```text theme={null}
 Could this candidate passage be from the cited precedent?
 ```
 
-A plain yes or no would not be enough to rank 30 candidates. A `Noul` instead
-returns a number between 0 and 1, called a
-[noul](/primitives/noul). The noul is TypeSafe's estimate
-of how likely the answer is to be yes.
+光是一个「是」或「否」不足以给 30 个候选排序。`Noul` 转而返回一个 0 到 1 之间的数，称为 [noul](/primitives/noul)。noul 是 TypeSafe 对「答案为是」的可能性的估计。
 
-The question's criteria define what counts as true and false. TypeSafe applies them to
-every query-candidate pair and returns the noul directly. That noul is the score the
-application sorts on. No scoring scale has to be invented for a general-purpose model, and
-TypeSafe is built to do this repeated scoring faster, cheaper, and more consistently.
+问题的判据（criteria）定义了什么算真、什么算假。TypeSafe 把它们应用到每个「查询—候选」对，直接返回 noul。这个 noul 就是应用用来排序的分数。不必为通用模型自造一套评分尺度，而 TypeSafe 天生就擅长把这种重复打分做得更快、更便宜、更一致。
 
-In simplified pseudocode, one TypeSafe scoring call looks like this:
+用简化的伪代码表示，一次 TypeSafe 打分调用是这样的：
 
 ```python theme={null}
 question = Noul(
@@ -127,20 +93,16 @@ response = client.system_one(state={...}, questions={"is_cited_source": question
 response.answers["is_cited_source"].noul  # -> 0.87
 ```
 
-TypeSafe reads the query and one candidate together against that question, and returns a
-noul.
+TypeSafe 把查询和一个候选放在一起，针对这个问题评估，返回一个 noul。
 
-You can use this to re-rank a shortlist by running the same question against every
-candidate on it, then sorting the shortlist by the noul each call comes back with, highest
-first.
+用它做重排的方式是：对候选列表上的每个候选都问同一个问题，再按每次调用返回的 noul 从高到低给候选列表排序。
 
 ```python theme={null}
 nouls = {candidate: ask_typesafe(query, candidate) for candidate in shortlist}
 reranked = sorted(shortlist, key=lambda c: nouls[c], reverse=True)  # highest noul first
 ```
 
-The diagram below shows how one request per candidate produces the scores used to reorder
-the shortlist.
+下图展示每个候选一次请求如何产出用于重排候选列表的分数。
 
 ```mermaid actions={true} theme={null}
 flowchart LR
@@ -172,27 +134,22 @@ flowchart LR
     linkStyle 2 stroke:none
 ```
 
-## A re-ranking example
+## 一个重排示例 {#a-re-ranking-example}
+下面把快速检索和重排跑在 [CLERC](https://aclanthology.org/2025.findings-naacl.441/) 上，这是一个法律检索数据集。本示例使用 3,565 条法院判决段落和 40 条查询。
 
-Fast search and re-ranking now run on
-[CLERC](https://aclanthology.org/2025.findings-naacl.441/), a legal retrieval dataset.
-This example uses 3,565 court opinion passages and 40 queries.
+### 环境准备
 
-### Setup
+第一步安装本演练依赖的包。
 
-The first step installs the packages this walkthrough depends on.
-
-* `bm25s` and `datasets` build the fast search shortlist.
-* `typesafe-sdk` and `cooksafe` handle re-ranking and API caching.
-* `matplotlib` draws the result charts.
+* `bm25s` 和 `datasets` 负责构建快速检索的候选列表。
+* `typesafe-sdk` 和 `cooksafe` 负责重排和 API 缓存。
+* `matplotlib` 负责绘制结果图表。
 
 ```bash theme={null}
 pip install bm25s datasets matplotlib 'cooksafe>=0.2.0,<0.3.0'
 ```
 
-The next block sets up the TypeSafe client and the constants the rest of the walkthrough
-uses, such as which TypeSafe model to call and how large a shortlist fast search hands to
-the re-ranker. Calling TypeSafe needs a `TYPESAFE_API_KEY`.
+下一个代码块创建 TypeSafe 客户端，并定义演练其余部分用到的常量，比如调用哪个 TypeSafe 模型、快速检索交给重排器的候选列表有多大。调用 TypeSafe 需要一个 `TYPESAFE_API_KEY`。
 
 ```python theme={null}
 import hashlib
@@ -225,26 +182,22 @@ client = TypeSafeClient(
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-### Ranking the passages with fast search
+### 用快速检索给段落排序
 
-The dataset used here is a corpus of US court opinions, 170 rows pooled together. Each
-row breaks down like this:
+这里用的数据集是美国法院判决语料库，170 行汇在一起。每一行的结构如下：
 
-* **Query**: an opinion excerpt with a citation removed.
-* **Gold**: the passage the removed citation pointed to, the one correct answer to the
-  query.
-* **Candidates**: every other passage in the corpus, each one something the query could be
-  matched against by mistake.
+* **Query（查询）**：删去引注的判决书摘录。
+* **Gold（正确答案）**：被删掉的那条引注所指向的段落，也就是这条查询唯一正确的答案。
+* **Candidates（候选）**：语料库中其余每个段落，每一个都可能被查询错误地匹配上。
 
-Of the 170 rows, 40 are picked to evaluate as queries. The other 130 only ever appear as
-candidates.
+170 行中有 40 行被挑出来作为查询进行评估，其余 130 行只会作为候选出现。
 
-The next cell builds the shortlist, using the technique described above:
+下一个单元格用上面讲的方法构建候选列表：
 
-1. Load the corpus.
-2. Rank it against every query with BM25.
+1. 加载语料库。
+2. 用 BM25 把语料库对每条查询排序。
 
-There's no TypeSafe here yet, this is only the fast search step.
+这里还没有 TypeSafe，只是快速检索这一步。
 
 ```python expandable theme={null}
 CLERC_FILE = (
@@ -365,31 +318,23 @@ bar_chart(
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/rerank_typesafe/rerank_typesafe.executed.1.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=db0d74ddf1659968b52bfda0cdf8b030" alt="output" width="940" height="462" data-path="cookbooks/rerank_typesafe/rerank_typesafe.executed.1.png" />
 
-### Fast search is unlikely to rank the right passage first
+### 快速检索很少能把正确段落排到第一
 
-The chart shows where fast search puts the correct passage, out of 3,565 candidates.
+这张图展示了在 3,565 个候选中，快速检索把正确段落排到了哪里。
 
-Fast search reliably narrows the corpus down to a shortlist that contains the right answer.
-It contains the right answer for 100% of the 40 queries. But that passage is rarely the
-top-ranked one on the shortlist, only 5% of the time.
+快速检索能稳定地把语料库收窄成一份包含正确答案的候选列表。40 条查询的正确答案 100% 都在列表里。但那个段落很少排在候选列表的第一位，只有 5% 的情况如此。
 
-Re-ranking below only reorders the top 30 candidates already on the shortlist. It cannot
-add a passage that fast search did not select. Here, the shortlist contains the correct
-passage for all 40 queries, so re-ranking can focus on putting each one in a better
-position.
+下面对候选列表上已有的前 30 个候选做重排。快速检索没选中的段落，重排也加不进来。在这里，候选列表对全部 40 条查询都包含了正确段落，所以重排可以专注于把它们挪到更好的位置。
 
-### Re-ranking it with TypeSafe
+### 用 TypeSafe 重排
 
-Re-ranking scores every candidate on the shortlist against its query, then sorts by that
-score. The question TypeSafe asks about each pair is whether the candidate could be the
-passage the query's removed citation points to.
+重排给候选列表上的每个候选与它对应的查询打分，再按分数排序。TypeSafe 对每个对问的问题是：这个候选会不会就是查询中被删掉的那条引注所指的段落？
 
-The next cell does the following:
+下一个单元格做三件事：
 
-1. Define that question.
-2. Ask it once per candidate on every shortlist, 40 queries times 30 candidates, 1,200
-   calls in total, run concurrently instead of one after another.
-3. Sort each shortlist by the score TypeSafe returns, producing the re-ranked result.
+1. 定义这个问题。
+2. 对每份候选列表上的每个候选都问一次，40 条查询乘以 30 个候选，共 1,200 次调用，并发发出而不是依次排队。
+3. 按 TypeSafe 返回的分数给每份候选列表排序，得到重排后的结果。
 
 ```python expandable theme={null}
 is_cited_source = Noul(
@@ -527,38 +472,26 @@ print(
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/rerank_typesafe/rerank_typesafe.executed.2.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=46bea6ecf0dbb89f8df634eb6cda16b7" alt="output" width="957" height="524" data-path="cookbooks/rerank_typesafe/rerank_typesafe.executed.2.png" />
 
-### Re-ranking moves the right answer toward the top
+### 重排把正确答案推向前面
 
-The chart compares fast search against fast search plus re-ranking, at three thresholds.
-Re-ranking moves the correct passage closer to the top at every one of them:
+这张图在三个阈值上比较了快速检索与快速检索加重排。每一个阈值上，重排都把正确段落推得更靠前：
 
 * **Top 1** — 5% → 18%
 * **Top 5** — 15% → 35%
 * **Top 10** — 38% → 62%
 
-The reported token count and cost cover all 1,200 TypeSafe calls used to re-rank the 40
-shortlists.
+报告的 token 数和成本覆盖了用于重排这 40 份候选列表的全部 1,200 次 TypeSafe 调用。
 
-Each CLERC row contains one correct passage and 20 negative passages. This walkthrough
-pools the passages from 170 rows into one shared corpus. For each of the 40 evaluation
-queries, BM25 selects 30 candidates from that full corpus, not only the 20 negatives
-supplied with that row. TypeSafe then reads the query against each selected candidate and
-re-ranks those 30 passages.
+CLERC 的每一行包含一个正确段落和 20 个负例段落。本演练把 170 行的段落汇成一个共享语料库。对 40 条评估查询中的每一条，BM25 都是从整个语料库里选出 30 个候选，而不只是那一行自带的 20 个负例。TypeSafe 再拿查询与每个选中的候选比对，给这 30 个段落重排。
 
-This walkthrough asked one question per pair for clarity. A real application would
-ask several questions about the same pair in one call. See the [parallel questions
-cookbook](/cookbooks/parallel_questions) and the
-[Speculative Fan-Out pattern](/patterns/fan-out) for how.
+为了清晰，本演练对每个对只问了一个问题。真实应用会在一次调用中针对同一个对问好几个问题。具体做法见[并行问题 cookbook](/cookbooks/parallel_questions)和[推测性扇出模式](/patterns/fan-out)。
 
 ***
 
-## What's next
+## 下一步
 
-The same building blocks show up elsewhere in TypeSafe's docs:
+同样的积木块在 TypeSafe 文档的其他地方也会出现：
 
-* [Noul](/primitives/noul), for how TypeSafe turns a yes/no
-  question into a score.
-* [Speculative Fan-Out](/patterns/fan-out), for asking
-  several questions about one document in a single call.
-* [Line-by-line Search](/cookbooks/semantic_find),
-  for another way to search a corpus by meaning rather than keywords.
+* [Noul](/primitives/noul)：TypeSafe 如何把一个是/否问题变成一个分数。
+* [推测性扇出](/patterns/fan-out)：在一次调用中针对同一份文档问好几个问题。
+* [逐行检索](/cookbooks/semantic_find)：另一种按语义而非关键词检索语料库的方式。

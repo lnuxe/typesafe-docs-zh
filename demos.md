@@ -1,11 +1,11 @@
-# Demos
+# 演示
 
-> Interactive examples showing what's possible with TypeSafe.
+> 展示 TypeSafe 能做什么的交互式示例。
 
-## Available demos
+## 可用的演示
 
-* [Smart Home Assistant Demo](/demos/smart-home) - Evaluate user smart home requests with speculative questions and LLM fallback.
+* [智能家居助手演示](/demos/smart-home) - 用推测性问题加 LLM 兜底来评估用户的智能家居请求。
 
 <Tip>
-  We're always keen to learn how people are making use of our primitives. If you've found a killer use case you think should be mentioned here, feel free to drop us a note!
+  我们一直很想了解大家是怎么用这些原语的。如果你有一个自认为该被列在这里的杀手级用例，欢迎来信告诉我们！
 </Tip>

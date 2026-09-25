@@ -1,28 +1,14 @@
-# Skill suggestion
+# 技能推荐
 
-> Picks at most one skill for an agent turn out of the 182 in Nous Research's Hermes catalog, using two TypeSafe requests to rank and re-check the top candidates.
+> 从 Nous Research Hermes 目录的 182 个技能中，为一次智能体回合最多挑出一个技能，全程用两次 TypeSafe 请求对候选先排序、再复核。
 
-*Agents choose skills by truncating and loading them all into the system message, which
-increases costs, degrades skill selection performance, and induces context rot for the rest
-of the session. We address this by using two TypeSafe requests per turn, one to rank skills
-and one to verify the choice, and reduce incorrect skill loads by more than half.*
+*智能体挑选技能的做法，是把所有技能截断后一股脑塞进系统消息，这既抬高成本、拖累技能选择的准确率，还会让本次会话后续的上下文逐渐腐化。这里改用每回合两次 TypeSafe 请求：一次给技能排序，一次复核选择结果，把错误的技能加载减少一半以上。*
 
-An agent with a large skill roster makes its choice on almost no information. The roster
-reaches it as an index: one line per skill, with the description truncated so the full text
-doesn't crowd out the conversation. Hermes, the agent harness used here, cuts it to 60
-characters by default. For example, at that width the skill that *edits* `.pptx` files
-reads nearly the same as the one that *authors* them. Ask for a pitch deck and the agent
-may load the wrong one. On a turn where no skill fits at all, it may still load
-one anyway, because a list of names invites a guess.
+技能清单一长，智能体几乎是凭零信息在做选择。清单以索引的形式到达它手里：每个技能一行，描述被截断，免得全文挤占对话。这里用的智能体框架 Hermes 默认截到 60 个字符。举例来说，在这么窄的宽度下，*编辑* `.pptx` 文件的技能，读起来和*创作*它的技能几乎一样。让它做一份路演稿，它可能加载错的那个。而在压根没有合适技能的回合，它照样可能加载一个，因为一列名字就是在引诱人去猜。
 
-This cookbook leaves the descriptions alone and uses progressive disclosure instead,
-reading all 182 skills cheaply and then reading three of them in detail. Two TypeSafe
-requests go in front of the decision on which skill to load, if any. The first ranks every
-skill in the roster against the user's turn and answers whether the turn needs a skill at
-all. The second re-reads only the top three, now with each skill's full description and the
-opening of its instructions, and is free to reject all of them.
+这个 cookbook 不动描述文本，改用渐进式披露：先廉价地读完 182 个技能，再细读其中三个。在「要不要加载技能、加载哪个」这个决定前面，放两次 TypeSafe 请求。第一次拿用户这一回合去给清单里每个技能排序，同时回答这一回合到底需不需要技能。第二次只重读前三名，此时带上每个技能的完整描述和其指令的开头，并且允许全盘否决。
 
-The winner's name goes into one extra line of the agent's system prompt for that turn:
+胜出者的名字会作为额外的一行，进入智能体该回合的系统提示词：
 
 ```
 <skill_relevance>
@@ -31,24 +17,17 @@ actually asked for.
 </skill_relevance>
 ```
 
-The agent keeps its full index and its own judgement, and that one line only tells it which
-entry to look at first. The roster itself never changes, so any prefix caching over it
-still holds. Over 488 requests against `claude-haiku-4-5-20251001`, using skills from the
-Hermes roster:
+智能体仍然保留完整索引和自己的判断，那一行只告诉它先看哪一条。清单本身从不变化，因此基于它的前缀缓存依然有效。用 Hermes 清单里的技能，向 `claude-haiku-4-5-20251001` 发出 488 次请求：
 
-|                                      | loads the wrong skill | loads one when nothing fits |
-| ------------------------------------ | --------------------- | --------------------------- |
-| agent alone, with just its roster    | 16.8%                 | 9.8%                        |
-| **agent with a TypeSafe suggestion** | **7.3%**              | **4.0%**                    |
-| agent handed the right answer        | 2.5%                  | 1.2%                        |
+|  | 加载了错误的技能 | 本无合适技能却仍加载 |
+| --- | --- | --- |
+| 只用清单的智能体 | 16.8% | 9.8% |
+| **加了 TypeSafe 建议的智能体** | **7.3%** | **4.0%** |
+| 直接拿到正确答案的智能体 | 2.5% | 1.2% |
 
-The third row shows the floor for making mistakes is not zero, because an agent given the
-right skill still does not always load it, and no selection method, however good, gets past
-that.
+第三行说明犯错的下限不是零：即便把正确的技能告诉智能体，它也不总会加载，再好的选择方法也跨不过这条线。
 
-You end up with a `suggest()` function that returns at most one skill name, a
-`suggestion_block()` that wraps it for the system prompt, and the harness that produced the
-table above, ready to point at your own roster.
+最终你会得到一个至多返回一个技能名的 `suggest()` 函数、一个把它包装成系统提示词片段的 `suggestion_block()`，以及生成上表的测试脚手架，可以直接指向你自己的清单。
 
 ```mermaid actions={true} theme={null}
 flowchart LR
@@ -73,11 +52,10 @@ flowchart LR
     C2 -->|"a winner"| OUT["suggest<br/>the winner"]
 ```
 
-## Setup
+## 环境准备
 
-* Install the TypeSafe client, the Anthropic client, and the shared cookbook helpers.
-* Set a [TypeSafe API key](https://console.typesafe.ai/keys), and an Anthropic key for the
-  agent being measured.
+* 安装 TypeSafe 客户端、Anthropic 客户端，以及共享的 cookbook 辅助工具。
+* 设置 [TypeSafe API key](https://console.typesafe.ai/keys)，并为被测智能体准备一个 Anthropic key。
 
 ```bash theme={null}
 pip install anthropic matplotlib ipython 'cooksafe>=0.2.0,<0.3.0'
@@ -85,14 +63,11 @@ export TYPESAFE_API_KEY=your-key-here
 export ANTHROPIC_API_KEY=your-key-here
 ```
 
-> **Note:** the code blocks below are one script, in order. To follow along, put them in a
-> single file in the order shown.
+> **注意：** 下面的代码块是同一个脚本，按顺序排列。要跟着跑一遍，就按这里给出的顺序放进同一个文件。
 
-## Caching results
+## 缓存结果
 
-`JsonCache` saves each call's result, keyed on its inputs, so re-running replays the
-numbers below instead of calling either API. Delete `json_cache.json` to run live. The
-published run used `jev-1.12` and `claude-haiku-4-5-20251001`, rendered 2026-07-31.
+`JsonCache` 以输入为键保存每次调用的结果，因此重跑时直接复现下面的数字，不会再调用任何一个 API。删掉 `json_cache.json` 即可实际运行。本页发布的运行使用 `jev-1.12` 和 `claude-haiku-4-5-20251001`，渲染于 2026-07-31。
 
 ```python expandable theme={null}
 import json
@@ -144,14 +119,11 @@ agent = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "cache-o
 json_cache = JsonCache(Path("json_cache.json"))
 ```
 
-## Step 1: load the roster
+## 第 1 步：加载技能清单
 
-`hermes_roster.json` holds the 182 skills of
-[NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) (MIT) at one
-pinned commit. Each record holds a skill's name and category, the description as the index
-shows it, the full description, and the opening of its `SKILL.md`.
+`hermes_roster.json` 保存 [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)（MIT）固定在某一个提交上的 182 个技能。每条记录包含技能名与分类、索引里显示的那段描述、完整描述，以及 `SKILL.md` 的开头部分。
 
-The index below, and the instructions above it in the prompt, are copied from Hermes.
+下面的索引，以及提示词里位于它上方的那段指令，都照抄自 Hermes。
 
 ```python expandable theme={null}
 ROSTER = json.loads(Path("hermes_roster.json").read_text(encoding="utf-8"))
@@ -241,26 +213,18 @@ one category, as the agent reads it:
     - imessage: Send and receive iMessages/SMS via the imsg CLI on macOS.
 ```
 
-## Step 2: score the agent on its own
+## 第 2 步：先测智能体单干的表现
 
-`requests.json` holds 488 single-turn requests, 315 of them covered by exactly one skill
-and the other 173 covered by nothing.
+`requests.json` 里有 488 条单回合请求，其中 315 条恰好对应一个技能，另外 173 条不对应任何技能。
 
-The covered requests were written by Claude Sonnet 5 from each skill's own `SKILL.md`, so
-the labels are trustworthy and the requests are easier than the ones users send.
+有对应技能的请求由 Claude Sonnet 5 依据各技能的 `SKILL.md` 写出，因此标注可信，而且比用户真实发来的请求更容易。
 
-The 173 uncovered ones were all written to punish guessing: 85 everyday requests, 42
-technical questions no skill serves (*explain what a monad is*), and 46 that ask for
-something specific the roster has no skill for, like *post this to Mastodon* on a roster
-that covers X and nothing else.
+173 条无对应技能的请求都是为了惩罚瞎猜而写的：85 条日常请求、42 条没有技能能胜任的技术问题（*解释一下什么是 monad*），以及 46 条要求清单里根本没有的技能才能完成的具体任务，比如在只覆盖 X、别的什么都没有的清单上要求*把这条内容发到 Mastodon*。
 
-Scoring reads the agent's first response only. Both numbers are error rates, so lower is
-better on each:
+评分只看智能体的第一次响应。两个指标都是错误率，因此都越低越好：
 
-* **wrong load**: of the covered requests, the share where the first `skill_view` call was
-  not the covering skill. A turn that loaded nothing at all counts as a miss.
-* **needless load**: of the uncovered requests, the share where the agent called
-  `skill_view` at all.
+* **错误加载（wrong load）**：在有对应技能的请求中，第一次 `skill_view` 调用不是该技能的比例。整个回合什么都没加载也算一次失败。
+* **多余加载（needless load）**：在无对应技能的请求中，智能体调用了 `skill_view` 的比例。
 
 ```python theme={null}
 REQUESTS = json.loads(Path("requests.json").read_text(encoding="utf-8"))
@@ -282,11 +246,9 @@ covered   [1password]  I've got a config.yaml with `{{ op://app-prod/db/password
 uncovered  Add these three cards to our Trello backlog.
 ```
 
-The suggestion goes in its own block of the system prompt, after the roster rather than
-inside it, so the roster text is identical on every turn to maintain prefix caching.
+建议放在系统提示词里独立的一块，位于清单之后而不是嵌进清单里；这样清单文本在每个回合都完全相同，前缀缓存才能保持有效。
 
-The agent has a minimal set of tools, including `skill_view` to load a skill using a
-free-text name. The name must match the skill exactly for a correct load.
+智能体的工具集很小，其中包括用自由文本技能名加载技能的 `skill_view`。名字必须与技能完全一致，加载才算正确。
 
 ```python expandable theme={null}
 # Verbatim from hermes-agent tools/skills_tool.py:SKILL_VIEW_SCHEMA.
@@ -387,8 +349,7 @@ def run_arm(arm: str, suggestions: dict[str, str]) -> dict[str, dict]:
         return dict(zip(texts, turns))
 ```
 
-The agent runs first with nothing but its roster, the way it works today. Its two error
-rates are the baseline the rest of the cookbook measures against.
+先让智能体只带清单跑一遍，也就是它今天的做法。它的两个错误率就是本 cookbook 余下部分用来对照的基线。
 
 ```python theme={null}
 baseline = run_arm("baseline", {})
@@ -424,32 +385,20 @@ needless loads 9.8%   (173 uncovered requests)
 of 36 wrong first picks, 10 came from the right skill's own category
 ```
 
-Wrong loads land in the right skill's own category far more often than chance would put
-them there, so the hard part is telling a few lookalikes apart. The agent is already
-looking in roughly the right place.
+错误加载落在正确技能自己所属分类里的次数远高于随机概率，可见难处在于把几个长得很像的技能区分开。智能体大致已经找对地方了。
 
-## Step 3: rank the whole roster
+## 第 3 步：给整份清单排序
 
-One request carries two kinds of question:
+一次请求里带两类问题：
 
-* **`which`** is a [`Choice`](/primitives/choice) question
-  over all 182 skill names, with the index description as each option's criteria (the same
-  text the agent itself gets). Its probabilities are the ranking.
-* **three [`Noul`](/primitives/noul) questions about the
-  request**, printed below, each asking a different way whether it wants an action taken
-  rather than an explanation given. `prose_suffices`
-  counts the other way round. Their mean decides whether to suggest anything at all, and
-  under 0.30 nothing is suggested.
+* **`which`** 是一个 [`Choice`](/primitives/choice) 问题，覆盖全部 182 个技能名，以索引里的描述作为每个选项的判据（就是智能体自己看到的那段文字）。它的概率分布就是排序结果。
+* **三个关于这次请求的 [`Noul`](/primitives/noul) 问题**，列在下面，各自换一种问法，判断要的是动手做事还是只要解释。`prose_suffices` 的方向相反。三者的均值决定要不要给出任何建议，低于 0.30 就什么都不建议。
 
-Both go out in one request, so the ranking and the check cost one round trip.
+两类问题在同一次请求里发出，排序和检查只花一个来回。
 
-Write these three to ask whether an action is wanted. A question about subject matter will
-not separate *explain what a monad is* from a request that needs a skill, since both are
-software.
+写这三个问题时，要问的是「是否要求动手」。问主题内容没用：*解释一下什么是 monad* 和真正需要技能的请求都是软件话题，分不开。
 
-One `Choice` question holds a roster this size comfortably. A few times larger and you
-would
-split it into chunks and rank each one, then run this same shortlist step over the winners.
+一个 `Choice` 问题装下这个规模的清单毫无压力。再大上几倍，就得把它切成几块分别排序，然后对胜出者跑同样的候选列表步骤。
 
 ```python expandable theme={null}
 CHOICE_INSTRUCTIONS = (
@@ -551,26 +500,16 @@ for request in DEMO:
     0.080  openhands                             Delegate coding to OpenHands CLI (model-agnostic, LiteLLM).
 ```
 
-The Notes.app request is unambiguous, and its top option is the right one. Nothing a
-ranking can do will save the Mastodon one: the three questions say a skill is wanted,
-because posting to an account is an action, and with a skill for posting to X and nothing
-for Mastodon the closest skill wins anyway.
+Notes.app 那条请求毫不含糊，排在第一的选项就是对的。Mastodon 那条则无解：三个问题都判为需要技能，因为往账号里发东西确实是个动作；清单里有发 X 的技能、没有发 Mastodon 的，最接近的那个技能照样会赢。
 
-That leaves the deck. Both leaders are `.pptx` skills, and on 60 characters the wide Choice
-question puts the editing skill ahead of the authoring one, for a request about
-authoring a deck.
+剩下的是那份路演稿。领先的两个都是 `.pptx` 技能，而在 60 个字符的宽度下，面对一份创作路演稿的请求，宽范围 Choice 问题把编辑技能排在了创作技能前面。
 
-## Step 4: rerank the top three
+## 第 4 步：重排前三名
 
-Three options leave room for the full description plus the opening of each skill's own
-`SKILL.md`, so the second request puts the same question to better evidence:
+三个选项就容得下完整描述，再加各技能 `SKILL.md` 的开头，于是第二次请求把同样的问题摆到更好的证据面前：
 
-* **`which`** is a `Choice` question over the shortlist, with that longer text as each
-  option's criteria.
-* **`fits::{name}`** is one `Noul` question per candidate: does this skill do the
-  specific
-  thing the request asks for? Each is answered on its own, so they can all come back low,
-  and a shortlist whose highest one lands under 0.30 gets dropped entirely.
+* **`which`** 是针对候选列表的 `Choice` 问题，以那段更长的文字作为每个选项的判据。
+* **`fits::{name}`** 是每个候选一个 `Noul` 问题：这个技能真的能做请求要的那件具体事吗？它们各自独立作答，因此可能全都给低分；候选列表里最高的一个低于 0.30，整份列表就被丢掉。
 
 ```python expandable theme={null}
 RERANK_INSTRUCTIONS = (
@@ -660,24 +599,15 @@ for request in DEMO:
     fits 0.05  openhands
 ```
 
-The two `.pptx` skills separate once each one brings its own text: the deck request flips
-to the authoring skill.
+两个 `.pptx` 技能一旦各自带上自己的文本就分开了：这份路演稿请求翻转到了创作技能上。
 
-The `fits` nouls and the Choice disagree there: the nouls score the editing skill higher
-while the Choice picks the authoring one. They are deciding different things. The Choice
-settles *which* skill, and the nouls settle *whether* to say anything at all.
+`fits` 的 noul 和 Choice 在那里结论不一致：noul 给编辑技能的分更高，Choice 却挑了创作技能。它们决定的是不同的事——Choice 定的是*哪一个*技能，noul 定的是到底*要不要*开口。
 
-The Mastodon request survives both checks: its best `fits` noul lands above 0.30, so the
-recipe suggests the X skill for a request about Mastodon. Most requests like it are caught.
-The second pass can only reject what the wide ranking hands it, and here that was three
-near-misses.
+Mastodon 那条请求两轮检查都过了：它最好的 `fits` noul 高于 0.30，于是这套做法为一条关于 Mastodon 的请求推荐了 X 技能。这类请求大多数会被拦下。第二轮只能否决宽范围排序交上来的东西，而这次交上来的是三个差一点就被否掉的候选。
 
-The function below is the whole recipe: two requests and two thresholds, with at most one
-skill name coming back.
+下面的函数就是全部做法：两次请求、两个阈值，最多返回一个技能名。
 
-To point it at your own roster, replace `hermes_roster.json`. Every question above reads
-`name`, `description`, `description_full`, and `body` out of that file, and nothing else
-knows about Hermes.
+要把它指向你自己的清单，替换 `hermes_roster.json` 即可。上面每个问题都只从该文件读取 `name`、`description`、`description_full` 和 `body`，其余代码对 Hermes 一无所知。
 
 ```python theme={null}
 def suggest(request: str) -> tuple[str, ...]:
@@ -725,24 +655,19 @@ Relevant to the current request: xurl. Ignore this if it does not fit what the u
 </skill_relevance>
 ```
 
-## Step 5: measure the suggestion
+## 第 5 步：测量建议的效果
 
-Each of the 488 requests goes to the agent three times, one measured turn each. The runs
-differ only in what the agent is told:
+488 条请求各跑三次，每次记录一个回合。三轮的差别只在于告诉智能体什么：
 
-|                         | what goes in the system prompt                                     |
-| ----------------------- | ------------------------------------------------------------------ |
-| agent alone             | nothing                                                            |
-| agent with a suggestion | whatever `suggest()` returned                                      |
-| agent given the answer  | the covering skill's name, or "nothing applies" when there is none |
+|  | 系统提示词里放了什么 |
+| --- | --- |
+| 智能体单干 | 什么都不放 |
+| 智能体拿到建议 | `suggest()` 返回的内容 |
+| 智能体直接得到答案 | 对应技能的名字；没有对应技能时是 "nothing applies" |
 
-The third is not achievable; it is the ceiling the other two get measured against.
+第三轮在实际中做不到，它是另外两轮用来对标的天花板。
 
-The wording of that suggestion is doing two jobs. It says the suggestion can be ignored,
-because pushing harder wins compliance on wrong suggestions too, and a wrong one is worse
-than none. And a turn with nothing to suggest still sends a sentence saying so; sending
-nothing at all would leave the roster's own "err on the side of loading" instruction
-unopposed.
+那句建议的措辞承担两项工作。一是说明建议可以忽略：施加更大压力固然能让错误建议也被采纳，但错误的建议比没有更糟。二是即使这一回合没有任何可推荐的技能，也仍然会发一句话讲明；要是什么都不发，清单自带的 "err on the side of loading" 指令就没人制衡了。
 
 ```python expandable theme={null}
 texts = [request["text"] for request in REQUESTS]
@@ -811,9 +736,7 @@ print(
 of 315 covered requests: 37 the suggestion fixed, 7 it broke
 ```
 
-The suggestion fixes many more requests than it breaks, but it does break some the agent
-had right on its own. A confident wrong suggestion is more persuasive than no suggestion at
-all, which is the price of putting one in front of the turn.
+建议修正的请求远多于它弄错的请求，但它确实会弄错一些智能体本来答对的请求。一条自信的错误建议，比没有建议更能把智能体带偏——这就是把建议摆到回合前面的代价。
 
 ```python expandable theme={null}
 SURFACE, INK, INK2, MUTED = "#fcfcfb", "#0b0b0b", "#52514e", "#898781"
@@ -878,20 +801,16 @@ plt.close(fig)
 
 <img src="https://mintcdn.com/ts-docs/2NirYCl-v96cw05F/cookbooks/skill_suggestion/skill_suggestion.executed.1.png?fit=max&auto=format&n=2NirYCl-v96cw05F&q=85&s=d367d7f1a110c8d0c7ba970e57203ef1" alt="output" width="1242" height="534" data-path="cookbooks/skill_suggestion/skill_suggestion.executed.1.png" />
 
-## What the results show
+## 结果说明了什么
 
-* Wrong loads fell from 16.8% to 7.3% and needless ones from 9.8% to 4.0%, which is most of
-  the gap between guessing from a truncated index and being handed the answer.
-* Some requests the agent had right on its own come back wrong once a suggestion is
-  attached. Counts are above.
+* 错误加载从 16.8% 降到 7.3%，多余加载从 9.8% 降到 4.0%，基本填上了「照截断索引瞎猜」与「直接拿到答案」之间的大部分差距。
+* 有些智能体本来答对的请求，一旦附上建议反而错了。数量见上文。
 
-Copy this shape when an agent of yours carries a large roster: a cheap ranking over
-everything, then a close look at two or three. Either step may come back empty-handed.
+当你的智能体背着大清单时，照搬这套做法：先对整个清单做一次廉价排序，再细看两三个。两步都可能空手而归。
 
-## Open it in the playground
+## 在 TypeSafe playground 中打开
 
-Build a playground link for the deck request from step 4, using each candidate's full
-description and body excerpt as its criteria.
+为第 4 步里的那份路演稿请求生成一个 Playground 链接，以每个候选的完整描述和正文摘录作为判据。
 
 ```python theme={null}
 demo_shortlist = tuple(name for name, _ in rank_wide(DEMO[1])["ranked"][:SHORTLIST])
@@ -907,13 +826,8 @@ display(
 )
 ```
 
-<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAE4ICOMCAziqQaQMICGS+AnhDPgA4wU+FBADmCFAAsEZfK34BLFFEn4wCKAGt8tTQgA2EiBwAUUCADcZAGh1KYrFAuP5LMiwoQB3W+bh9aWz4KKAR1VGEydlpWKCdjQPwAEWYAMVsAGQAhAHkASjlaOXwAOj4+FExbGFoFJFFXGFkAMwUyOABaFAR-fUcEMorMfGaIWQAjKKQwOob2MBGICBQkZdn8BFjVC1Z9B3iOJHhxmXxx2O0RYWl8UP19fCVb1kQRsgg4R44pBHw4CHU+gA-KRbKQQsgUAB9cyoLAMPD4UikAC+IFsIGCHwqtAw2ERRFIXkkChUjHwJBAKE4fAQ5NIKggpLp6KRIDq9DIMDiziQtHpIAAophYih9JxXEhfhBmtc6L9dAp7kUFEUfvgyApRJIhMZfld9BBWAtRrJ1TUZAByIp9br0DVUGj0Er4ADqJJUkoQQPwACVNgtiY4Nls5HEHPcJZA6LZVkIAFY1IRKIpIF4DUFsqCa7qa1jkyl8CBeGRFuoIpggZgUfq2GtgWxhJ6DSpqDSaRK0fQKdSJOMx4Q9Pi2uguwAoBPgAMT4AAKxdLTIiAGVNEqHtXNt06wHbPMNjMhHOS2Q5+W21oihPmu9OrRs45PeIpVEDvgvEpVOVKk-44lur1+g6c5aDCfclHWDx5BmEIhAADQAWQyP52AUARbV5WxaFpVg9FkftEhUVgyBQRI917LUOAARQAQRdaj8AAAxbTAGMeIp5AALQASRnOQyBUBQrFcWUEKQ1pDFoF1J2nd1kGECB8AAVRApSVKkVUdFXe45CQCUnFeeRmNcWQymWYZxN+DS6gsCB9CsBY6h0iUvFYCUJ1YFUkAEFBbB4FBvN8iZlkkAhs03dYux7X51AvIIlE9GKO0C-gKBA1BHF5WgAG4HWNdYxg2bAoh5epB2wN4Pic0ov0wHKmycUqsFVBqGmCeV0oObLbg+cY6ny2QsO7FAWp0bt1BGJU6ByrwxlXUr3ykQcALtfATFMyo8lsPpuEETtsNw-B8OSvxEFQST8DQTVRHEWRiWQBArDNG4LVkU7OqRYhSES6xPtID7SEi3sfs+kB-sxVLIQy4xgb+gqKGaGRkFCdjqqGAB6dbzMmtNECk6cZwoChqFVJQWTBTEhg6VhBEkMYBSyGAlQWI8ZFPCJEqKaRjQkooFs-TgpGMDoavHKd+Ep6nBdkAmAW5X5DJqibDElNRVW0Gp1gYvgBdppBhaGJjVN+O6OB2w6EFAq5AUE04oPbQpigsvinGaUVY2WNRNSE+RuyElmT0XIQQNoWpjDosBWAqUDr0q6jUEkd4+FJa1GJqqmabGVi9y1+LJA6RLWMVZUvnwABtdgpET0laDR1o0yQKAFF2DoQLIDxkYAXRMHV-NoXA0bR0QPxgcYSj8NGK4TiAk6gGu6-YRvm9b9u6DyF00BueDmF4tH8ByZpWlCDoACklzOKYVDoYS5WMrU6l2diKE96faQWCd1PYkP4CvrmwB52cdZh3wKkAq6pJhGnUGQXc+h6ycBbiScooF-ZsyEJLWmmpSpFweCYQGA4sKbAOkdDYcAThgESIgGYrBNo6AtjfcYjN9AoA6I5LW84yBllQIXLS+h14kiKFgtixRuzalzB0EsWodT8EcLmb4MApQmgKv8QEQELigQ5qtJOyhVAc1sFxZgfwegQESJsMgSBZipmWKvN80gn4PRkBKI4JDThwCTJEWI+oFLyFoDwfixtZrjCWJoPGe9BB8EzAyKecB8yIlIIKJxYAZilQjigVgwFfimj9NRAA4jpBYIEomoFJDQoiKhRbTmYJE+QHQ960j1kuHxoR8BxNIYkhoSRHCpI8r8DevxqJcQ6GmJwQlkmdJUhk+hTN1gZAyPBOQ5RuxQChnyN8H4DH-DIJwYJslvgKQtPgCpN55AACojnKV+Acj48gTa4BOfgapDNJmlV9Nk1aFAUCages3amog3qgSfDIJZBRI7DlJEsoo1SAByFsFiGkWfoNGIF9DNA6LTegoErBxAKiMtJdy3QV1cLUluDSFS2UELyVa1E+BbF+AAJhKAABgKNUmWIhqRJ1Ko5fsASIAdlxUuHoFcikgRKaoNwshICwDeuC-AS4RAYIaD0Fp5iVmLUQCkkZ+ATnwQkJqWeJyCDVJOTSgALNYAAzPS+lABqfAWSlAAAkR46BSWQWgtzDVHIAIzWAAJyWptaaDs7rNVHIsJ6koZqI23JwSk8YhhbAlgQJocUDpDBdNoEykNlLqX4DpfS-ACzkAgVuScs5chGEyEGTbTyaLjT6txScmcdQNB6nrfBdgrBxALCgIaGADY5CCAgC3OF6wPWpD6UuJc9aZxNAVAoOASoiJKAlMK-ikh3YGPVR0htRzXSbEgt0ad7wwDclfIhAZGVhkdJxR6yiYApgoHrfaiRbIUQonJq0EiuBcBFmPBwisFJSBspZJWVYMB9DhPZHyd5p7MoCiSBAK+6oBGWl-Qucslo1AKWQ7SRuh9rjrHNK3FORMnSoN0EUU0PouLJiKL2bMChSGFAIBuWsuV+31VRq2HRo0op9ksX+IcI5JKog-Smb9ac0F00RJSYDAowMQdZKQDkMGeQJHg4htUNwUOSYzmQTDkAb74Lw0U9SpUiNWiKKRug5HeVUfwDRwR9HNRMY8gQB5+hmZsJQeeXlv9-5834IAvWItRNsk-X3XAKhDkFiAzSEDbIFOQZU1yNTfINNIe09w-AlpouXIM9h7TuGFD4bMw0Cz+mrOOhs4UOzYxqO0bbHeFzoE3NNPia0tQ16umLFkM8nJe58mCqgMUtdJRURogxJHBQAA1GQockAEjDayEAiKNDdDAPBAEBhaCIlLiAeMD0Ojhs9TSkAHcURAA" target="_blank" rel="noreferrer" className="text-primary">Open the shortlist + questions in the TypeSafe playground →</a>
+<a href="https://console.typesafe.ai/playground#share/N4IgJg9gxgrgtgUwHYBcAqCAeKQC4AEIwAOiAE4ICOMCAziqQaQMICGS+AnhDPgA4wU+FBADmCFAAsEZfK34BLFFEn4wCKAGt8tTQgA2EiBwAUUCADcZAGh1KYrFAuP5LMiwoQB3W+bh9aWz4KKAR1VGEydlpWKCdjQPwAEWYAMVsAGQAhAHkASjlaOXwAOj4+FExbGFoFJFFXGFkAMwUyOABaFAR-fUcEMorMfGaIWQAjKKQwOob2MBGICBQkZdn8BFjVC1Z9B3iOJHhxmXxx2O0RYWl8UP19fCVb1kQRsgg4R44pBHw4CHU+gA-KRbKQQsgUAB9cyoLAMPD4UikAC+IFsIGCHwqtAw2ERRFIXkkChUjHwJBAKE4fAQ5NIKggpLp6KRIDq9DIMDiziQtHpIAAophYih9JxXEhfhBmtc6L9dAp7kUFEUfvgyApRJIhMZfld9BBWAtRrJ1TUZAByIp9br0DVUGj0Er4ADqJJUkoQQPwACVNgtiY4Nls5HEHPcJZA6LZVkIAFY1IRKIpIF4DUFsqCa7qa1jkyl8CBeGRFuoIpggZgUfq2GtgWxhJ6DSpqDSaRK0fQKdSJOMx4Q9Pi2uguwAoBPgAMT4AAKxdLTIiAGVNEqHtXNt06wHbPMNjMhHOS2Q5+W21oihPmu9OrRs45PeIpVEDvgvEpVOVKk-44lur1+g6c5aDCfclHWDx5BmEIhAADQAWQyP52AUARbV5WxaFpVg9FkftEhUVgyBQRI917LUOAARQAQRdaj8AAAxbTAGMeIp5AALQASRnOQyBUBQrFcWUEKQ1pDFoF1J2nd1kGECB8AAVRApSVKkVUdFXe45CQCUnFeeRmNcWQymWYZxN+DS6gsCB9CsBY6h0iUvFYCUJ1YFUkAEFBbB4FBvN8iZlkkAhs03dYux7X51AvIIlE9GKO0C-gKBA1BHF5WgAG4HWNdYxg2bAoh5epB2wN4Pic0ov0wHKmycUqsFVBqGmCeV0oObLbg+cY6ny2QsO7FAWp0bt1BGJU6ByrwxlXUr3ykQcALtfATFMyo8lsPpuEETtsNw-B8OSvxEFQST8DQTVRHEWRiWQBArDNG4LVkU7OqRYhSES6xPtID7SEi3sfs+kB-sxVLIQy4xgb+gqKGaGRkFCdjqqGAB6dbzMmtNECk6cZwoChqFVJQWTBTEhg6VhBEkMYBSyGAlQWI8ZFPCJEqKaRjQkooFs-TgpGMDoavHKd+Ep6nBdkAmAW5X5DJqibDElNRVW0Gp1gYvgBdppBhaGJjVN+O6OB2w6EFAq5AUE04oPbQpigsvinGaUVY2WNRNSE+RuyElmT0XIQQNoWpjDosBWAqUDr0q6jUEkd4+FJa1GJqqmabGVi9y1+LJA6RLWMVZUvnwABtdgpET0laDR1o0yQKAFF2DoQLIDxkYAXRMHV-NoXA0bR0QPxgcYSj8NGK4TiAk6gGu6-YRvm9b9u6DyF00BueDmF4tH8ByZpWlCDoACklzOKYVDoYS5WMrU6l2diKE96faQWCd1PYkP4CvrmwB52cdZh3wKkAq6pJhGnUGQXc+h6ycBbiScooF-ZsyEJLWmmpSpFweCYQGA4sKbAOkdDYcAThgESIgGYrBNo6AtjfcYjN9AoA6I5LW84yBllQIXLS+h14kiKFgtixRuzalzB0EsWodT8EcLmb4MApQmgKv8QEQELigQ5qtJOyhVAc1sFxZgfwegQESJsMgSBZipmWKvN80gn4PRkBKI4JDThwCTJEWI+oFLyFoDwfixtZrjCWJoPGe9BB8EzAyKecB8yIlIIKJxYAZilQjigVgwFfimj9NRAA4jpBYIEomoFJDQoiKhRbTmYJE+QHQ960j1kuHxoR8BxNIYkhoSRHCpI8r8DevxqJcQ6GmJwQlkmdJUhk+hTN1gZAyPBOQ5RuxQChnyN8H4DH-DIJwYJslvgKQtPgCpN55AACojnKV+Acj48gTa4BOfgapDNJmlV9Nk1aFAUCages3amog3qgSfDIJZBRI7DlJEsoo1SAByFsFiGkWfoNGIF9DNA6LTegoErBxAKiMtJdy3QV1cLUluDSFS2UELyVa1E+BbF+AAJhKAABgKNUmWIhqRJ1Ko5fsASIAdlxUuHoFcikgRKaoNwshICwDeuC-AS4RAYIaD0Fp5iVmLUQCkkZ+ATnwQkJqWeJyCDVJOTSgALNYAAzPS+lABqfAWSlAAAkR46BSWQWgtzDVHIAIzWAAJyWptaaDs7rNVHIsJ6koZqI23JwSk8YhhbAlgQJocUDpDBdNoEykNlLqX4DpfS-ACzkAgVuScs5chGEyEGTbTyaLjT6txScmcdQNB6nrfBdgrBxALCgIaGADY5CCAgC3OF6wPWpD6UuJc9aZxNAVAoOASoiJKAlMK-ikh3YGPVR0htRzXSbEgt0ad7wwDclfIhAZGVhkdJxR6yiYApgoHrfaiRbIUQonJq0EiuBcBFmPBwisFJSBspZJWVYMB9DhPZHyd5p7MoCiSBAK+6oBGWl-Qucslo1AKWQ7SRuh9rjrHNK3FORMnSoN0EUU0PouLJiKL2bMChSGFAIBuWsuV+31VRq2HRo0op9ksX+IcI5JKog-Smb9ac0F00RJSYDAowMQdZKQDkMGeQJHg4htUNwUOSYzmQTDkAb74Lw0U9SpUiNWiKKRug5HeVUfwDRwR9HNRMY8gQB5+hmZsJQeeXlv9-5834IAvWItRNsk-X3XAKhDkFiAzSEDbIFOQZU1yNTfINNIe09w-AlpouXIM9h7TuGFD4bMw0Cz+mrOOhs4UOzYxqO0bbHeFzoE3NNPia0tQ16umLFkM8nJe58mCqgMUtdJRURogxJHBQAA1GQockAEjDayEAiKNDdDAPBAEBhaCIlLiAeMD0Ojhs9TSkAHcURAA" target="_blank" rel="noreferrer" className="text-primary">在 TypeSafe playground 中打开这份候选列表及其问题 →</a>
 
-## What's next
+## 接下来
 
-The same shape shows up elsewhere:
-[Intent Routing](/patterns/intent-routing) for routing to a
-handler rather than a skill, [Confidence](/confidence) for
-picking the two thresholds, and
-[Speculative Fan-Out](/patterns/fan-out) for putting every
-question in one request.
+同样的做法还出现在别处：[意图路由](/patterns/intent-routing) 把请求路由到处理器而不是技能，[置信度](/confidence) 用来挑上面那两个阈值，[推测性扇出](/patterns/fan-out) 则把所有问题塞进一次请求。
