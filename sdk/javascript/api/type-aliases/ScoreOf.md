@@ -1,12 +1,12 @@
-# Type Alias: ScoreOf\<T\>
+# 类型别名：ScoreOf\<T\>
 
 ```ts theme={null}
 type ScoreOf<T> = number extends T["length"] ? number : Extract<keyof T, `${number}`>;
 ```
 
-Score keys inferred from the rubric; a fixed-length tuple yields its indices, otherwise `number`.
+从量规推断出的分数键；定长元组给出其索引，否则为 `number`。
 
-## Type Parameters
+## 类型参数
 
 ### T
 

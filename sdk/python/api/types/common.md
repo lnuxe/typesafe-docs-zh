@@ -1,6 +1,6 @@
-# Common types
+# 通用类型
 
-> Common types for TypeSafe API SDK.
+> TypeSafe API SDK 的通用类型。
 
 export function SdkSignature({children}) {
   async function copy(event) {
@@ -41,7 +41,7 @@ export function SdkSignature({children}) {
   <span className="n">{"JSONValue"}</span>{" "}<span className="o">{"="}</span>{" "}<span className="n"><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypeAliasType">{"TypeAliasType"}</a></span><span className="p">{"("}</span>{"\n"}{"    "}<span className="s2">{"\"JSONValue\""}</span><span className="p">{","}</span>{"\n"}{"    "}<span className="s2">{"\"str | int | float | bool | Sequence[JSONValue | None] | Mapping[str, JSONValue | None]\""}</span><span className="p">{","}</span>{"\n"}<span className="p">{")"}</span>{"\n"}
 </SdkSignature>
 
-A JSON-like value. May be nested and contain `None`.
+类 JSON 的值。可以嵌套，并且可以包含 `None`。
 
 <h2 id="typesafe_sdk.JSONContent">
   typesafe\_sdk.JSONContent
@@ -53,4 +53,4 @@ A JSON-like value. May be nested and contain `None`.
   <span className="n">{"JSONContent"}</span>{" "}<span className="o">{"="}</span>{" "}<span className="n"><a href="https://typing-extensions.readthedocs.io/en/latest/index.html#typing_extensions.TypeAliasType">{"TypeAliasType"}</a></span><span className="p">{"("}</span>{"\n"}{"    "}<span className="s2">{"\"JSONContent\""}</span><span className="p">{","}</span>{"\n"}{"    "}<span className="s2">{"\"str | Mapping[str, JSONValue | None] | Sequence[JSONValue | None]\""}</span><span className="p">{","}</span>{"\n"}<span className="p">{")"}</span>{"\n"}
 </SdkSignature>
 
-Either a plain string or a mapping/sequence of [`JSONValue`](/sdk/python/api/types/common#typesafe_sdk.JSONValue) entries.
+要么是纯字符串，要么是由 [`JSONValue`](/sdk/python/api/types/common#typesafe_sdk.JSONValue) 项构成的映射或序列。

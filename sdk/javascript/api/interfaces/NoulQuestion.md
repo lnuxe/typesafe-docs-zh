@@ -1,8 +1,8 @@
-# Interface: NoulQuestion
+# 接口：NoulQuestion
 
-A yes/no question with optional descriptions for either outcome.
+一个是/否问题，可为任一结果附带描述。
 
-## Properties
+## 属性
 
 <a id="sdk-criteria" />
 
@@ -17,11 +17,11 @@ optional criteria?:
   | null;
 ```
 
-Optional descriptions of the yes and no outcomes.
+对「是」与「否」两种结果的可选描述。
 
-#### Union Members
+#### 联合成员
 
-##### Type Literal
+##### 类型字面量
 
 ```ts theme={null}
 {
@@ -36,7 +36,7 @@ Optional descriptions of the yes and no outcomes.
 optional false?: EntryType;
 ```
 
-Description of the no outcome.
+对「否」这一结果的描述。
 
 ##### true?
 
@@ -44,7 +44,7 @@ Description of the no outcome.
 optional true?: EntryType;
 ```
 
-Description of the yes outcome.
+对「是」这一结果的描述。
 
 ***
 
@@ -60,7 +60,7 @@ Description of the yes outcome.
 optional instructions?: EntryType;
 ```
 
-The question as text, a JSON object, or an array; optional or `null`.
+问题本身，可以是文本、JSON 对象或数组；可选，也可以为 `null`。
 
 ***
 

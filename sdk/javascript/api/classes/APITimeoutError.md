@@ -1,22 +1,22 @@
-# Class: APITimeoutError
+# 类：APITimeoutError
 
-The full response did not arrive within the timeout. A kind of `APIConnectionError`.
+超时时间内没有收到完整响应。是 `APIConnectionError` 的一种。
 
-## Extends
+## 继承
 
 * [`APIConnectionError`](/sdk/javascript/api/classes/APIConnectionError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new APITimeoutError(timeoutMs, options?): APITimeoutError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### timeoutMs
 
@@ -26,15 +26,15 @@ new APITimeoutError(timeoutMs, options?): APITimeoutError;
 
 `ErrorOptions`
 
-#### Returns
+#### 返回值
 
 `APITimeoutError`
 
-#### Overrides
+#### 覆盖
 
 [`APIConnectionError`](/sdk/javascript/api/classes/APIConnectionError).[`constructor`](/sdk/javascript/api/classes/APIConnectionError#sdk-constructor)
 
-## Properties
+## 属性
 
 <a id="sdk-timeoutms" />
 
@@ -44,4 +44,4 @@ new APITimeoutError(timeoutMs, options?): APITimeoutError;
 readonly timeoutMs: number;
 ```
 
-Configured timeout in milliseconds.
+配置的超时时间，单位毫秒。

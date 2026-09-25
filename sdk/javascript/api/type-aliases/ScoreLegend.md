@@ -1,12 +1,12 @@
-# Type Alias: ScoreLegend\<T\>
+# 类型别名：ScoreLegend\<T\>
 
 ```ts theme={null}
 type ScoreLegend<T> = { readonly [score in ScoreOf<T>]: T[score] };
 ```
 
-Rubric descriptions keyed by score.
+以分数为键的量规描述。
 
-## Type Parameters
+## 类型参数
 
 ### T
 

@@ -1,31 +1,31 @@
-# Function: choice()
+# 函数：choice()
 
 ```ts theme={null}
 function choice<T>(instructions, criteria): ChoiceQuestion<T>;
 ```
 
-Create a question that selects between named alternatives.
+创建一个在具名选项之间做选择的问题。
 
-## Type Parameters
+## 类型参数
 
 ### T
 
 `T` *extends* [`ChoiceCriteria`](/sdk/javascript/api/type-aliases/ChoiceCriteria)
 
-## Parameters
+## 参数
 
 ### instructions
 
 [`EntryType`](/sdk/javascript/api/type-aliases/EntryType)
 
-The question as text, a JSON object or array, or `null`.
+以文本、JSON 对象或数组形式给出的问题，也可以为 `null`。
 
 ### criteria
 
 `T`
 
-Labels mapped to descriptions, or `null` for undescribed labels.
+标签到描述的映射；未提供描述的标签用 `null`。
 
-## Returns
+## 返回值
 
 [`ChoiceQuestion`](/sdk/javascript/api/interfaces/ChoiceQuestion)\<`T`>

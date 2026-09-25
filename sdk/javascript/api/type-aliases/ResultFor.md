@@ -1,12 +1,12 @@
-# Type Alias: ResultFor\<T\>
+# 类型别名：ResultFor\<T\>
 
 ```ts theme={null}
 type ResultFor<T> = T extends NoulQuestion ? NoulResponse : T extends ScoreQuestion<infer S> ? ScoreResponse<S> : T extends ChoiceQuestion<infer E> ? ChoiceResponse<E> : never;
 ```
 
-The answer type for a question, preserving its criteria keys.
+问题对应的答案类型，保留其判据的键。
 
-## Type Parameters
+## 类型参数
 
 ### T
 

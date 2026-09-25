@@ -1,8 +1,8 @@
-# Interface: Logger
+# 接口：Logger
 
-Log methods accepting a message and structured values; compatible with `console`.
+接收消息与结构化值的一组日志方法；与 `console` 兼容。
 
-## Methods
+## 方法
 
 <a id="sdk-debug" />
 
@@ -12,7 +12,7 @@ Log methods accepting a message and structured values; compatible with `console`
 debug(message, ...args): void;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message
 
@@ -22,7 +22,7 @@ debug(message, ...args): void;
 
 ...`unknown`\[]
 
-#### Returns
+#### 返回值
 
 `void`
 
@@ -36,7 +36,7 @@ debug(message, ...args): void;
 error(message, ...args): void;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message
 
@@ -46,7 +46,7 @@ error(message, ...args): void;
 
 ...`unknown`\[]
 
-#### Returns
+#### 返回值
 
 `void`
 
@@ -60,7 +60,7 @@ error(message, ...args): void;
 info(message, ...args): void;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message
 
@@ -70,7 +70,7 @@ info(message, ...args): void;
 
 ...`unknown`\[]
 
-#### Returns
+#### 返回值
 
 `void`
 
@@ -84,7 +84,7 @@ info(message, ...args): void;
 warn(message, ...args): void;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message
 
@@ -94,6 +94,6 @@ warn(message, ...args): void;
 
 ...`unknown`\[]
 
-#### Returns
+#### 返回值
 
 `void`

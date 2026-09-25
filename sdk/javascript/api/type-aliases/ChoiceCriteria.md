@@ -1,12 +1,12 @@
-# Type Alias: ChoiceCriteria
+# 类型别名：ChoiceCriteria
 
 ```ts theme={null}
 type ChoiceCriteria = object;
 ```
 
-Labels mapped to descriptions, or `null` for undescribed labels.
+标签到描述的映射；未提供描述的标签用 `null`。
 
-## Index Signature
+## 索引签名
 
 ```ts theme={null}
 [label: string]: EntryType

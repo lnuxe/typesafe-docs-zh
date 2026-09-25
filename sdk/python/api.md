@@ -1,12 +1,12 @@
-# API reference
+# API 参考
 
-> Python clients for the TypeSafe AI API
+> TypeSafe AI API 的 Python 客户端
 
 <a id="api-reference" />
 
-* [Sync client](/sdk/python/api/clients/sync)
-* [Async client](/sdk/python/api/clients/async)
-* Types: [Common](/sdk/python/api/types/common) · [Questions](/sdk/python/api/types/questions) · [Responses](/sdk/python/api/types/responses)
-* [Retries](/sdk/python/api/retries)
-* [Exceptions](/sdk/python/api/exceptions)
-* [Constants](/sdk/python/api/constants)
+* [同步客户端](/sdk/python/api/clients/sync)
+* [异步客户端](/sdk/python/api/clients/async)
+* 类型：[Common](/sdk/python/api/types/common) · [Questions](/sdk/python/api/types/questions) · [Responses](/sdk/python/api/types/responses)
+* [重试](/sdk/python/api/retries)
+* [异常](/sdk/python/api/exceptions)
+* [常量](/sdk/python/api/constants)

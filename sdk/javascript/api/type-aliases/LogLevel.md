@@ -1,7 +1,7 @@
-# Type Alias: LogLevel
+# 类型别名：LogLevel
 
 ```ts theme={null}
 type LogLevel = "debug" | "info" | "warn" | "error" | "off";
 ```
 
-Log verbosity; `off` disables logging.
+日志详细程度；`off` 关闭日志。

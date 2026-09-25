@@ -1,12 +1,12 @@
-# Variable: ENV
+# 变量：ENV
 
 ```ts theme={null}
 const ENV: object;
 ```
 
-Environment variable names for client configuration. Explicit options take precedence.
+客户端配置使用的环境变量名。显式传入的选项优先于环境变量。
 
-## Type Declaration
+## 类型声明
 
 <a id="sdk-apikey" />
 
@@ -16,7 +16,7 @@ Environment variable names for client configuration. Explicit options take prece
 readonly apiKey: "TYPESAFE_API_KEY" = "TYPESAFE_API_KEY";
 ```
 
-Required API key; used when `apiKey` is omitted.
+必需的 API 密钥；未提供 `apiKey` 时使用。
 
 <a id="sdk-baseurl" />
 
@@ -26,7 +26,7 @@ Required API key; used when `apiKey` is omitted.
 readonly baseURL: "TYPESAFE_BASE_URL" = "TYPESAFE_BASE_URL";
 ```
 
-API root; defaults to `https://api.typesafe.ai`.
+API 基础 URL；默认为 `https://api.typesafe.ai`。
 
 <a id="sdk-defaultmodel" />
 
@@ -36,7 +36,7 @@ API root; defaults to `https://api.typesafe.ai`.
 readonly defaultModel: "TYPESAFE_DEFAULT_MODEL" = "TYPESAFE_DEFAULT_MODEL";
 ```
 
-Default model name; defaults to `jev-latest`.
+默认模型名；默认为 `jev-latest`。
 
 <a id="sdk-loglevel" />
 
@@ -46,4 +46,4 @@ Default model name; defaults to `jev-latest`.
 readonly logLevel: "TYPESAFE_LOG_LEVEL" = "TYPESAFE_LOG_LEVEL";
 ```
 
-Log level; defaults to `warn`.
+日志级别；默认为 `warn`。

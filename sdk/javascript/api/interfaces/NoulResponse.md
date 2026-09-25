@@ -1,8 +1,8 @@
-# Interface: NoulResponse
+# 接口：NoulResponse
 
-A yes/no answer.
+一个是/否答案。
 
-## Properties
+## 属性
 
 <a id="sdk-noul" />
 
@@ -12,7 +12,7 @@ A yes/no answer.
 readonly noul: number;
 ```
 
-Probability of a yes answer, from zero to one.
+回答「是」的概率，取值从 0 到 1。
 
 ***
 

@@ -1,16 +1,16 @@
 # JavaScript SDK
 
-JavaScript and TypeScript SDK for [TypeSafe AI](https://typesafe.ai).
+用于 [TypeSafe AI](https://typesafe.ai) 的 JavaScript 与 TypeScript SDK。
 
-## Quickstart
+## 快速开始
 
-Install the SDK (Node.js 20 or newer):
+安装 SDK（Node.js 20 或更高版本）：
 
 ```sh theme={null}
 npm install @typesafe-ai/sdk
 ```
 
-Set `TYPESAFE_API_KEY` in your environment, then create and use the client:
+在环境中设置 `TYPESAFE_API_KEY`，然后创建并使用客户端：
 
 ```ts theme={null}
 import { choice, TypeSafeClient } from "@typesafe-ai/sdk";
@@ -30,9 +30,9 @@ const response = await client.systemOne({
 console.log(response.answers.category.choice);
 ```
 
-Answer types are inferred from your questions. The package includes ESM, CommonJS, and TypeScript declarations.
+答案类型会根据你的问题自动推断。包内提供 ESM、CommonJS 和 TypeScript 声明文件。
 
-## Documentation
+## 文档
 
-Learn what TypeSafe can do in the [TypeSafe docs](https://docs.typesafe.ai/).
-See the SDK's [client](https://github.com/typesafe-ai/typesafe-sdk-js/blob/v0.6.0/src/client.ts) and [types](https://github.com/typesafe-ai/typesafe-sdk-js/blob/v0.6.0/src/types.ts) for API options and defaults.
+想了解 TypeSafe 能做什么，见 [TypeSafe 文档](https://docs.typesafe.ai/)。
+API 选项与默认值见 SDK 的 [client](https://github.com/typesafe-ai/typesafe-sdk-js/blob/v0.6.0/src/client.ts) 与 [types](https://github.com/typesafe-ai/typesafe-sdk-js/blob/v0.6.0/src/types.ts)。

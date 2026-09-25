@@ -1,8 +1,8 @@
-# Interface: RequestOptions
+# 接口：RequestOptions
 
-Per-call options that override client settings.
+用于覆盖客户端设置的逐次调用选项。
 
-## Properties
+## 属性
 
 <a id="sdk-headers" />
 
@@ -12,7 +12,7 @@ Per-call options that override client settings.
 optional headers?: Record<string, string>;
 ```
 
-Additional headers, merged over `defaultHeaders`.
+额外请求头，合并到 `defaultHeaders` 之上。
 
 ***
 
@@ -24,7 +24,7 @@ Additional headers, merged over `defaultHeaders`.
 optional retry?: Partial<RetryPolicy>;
 ```
 
-Retry overrides for this call; omitted fields inherit client settings.
+本次调用的重试覆盖项；未提供的字段沿用客户端设置。
 
 ***
 
@@ -36,7 +36,7 @@ Retry overrides for this call; omitted fields inherit client settings.
 optional signal?: AbortSignal;
 ```
 
-Cancellation signal for the request and pending retries.
+用于取消请求及其待处理重试的信号。
 
 ***
 
@@ -48,4 +48,4 @@ Cancellation signal for the request and pending retries.
 optional timeout?: number;
 ```
 
-Timeout per attempt in milliseconds; there is no total retry budget.
+每次尝试的超时时间，单位为毫秒；没有总的重试预算。

@@ -1,8 +1,8 @@
-# Interface: Usage
+# 接口：Usage
 
-Token usage for a request.
+一次请求的 token 用量。
 
-## Properties
+## 属性
 
 <a id="sdk-input_tokens" />
 
@@ -12,7 +12,7 @@ Token usage for a request.
 readonly input_tokens: number;
 ```
 
-Number of input tokens used.
+消耗的输入 token 数。
 
 ***
 
@@ -24,4 +24,4 @@ Number of input tokens used.
 readonly output_tokens: number;
 ```
 
-Number of output tokens used.
+消耗的输出 token 数。

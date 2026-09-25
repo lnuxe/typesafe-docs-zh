@@ -1,22 +1,22 @@
-# Class: APIUserAbortError
+# 类：APIUserAbortError
 
-The caller cancelled the request through an `AbortSignal`.
+调用方通过 `AbortSignal` 取消了请求。
 
-## Extends
+## 继承
 
 * [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError)
 
-## Constructors
+## 构造函数
 
 <a id="sdk-constructor" />
 
-### Constructor
+### 构造函数
 
 ```ts theme={null}
 new APIUserAbortError(message?, options?): APIUserAbortError;
 ```
 
-#### Parameters
+#### 参数
 
 ##### message?
 
@@ -26,10 +26,10 @@ new APIUserAbortError(message?, options?): APIUserAbortError;
 
 `ErrorOptions`
 
-#### Returns
+#### 返回值
 
 `APIUserAbortError`
 
-#### Overrides
+#### 覆盖
 
 [`TypeSafeError`](/sdk/javascript/api/classes/TypeSafeError).[`constructor`](/sdk/javascript/api/classes/TypeSafeError#sdk-constructor)

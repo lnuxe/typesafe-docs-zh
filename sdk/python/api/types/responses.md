@@ -1,6 +1,6 @@
-# Answers and responses
+# 答案与响应
 
-> Read answers, confidence scores, token usage, and available models returned by the TypeSafe API.
+> 阅读 TypeSafe API 返回的答案、置信度、token 用量与可用模型。
 
 export function SdkSignature({children}) {
   async function copy(event) {
@@ -32,7 +32,7 @@ export function SdkSignature({children}) {
 <a id="answers-and-responses" />
 
 <h2 id="response">
-  Response
+  响应
 </h2>
 
 <h2 id="typesafe_sdk.SystemOneResponse">
@@ -41,16 +41,16 @@ export function SdkSignature({children}) {
 
 `pydantic-model`
 
-Bases: `Response`
+基类：`Response`
 
-Answers grouped by question type with model and usage metadata.
+按问题类型分组的答案，附带模型与用量元数据。
 
-See [System One](https://docs.typesafe.ai/concepts/system-one) for details.
+详见 [System One](https://docs.typesafe.ai/concepts/system-one)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-1">
+  <Accordion title="详细信息" id="sdk-disclosure-1">
     ```json theme={null}
     {
       "$defs": {
@@ -266,13 +266,13 @@ See [System One](https://docs.typesafe.ai/concepts/system-one) for details.
   </Accordion>
 </Note>
 
-Config:
+配置：
 
 * `extra`: `ignore`
 * `frozen`: `True`
 * `strict`: `True`
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.SystemOneResponse.model">model</a></code> (<code><a href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>)
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.SystemOneResponse.usage">usage</a></code> (<code><a href="/sdk/python/api/types/responses#typesafe_sdk.Usage">Usage</a></code>)
@@ -304,7 +304,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-The `x-typesafe-request-id` response header.
+`x-typesafe-request-id` 响应头。
 
 <h3 id="typesafe_sdk.SystemOneResponse.raw_http_response">
   raw\_http\_response
@@ -316,7 +316,7 @@ The `x-typesafe-request-id` response header.
 raw_http_response: httpx2.Response
 ```
 
-The underlying `httpx2.Response`, exposing status, headers, and body.
+底层的 `httpx2.Response`，可读取状态码、响应头与响应体。
 
 <h3 id="typesafe_sdk.SystemOneResponse.model_config">
   model\_config
@@ -356,7 +356,7 @@ model_config = ConfigDict(
   {"\n"}
 </SdkSignature>
 
-The model used to answer the request.
+用于回答该请求的模型。
 
 <h3 id="typesafe_sdk.SystemOneResponse.usage">
   usage
@@ -384,7 +384,7 @@ The model used to answer the request.
   {"\n"}
 </SdkSignature>
 
-Token usage for the request.
+该请求的 token 用量。
 
 <h3 id="typesafe_sdk.SystemOneResponse.answers">
   answers
@@ -438,7 +438,7 @@ Token usage for the request.
   {"\n"}
 </SdkSignature>
 
-All answer objects keyed by question name.
+按问题名索引的全部答案对象。
 
 <h3 id="typesafe_sdk.SystemOneResponse.nouls">
   nouls
@@ -492,7 +492,7 @@ All answer objects keyed by question name.
   {"\n"}
 </SdkSignature>
 
-Yes/no answers keyed by question name.
+按问题名索引的是/否答案。
 
 <h3 id="typesafe_sdk.SystemOneResponse.choices">
   choices
@@ -546,7 +546,7 @@ Yes/no answers keyed by question name.
   {"\n"}
 </SdkSignature>
 
-Choice answers keyed by question name.
+按问题名索引的 Choice 答案。
 
 <h3 id="typesafe_sdk.SystemOneResponse.scores">
   scores
@@ -600,7 +600,7 @@ Choice answers keyed by question name.
   {"\n"}
 </SdkSignature>
 
-Score answers keyed by question name.
+按问题名索引的 Score 答案。
 
 <h2 id="typesafe_sdk.Usage">
   typesafe\_sdk.Usage
@@ -608,14 +608,14 @@ Score answers keyed by question name.
 
 `pydantic-model`
 
-Bases: `wire.Usage`
+基类：`wire.Usage`
 
-Token counts for a request, when reported by the API.
+一次请求的 token 计数，在 API 报告时给出。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-2">
+  <Accordion title="详细信息" id="sdk-disclosure-2">
     ```json theme={null}
     {
       "description": "Token counts for a request, when reported by the API.",
@@ -652,13 +652,13 @@ Token counts for a request, when reported by the API.
   </Accordion>
 </Note>
 
-Config:
+配置：
 
 * `extra`: `ignore`
 * `frozen`: `True`
 * `strict`: `True`
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.Usage.input_tokens">input\_tokens</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#int">int</a> | None</code>)
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.Usage.output_tokens">output\_tokens</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#int">int</a> | None</code>)
@@ -725,7 +725,7 @@ model_config = ConfigDict(
   {"\n"}
 </SdkSignature>
 
-Number of input tokens used, or `None` when the API did not report it.
+使用的输入 token 数，API 未报告时为 `None`。
 
 <h3 id="typesafe_sdk.Usage.output_tokens">
   output\_tokens
@@ -777,10 +777,10 @@ Number of input tokens used, or `None` when the API did not report it.
   {"\n"}
 </SdkSignature>
 
-Number of output tokens used, or `None` when the API did not report it.
+使用的输出 token 数，API 未报告时为 `None`。
 
 <h2 id="answers">
-  Answers
+  答案
 </h2>
 
 <h2 id="typesafe_sdk.NoulAnswer">
@@ -789,16 +789,16 @@ Number of output tokens used, or `None` when the API did not report it.
 
 `pydantic-model`
 
-Bases: `wire.NoulAnswer`
+基类：`wire.NoulAnswer`
 
-A yes/no answer.
+一个是/否答案。
 
-See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
+详见 [noul 原语](https://docs.typesafe.ai/primitives/noul)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-3">
+  <Accordion title="详细信息" id="sdk-disclosure-3">
     ```json theme={null}
     {
       "description": "A yes/no answer.\n\nSee the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.",
@@ -828,13 +828,13 @@ See the [noul primitive](https://docs.typesafe.ai/primitives/noul) for details.
   </Accordion>
 </Note>
 
-Config:
+配置：
 
 * `extra`: `ignore`
 * `frozen`: `True`
 * `strict`: `True`
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.NoulAnswer.noul">noul</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#float">float</a></code>)
 * `type` (<code><a href="https://docs.python.org/3/library/typing.html#typing.Literal">Literal</a>\['noul']</code>)
@@ -865,7 +865,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-Probability of a yes answer or a true statement, from 0 to 1. Values near 1 favor yes or true, values near 0 favor no or false, and values near 0.5 indicate uncertainty.
+答案为「是」或陈述为真的概率，取值 0 到 1。接近 1 时偏向「是」或为真，接近 0 时偏向「否」或为假，接近 0.5 表示不确定。
 
 <h3 id="typesafe_sdk.NoulAnswer.model_config">
   model\_config
@@ -885,16 +885,16 @@ model_config = ConfigDict(
 
 `pydantic-model`
 
-Bases: `wire.ChoiceAnswer`
+基类：`wire.ChoiceAnswer`
 
-A selected label and its probabilities.
+被选中的标签及其概率分布。
 
-See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for details.
+详见 [choice 原语](https://docs.typesafe.ai/primitives/choice)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-4">
+  <Accordion title="详细信息" id="sdk-disclosure-4">
     ```json theme={null}
     {
       "description": "A selected label and its probabilities.\n\nSee the [choice primitive](https://docs.typesafe.ai/primitives/choice) for details.",
@@ -949,13 +949,13 @@ See the [choice primitive](https://docs.typesafe.ai/primitives/choice) for detai
   </Accordion>
 </Note>
 
-Config:
+配置：
 
 * `extra`: `ignore`
 * `frozen`: `True`
 * `strict`: `True`
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ChoiceAnswer.choice">choice</a></code> (<code><a href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>)
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ChoiceAnswer.confidence">confidence</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#float">float</a></code>)
@@ -988,7 +988,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-The name of the choice with the highest probability among the question's criteria.
+该问题判据中概率最高的选项名称。
 
 <h3 id="typesafe_sdk.ChoiceAnswer.confidence">
   confidence
@@ -1016,7 +1016,7 @@ The name of the choice with the highest probability among the question's criteri
   {"\n"}
 </SdkSignature>
 
-Confidence in the selected choice, from 0 to 1. Higher values indicate greater certainty; use lower values to flag uncertain selections for review.
+对所选选项的置信度，取值 0 到 1。值越高表示越确定；可用较低的值把不确定的选择标记出来供复核。
 
 <h3 id="typesafe_sdk.ChoiceAnswer.probabilities">
   probabilities
@@ -1070,7 +1070,7 @@ Confidence in the selected choice, from 0 to 1. Higher values indicate greater c
   {"\n"}
 </SdkSignature>
 
-Probability of each choice in criteria, keyed by choice name, from 0 to 1. Shows how likely the alternatives are; values sum to approximately 1.
+判据中每个选项的概率，按选项名索引，取值 0 到 1。说明各选项的可能性大小；各值之和约为 1。
 
 <h3 id="typesafe_sdk.ChoiceAnswer.model_config">
   model\_config
@@ -1090,16 +1090,16 @@ model_config = ConfigDict(
 
 `pydantic-model`
 
-Bases: `wire.ScoreAnswer`
+基类：`wire.ScoreAnswer`
 
-An expected score with its rubric and probabilities.
+带量规与概率分布的期望评分。
 
-See the [score primitive](https://docs.typesafe.ai/primitives/score) for details.
+详见 [score 原语](https://docs.typesafe.ai/primitives/score)。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-5">
+  <Accordion title="详细信息" id="sdk-disclosure-5">
     ```json theme={null}
     {
       "description": "An expected score with its rubric and probabilities.\n\nSee the [score primitive](https://docs.typesafe.ai/primitives/score) for details.",
@@ -1166,13 +1166,13 @@ See the [score primitive](https://docs.typesafe.ai/primitives/score) for details
   </Accordion>
 </Note>
 
-Config:
+配置：
 
 * `extra`: `ignore`
 * `frozen`: `True`
 * `strict`: `True`
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ScoreAnswer.score">score</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#float">float</a></code>)
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ScoreAnswer.confidence">confidence</a></code> (<code><a href="https://docs.python.org/3/builtins/functions.html#float">float</a></code>)
@@ -1206,7 +1206,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-Expected score: the probability-weighted average of the rubric levels. May fall between integer levels.
+期望评分：量规各档位的概率加权平均值。可能落在整数档位之间。
 
 <h3 id="typesafe_sdk.ScoreAnswer.confidence">
   confidence
@@ -1234,7 +1234,7 @@ Expected score: the probability-weighted average of the rubric levels. May fall 
   {"\n"}
 </SdkSignature>
 
-Confidence in the score, from 0 to 1. Higher values indicate greater certainty; use lower values to flag uncertain ratings for review.
+对该评分的置信度，取值 0 到 1。值越高表示越确定；可用较低的值把不确定的评分标记出来供复核。
 
 <h3 id="typesafe_sdk.ScoreAnswer.model_config">
   model\_config
@@ -1258,7 +1258,7 @@ model_config = ConfigDict(
   <span className="n">{"legend"}</span><span className="p">{":"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/builtins/stdtypes.html#dict">{"dict"}</a></span><span className="p">{"["}</span>{"\n"}{"    "}<span className="n"><a href="https://docs.python.org/3/builtins/functions.html#int">{"int"}</a></span><span className="p">{","}</span>{" "}<span className="n"><a href="https://docs.python.org/3/builtins/stdtypes.html#str">{"str"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/builtins/stdtypes.html#dict">{"dict"}</a></span><span className="p">{"["}</span><span className="n"><a href="https://docs.python.org/3/builtins/stdtypes.html#str">{"str"}</a></span><span className="p">{","}</span>{" "}<span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.Any">{"Any"}</a></span><span className="p">{"]"}</span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/builtins/stdtypes.html#list">{"list"}</a></span><span className="p">{"["}</span><span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.Any">{"Any"}</a></span><span className="p">{"]"}</span>{"\n"}<span className="p">{"]"}</span>{"\n"}
 </SdkSignature>
 
-Rubric descriptions keyed by integer score.
+按整数评分索引的量规描述。
 
 <h3 id="typesafe_sdk.ScoreAnswer.probabilities">
   probabilities
@@ -1312,7 +1312,7 @@ Rubric descriptions keyed by integer score.
   {"\n"}
 </SdkSignature>
 
-Probabilities keyed by integer score.
+按整数评分索引的概率分布。
 
 <h2 id="typesafe_sdk.Answer">
   typesafe\_sdk.Answer
@@ -1324,10 +1324,10 @@ Probabilities keyed by integer score.
   <span className="n">{"Answer"}</span><span className="p">{":"}</span>{" "}<span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.TypeAlias">{"TypeAlias"}</a></span>{" "}<span className="o">{"="}</span>{" "}<span className="n"><a href="https://docs.python.org/3/library/typing.html#typing.Annotated">{"Annotated"}</a></span><span className="p">{"["}</span>{"\n"}{"    "}<span className="n"><a href="/sdk/python/api/types/responses#typesafe_sdk.NoulAnswer">{"NoulAnswer"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/responses#typesafe_sdk.ChoiceAnswer">{"ChoiceAnswer"}</a></span>{" "}<span className="o">{"|"}</span>{" "}<span className="n"><a href="/sdk/python/api/types/responses#typesafe_sdk.ScoreAnswer">{"ScoreAnswer"}</a></span><span className="p">{","}</span>{"\n"}{"    "}<span className="n">{"Field"}</span><span className="p">{"("}</span><span className="n">{"discriminator"}</span><span className="o">{"="}</span><span className="s2">{"\"type\""}</span><span className="p">{"),"}</span>{"\n"}<span className="p">{"]"}</span>{"\n"}
 </SdkSignature>
 
-An answer to a single question, identified by its `type`.
+对单个问题的答案，由其 `type` 标识。
 
 <h2 id="available-models">
-  Available models
+  可用模型
 </h2>
 
 <h2 id="typesafe_sdk.ListModelsResponse">
@@ -1336,14 +1336,14 @@ An answer to a single question, identified by its `type`.
 
 `pydantic-model`
 
-Bases: `Response`
+基类：`Response`
 
-The models available to the account.
+该账户可用的模型。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-6">
+  <Accordion title="详细信息" id="sdk-disclosure-6">
     ```json theme={null}
     {
       "$defs": {
@@ -1392,7 +1392,7 @@ The models available to the account.
   </Accordion>
 </Note>
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ListModelsResponse.models">models</a></code> (<code><a href="https://docs.python.org/3/builtins/stdtypes.html#tuple">tuple</a>\[<a href="/sdk/python/api/types/responses#typesafe_sdk.ModelMetadata">ModelMetadata</a>, ...]</code>)
 
@@ -1422,7 +1422,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-The `x-typesafe-request-id` response header.
+`x-typesafe-request-id` 响应头。
 
 <h3 id="typesafe_sdk.ListModelsResponse.raw_http_response">
   raw\_http\_response
@@ -1434,7 +1434,7 @@ The `x-typesafe-request-id` response header.
 raw_http_response: httpx2.Response
 ```
 
-The underlying `httpx2.Response`, exposing status, headers, and body.
+底层的 `httpx2.Response`，可读取状态码、响应头与响应体。
 
 <h3 id="typesafe_sdk.ListModelsResponse.model_config">
   model\_config
@@ -1498,7 +1498,7 @@ model_config = ConfigDict(
   {"\n"}
 </SdkSignature>
 
-The available models.
+可用的模型。
 
 <h2 id="typesafe_sdk.ModelMetadata">
   typesafe\_sdk.ModelMetadata
@@ -1506,14 +1506,14 @@ The available models.
 
 `pydantic-model`
 
-Bases: `Schema`
+基类：`Schema`
 
-Metadata describing a single available model.
+描述单个可用模型的元数据。
 
 <Note>
-  **Show JSON schema:**
+  **显示 JSON schema：**
 
-  <Accordion title="Details" id="sdk-disclosure-7">
+  <Accordion title="详细信息" id="sdk-disclosure-7">
     ```json theme={null}
     {
       "description": "Metadata describing a single available model.",
@@ -1543,7 +1543,7 @@ Metadata describing a single available model.
   </Accordion>
 </Note>
 
-Fields:
+字段：
 
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ModelMetadata.name">name</a></code> (<code><a href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>)
 * <code><a href="/sdk/python/api/types/responses#typesafe_sdk.ModelMetadata.description">description</a></code> (<code><a href="https://docs.python.org/3/builtins/stdtypes.html#str">str</a></code>)
@@ -1575,7 +1575,7 @@ Fields:
   {"\n"}
 </SdkSignature>
 
-Model name or alias accepted by a request's model field.
+请求的 model 字段所接受的模型名或别名。
 
 <h3 id="typesafe_sdk.ModelMetadata.description">
   description
@@ -1603,7 +1603,7 @@ Model name or alias accepted by a request's model field.
   {"\n"}
 </SdkSignature>
 
-Human-readable description of the model and its capabilities.
+对模型及其能力的可读描述。
 
 <h3 id="typesafe_sdk.ModelMetadata.release_date">
   release\_date
@@ -1631,4 +1631,4 @@ Human-readable description of the model and its capabilities.
   {"\n"}
 </SdkSignature>
 
-Model release date, formatted as YYYY-MM-DD.
+模型发布日期，格式为 YYYY-MM-DD。

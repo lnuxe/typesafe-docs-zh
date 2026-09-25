@@ -1,20 +1,20 @@
-# Interface: SystemOneRequest\<Q\>
+# 接口：SystemOneRequest\<Q\>
 
-State and named questions for `systemOne`.
+供 `systemOne` 使用的状态与具名问题。
 
-Additional properties on a request variable are forwarded, including `null` values.
+请求变量上的额外属性会被转发，`null` 值也不例外。
 
-## Extended by
+## 被继承
 
 * [`SystemOneRequestPayload`](/sdk/javascript/api/interfaces/SystemOneRequestPayload)
 
-## Type Parameters
+## 类型参数
 
 ### Q
 
 `Q` *extends* [`Questions`](/sdk/javascript/api/interfaces/Questions) = [`Questions`](/sdk/javascript/api/interfaces/Questions)
 
-## Properties
+## 属性
 
 <a id="sdk-model" />
 
@@ -24,7 +24,7 @@ Additional properties on a request variable are forwarded, including `null` valu
 optional model?: string;
 ```
 
-Model override; omitted values inherit `defaultModel`.
+模型覆盖项；未提供的值沿用 `defaultModel`。
 
 ***
 
@@ -36,7 +36,7 @@ Model override; omitted values inherit `defaultModel`.
 questions: Q;
 ```
 
-Nonempty questions keyed by the names used to identify their answers.
+非空的问题集合，以用于标识其答案的名称为键。
 
 ***
 
@@ -48,4 +48,4 @@ Nonempty questions keyed by the names used to identify their answers.
 state: EntryType;
 ```
 
-Text, a JSON object or array, or `null` to evaluate.
+待评估的文本、JSON 对象或数组，也可以为 `null`。

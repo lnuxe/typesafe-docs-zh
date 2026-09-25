@@ -1,6 +1,6 @@
-# Constants
+# 常量
 
-> Default settings and environment variable names for the TypeSafe Python SDK.
+> TypeSafe Python SDK 的默认设置与环境变量名。
 
 <a id="constants" />
 
@@ -8,7 +8,7 @@
   typesafe\_sdk.constants
 </h2>
 
-Public environment-variable names and client defaults.
+公开的环境变量名与客户端默认值。
 
 <h3 id="typesafe_sdk.constants.API_KEY_ENV">
   API\_KEY\_ENV
@@ -20,7 +20,7 @@ Public environment-variable names and client defaults.
 API_KEY_ENV = 'TYPESAFE_API_KEY'
 ```
 
-Environment variable for the API key.
+API 密钥的环境变量。
 
 <h3 id="typesafe_sdk.constants.BASE_URL_ENV">
   BASE\_URL\_ENV
@@ -32,7 +32,7 @@ Environment variable for the API key.
 BASE_URL_ENV = 'TYPESAFE_BASE_URL'
 ```
 
-Environment variable for the API base URL.
+API 基础 URL 的环境变量。
 
 <h3 id="typesafe_sdk.constants.DEFAULT_MODEL_ENV">
   DEFAULT\_MODEL\_ENV
@@ -44,7 +44,7 @@ Environment variable for the API base URL.
 DEFAULT_MODEL_ENV = 'TYPESAFE_DEFAULT_MODEL'
 ```
 
-Environment variable for the default model.
+默认模型的环境变量。
 
 <h3 id="typesafe_sdk.constants.LOG_LEVEL_ENV">
   LOG\_LEVEL\_ENV
@@ -56,7 +56,7 @@ Environment variable for the default model.
 LOG_LEVEL_ENV = 'TYPESAFE_LOG_LEVEL'
 ```
 
-Environment variable for the logging level.
+日志级别的环境变量。
 
 <h3 id="typesafe_sdk.constants.DEFAULT_BASE_URL">
   DEFAULT\_BASE\_URL
@@ -68,7 +68,7 @@ Environment variable for the logging level.
 DEFAULT_BASE_URL = 'https://api.typesafe.ai'
 ```
 
-Default API base URL.
+默认的 API 基础 URL。
 
 <h3 id="typesafe_sdk.constants.DEFAULT_MODEL">
   DEFAULT\_MODEL
@@ -80,7 +80,7 @@ Default API base URL.
 DEFAULT_MODEL = 'jev-latest'
 ```
 
-Default model name.
+默认模型名称。
 
 <h3 id="typesafe_sdk.constants.DEFAULT_TIMEOUT">
   DEFAULT\_TIMEOUT
@@ -92,4 +92,4 @@ Default model name.
 DEFAULT_TIMEOUT = 10.0
 ```
 
-Default timeout in seconds for each HTTP operation.
+每个 HTTP 操作的默认超时秒数。

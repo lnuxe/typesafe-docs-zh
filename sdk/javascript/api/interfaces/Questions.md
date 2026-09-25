@@ -1,8 +1,8 @@
-# Interface: Questions
+# 接口：Questions
 
-Questions keyed by the names used to identify their answers.
+以用于标识其答案的名称为键的一组问题。
 
-## Indexable
+## 索引签名
 
 ```ts theme={null}
 [name: string]: Question
