@@ -2227,6 +2227,12 @@ function pageHtml(page, bodyHtml, toc, opts, site) {
   const mermaidAttr = page.hasMermaid
     ? ' data-mermaid-src="' + esc(rel + 'assets/mermaid.min.js') + '"'
     : '';
+  // mermaid 压缩后仍有 ~1MB，而且是 runtime 动态插 <script> 才发起请求。
+  // 在含图表的页面上用 <link rel="preload"> 让浏览器**解析阶段**就开始下载，
+  // 和 CSS/JS 并行，能省掉 app.js 执行完才开始下载的那段空窗。
+  const mermaidPreload = page.hasMermaid
+    ? '<link rel="preload" as="script" href="' + esc(rel + 'assets/mermaid.min.js') + '">\n'
+    : '';
   return '<!doctype html>\n<html lang="zh-CN" data-theme="light">\n<head>\n' +
     '<meta charset="utf-8">\n' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
@@ -2236,6 +2242,7 @@ function pageHtml(page, bodyHtml, toc, opts, site) {
     '<link rel="canonical" href="' + esc(opts.base + page.path + '/') + '">\n' +
     headScript() + '\n' +
     '<link rel="stylesheet" href="' + esc(rel) + 'assets/style.css">\n' +
+    mermaidPreload +
     '</head>\n<body data-base="' + esc(opts.base) + '" data-search-index="' + esc(rel + 'search-index.json') + '"' + mermaidAttr + '>\n' +
     '<a class="skip-link" href="#main">跳到主要内容</a>\n' +
     topbarHtml(site, ctx, tab) + '\n' +
