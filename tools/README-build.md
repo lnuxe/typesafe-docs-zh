@@ -81,7 +81,7 @@ python tools/verify_site.py
 原站是 Mintlify 托管的，它会额外输出三样东西；我们的自托管构建也必须自己生成，否则不算复刻：
 
 ```bash
-python tools/gen_llms.py --dist dist --base /typesafe/ --url http://<服务器>/typesafe
+node tools/gen_llms.mjs --dist dist --base /typesafe/ --url http://<服务器>/typesafe
 ```
 
 | 产物 | 说明 | 本站实测大小 |
@@ -90,7 +90,11 @@ python tools/gen_llms.py --dist dist --base /typesafe/ --url http://<服务器>/
 | `dist/llms-full.txt` | 全站正文拼接成单个纯文本文件 | 1.15 MB |
 | `dist/<path>.md` | 每个页面额外的原始 Markdown 副本（`llms.txt` 链的就是它） | 111 个 |
 
+构建流水线里它排在 `build_site.mjs` **之后**：先出 HTML，再补 llms 产物。
+
 `--url` 用来拼 `llms.txt` 里的绝对链接；不给就退化成带 `--base` 前缀的根相对路径。
+
+> 写成 Node 而不是 Python，是因为**目标服务器上只装了 Node、没有 Python**（第一次部署时 `python` 直接报 `CommandNotFoundException`）。
 
 > **IIS 注意**：IIS 默认不识别 `.md`，不加 MIME 映射会直接 404.3。服务器上已经加过：
 > ```powershell
