@@ -48,7 +48,8 @@ const ICONS = {
   "badge-check": "<path d=\"M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z\" /><path d=\"m9 12 2 2 4-4\" />",
   "binary": "<rect x=\"14\" y=\"14\" width=\"4\" height=\"6\" rx=\"2\" /><rect x=\"6\" y=\"4\" width=\"4\" height=\"6\" rx=\"2\" /><path d=\"M6 20h4\" /><path d=\"M14 10h4\" /><path d=\"M6 14h2v6\" /><path d=\"M14 4h2v6\" />",
   "blocks": "<rect width=\"7\" height=\"7\" x=\"14\" y=\"3\" rx=\"1\" /><path d=\"M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3\" />",
-  "book-open": "<path d=\"M12 7v14\" /><path d=\"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z\" />",
+  "book-open": "<path d=\"M12 5v16\" /><path d=\"M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z\" />",
+  "chef-hat": "<path d=\"M17 21a1 1 0 0 0 1-1v-5.35c0-.457.316-.844.727-1.041a4 4 0 0 0-2.134-7.589 5 5 0 0 0-9.186 0 4 4 0 0 0-2.134 7.588c.411.198.727.585.727 1.041V20a1 1 0 0 0 1 1Z\" /><path d=\"M6 17h12\" />",
   "braces": "<path d=\"M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1\" /><path d=\"M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1\" />",
   "brain-circuit": "<path d=\"M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z\" /><path d=\"M9 13a4.5 4.5 0 0 0 3-4\" /><path d=\"M6.003 5.125A3 3 0 0 0 6.401 6.5\" /><path d=\"M3.477 10.896a4 4 0 0 1 .585-.396\" /><path d=\"M6 18a4 4 0 0 1-1.967-.516\" /><path d=\"M12 13h4\" /><path d=\"M12 18h6a2 2 0 0 1 2 2v1\" /><path d=\"M12 8h8\" /><path d=\"M16 8V5a2 2 0 0 1 2-2\" /><circle cx=\"16\" cy=\"13\" r=\".5\" /><circle cx=\"18\" cy=\"3\" r=\".5\" /><circle cx=\"20\" cy=\"21\" r=\".5\" /><circle cx=\"20\" cy=\"8\" r=\".5\" />",
   "chart-no-axes-combined": "<path d=\"M12 16v5\" /><path d=\"M16 14v7\" /><path d=\"M20 10v11\" /><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\" /><path d=\"M4 18v3\" /><path d=\"M8 14v7\" />",
@@ -59,7 +60,7 @@ const ICONS = {
   "chevron-right": "<path d=\"m9 18 6-6-6-6\" />",
   "circle-check": "<circle cx=\"12\" cy=\"12\" r=\"10\" /><path d=\"m9 12 2 2 4-4\" />",
   "clipboard-check": "<rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\" ry=\"1\" /><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\" /><path d=\"m9 14 2 2 4-4\" />",
-  "code": "<polyline points=\"16 18 22 12 16 6\" /><polyline points=\"8 6 2 12 8 18\" />",
+  "code": "<path d=\"m16 18 6-6-6-6\" /><path d=\"m8 6-6 6 6 6\" />",
   "copy": "<rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\" /><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\" />",
   "database-zap": "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\" /><path d=\"M3 5V19A9 3 0 0 0 15 21.84\" /><path d=\"M21 5V8\" /><path d=\"M21 12L18 17H22L19 22\" /><path d=\"M3 12A9 3 0 0 0 14.59 14.87\" />",
   "external-link": "<path d=\"M15 3h6v6\" /><path d=\"M10 14 21 3\" /><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\" />",
@@ -77,7 +78,8 @@ const ICONS = {
   "megaphone": "<path d=\"m3 11 18-5v12L3 14v-3z\" /><path d=\"M11.6 16.8a3 3 0 1 1-5.8-1.6\" />",
   "menu": "<line x1=\"4\" x2=\"20\" y1=\"12\" y2=\"12\" /><line x1=\"4\" x2=\"20\" y1=\"6\" y2=\"6\" /><line x1=\"4\" x2=\"20\" y1=\"18\" y2=\"18\" />",
   "messages-square": "<path d=\"M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z\" /><path d=\"M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1\" />",
-  "moon": "<path d=\"M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z\" />",
+  "monitor": "<rect width=\"20\" height=\"14\" x=\"2\" y=\"3\" rx=\"2\" /><line x1=\"8\" x2=\"16\" y1=\"21\" y2=\"21\" /><line x1=\"12\" x2=\"12\" y1=\"17\" y2=\"21\" />",
+  "moon": "<path d=\"M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401\" />",
   "network": "<rect x=\"16\" y=\"16\" width=\"6\" height=\"6\" rx=\"1\" /><rect x=\"2\" y=\"16\" width=\"6\" height=\"6\" rx=\"1\" /><rect x=\"9\" y=\"2\" width=\"6\" height=\"6\" rx=\"1\" /><path d=\"M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3\" /><path d=\"M12 12V8\" />",
   "panel-left": "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\" /><path d=\"M9 3v18\" />",
   "pen-tool": "<path d=\"M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z\" /><path d=\"m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18\" /><path d=\"m2.3 2.3 7.286 7.286\" /><circle cx=\"11\" cy=\"11\" r=\"2\" />",
@@ -100,10 +102,17 @@ const ICONS = {
 
 const FALLBACK_ICON = 'info';
 
-function icon(name, cls = 'ic') {
+/**
+ * 内联一个 lucide 图标。
+ * @param {string} name  ICONS 里的图标名
+ * @param {string} cls   class（.ic 是基础类，.ic-sm=16px / .ic-lg=18px 控制尺寸）
+ * @param {number} [stroke] 描边宽度。默认 1.75；原站顶栏 tab 图标是 CSS mask 加载的
+ *                          lucide 原文件（stroke-width=2），要那些位置传 2 才能对齐。
+ */
+function icon(name, cls = 'ic', stroke = 1.75) {
   const body = ICONS[name] || ICONS[FALLBACK_ICON] || '';
   return '<svg class="' + cls + '" viewBox="0 0 24 24" width="18" height="18" fill="none" ' +
-    'stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" ' +
+    'stroke="currentColor" stroke-width="' + stroke + '" stroke-linecap="round" stroke-linejoin="round" ' +
     'aria-hidden="true" focusable="false">' + body + '</svg>';
 }
 
@@ -1479,6 +1488,14 @@ html[data-theme="light"] {
   --shadow: 0 1px 2px rgba(0, 0, 0, .05);
   --shadow-pop: 0 10px 38px rgba(15, 12, 15, .16), 0 2px 8px rgba(15, 12, 15, .08);
   --overlay: rgba(24, 20, 24, .32);
+  /* 主题偏好菜单（实测原站 theme-preference-menu-content） */
+  --menu-bg: #FFFFFF;                 /* bg-white */
+  --menu-bd: var(--gray-200);         /* border-gray-200 */
+  --menu-fg: rgba(17, 12, 15, .7);    /* text-gray-950/70 */
+  --menu-item-fg: var(--gray-800);    /* text-gray-800 */
+  --menu-item-fg-hover: rgba(17, 12, 15, .75);
+  --menu-item-hover: rgba(13, 10, 15, .03);
+  --menu-item-hi: rgba(13, 10, 15, .05);
 }
 html[data-theme="dark"] {
   --bg: var(--background-dark);
@@ -1522,6 +1539,13 @@ html[data-theme="dark"] {
   --shadow: 0 1px 2px rgba(0, 0, 0, .05);
   --shadow-pop: 0 16px 48px rgba(0, 0, 0, .6), 0 2px 8px rgba(0, 0, 0, .5);
   --overlay: rgba(6, 4, 7, .66);
+  --menu-bg: var(--gray-950);            /* dark:bg-gray-950 = #110C0F */
+  --menu-bd: rgba(255, 255, 255, .1);    /* dark:border-white/10 */
+  --menu-fg: rgba(255, 255, 255, .7);    /* dark:text-white/70 */
+  --menu-item-fg: var(--gray-300);       /* dark:text-gray-300 */
+  --menu-item-fg-hover: rgba(255, 255, 255, .75);
+  --menu-item-hover: rgba(255, 255, 255, .03);
+  --menu-item-hi: rgba(255, 255, 255, .05);
 }
 
 /* --- 基础 ----------------------------------------------------------- */
@@ -1621,11 +1645,45 @@ html[data-theme="dark"] .search-btn:hover { background: var(--gray-800); border-
 }
 .icon-btn:hover { color: var(--fg); }
 html[data-theme="dark"] .icon-btn:hover { color: var(--gray-100); }
+/* 主题偏好菜单（三态）：触发按钮 32×32，菜单 min-w 128px / p-1 / rounded-2xl
+   实测原站 #theme-preference-menu-trigger 32×32、#theme-preference-menu-content 128×118（3×36 + 8 + 2 边框） */
+.theme-menu-wrap { position: relative; display: inline-flex; }
+/* 触发按钮图标随偏好显隐：三个都在 DOM 里，只显示当前偏好对应的那个（同原站机制） */
+.theme-trigger-icon { display: none; }
+html[data-theme-preference="system"] .theme-trigger-icon[data-theme-preference-icon="system"],
+html[data-theme-preference="light"] .theme-trigger-icon[data-theme-preference-icon="light"],
+html[data-theme-preference="dark"] .theme-trigger-icon[data-theme-preference-icon="dark"] { display: block; }
 .theme-ic { display: inline-flex; }
-html[data-theme="light"] .theme-ic-dark { display: none; }
-html[data-theme="dark"] .theme-ic-light { display: none; }
+.theme-menu {
+  position: absolute; top: calc(100% + 2px); right: 0; z-index: 120;
+  min-width: 128px; max-height: 384px; overflow-y: auto; padding: 4px;
+  background: var(--menu-bg); border: 1px solid var(--menu-bd);
+  border-radius: var(--radius-2xl); box-shadow: var(--shadow-pop);
+  color: var(--menu-fg);
+}
+.theme-menu[hidden] { display: none; }
+.theme-menu button {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  padding: 8px; border: 0; border-radius: var(--radius-xl); background: none;
+  font: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
+  color: var(--menu-item-fg); text-align: left; cursor: pointer; white-space: nowrap;
+}
+.theme-menu-main { display: flex; align-items: center; gap: 8px; min-width: 0; white-space: nowrap; }
+.theme-menu button .ic { width: 16px; height: 16px; }
+/* 选中项右侧的对勾（原站 size-3.5=14px，未选中时 text-primary/0 全透明） */
+.theme-menu-check { display: inline-flex; color: transparent; }
+.theme-menu-check .ic { width: 14px; height: 14px; }
+.theme-menu button[aria-checked="true"] .theme-menu-check { color: var(--primary); }
+.theme-menu button:hover { background: var(--menu-item-hover); color: var(--menu-item-fg-hover); }
+.theme-menu button:focus { background: var(--menu-item-hi); color: var(--menu-item-fg-hover); }
+.theme-menu button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.theme-menu button[aria-checked="true"] { color: var(--primary); font-weight: 500; }
+@media (prefers-reduced-motion: no-preference) {
+  .theme-menu:not([hidden]) { animation: theme-menu-in .1s ease-out; }
+}
+@keyframes theme-menu-in { from { opacity: 0; transform: scale(.95); } }
 .menu-btn { display: none; }
-html:not([data-js="on"]) .search-btn, html:not([data-js="on"]) #theme-toggle { display: none; }
+html:not([data-js="on"]) .search-btn, html:not([data-js="on"]) #theme-preference-menu-trigger { display: none; }
 
 /* 第二行 tabs */
 .top-tabs { display: flex; align-items: center; gap: 0 24px; height: 100%; overflow-x: auto; scrollbar-width: none; }
@@ -1639,7 +1697,12 @@ html[data-theme="dark"] .top-tab { color: var(--gray-400); }
 .top-tab:hover { color: var(--gray-800); }
 html[data-theme="dark"] .top-tab:hover { color: var(--gray-300); }
 .top-tab .ic { width: 16px; height: 16px; }
-.top-tab.is-active { color: var(--primary); }
+.top-tab.is-active {
+  /* 实测原站激活项不变色，只用 [text-shadow:-0.2px_0_0_currentColor,0.2px_0_0_currentColor] 伪粗体 */
+  color: var(--gray-600);
+  text-shadow: -0.2px 0 0 currentColor, 0.2px 0 0 currentColor;
+}
+html[data-theme="dark"] .top-tab.is-active { color: var(--gray-400); }
 .top-tab.is-active::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0;
   height: 2px; background: var(--primary);
@@ -1710,14 +1773,18 @@ html[data-js="on"] .page-actions { display: flex; }
 .page-lead { margin: 8px 0 0; font-size: var(--prose-size); line-height: 30px; color: var(--lead-fg); }
 
 .copy-group { display: inline-flex; align-items: center; }
+/* 原站实测（computed style）：Copy page 按钮 122×34 / padding 6px 12px / 图标 16px stroke 1.5，
+   站点自定义 CSS（styles.css）对 #page-context-menu button 强制 border-radius:0，
+   所以渲染出来是直角胶囊；展开按钮 34×34，箭头 12×12 stroke 2（chevron-right 旋转 90°）。 */
 .copy-page {
   display: inline-flex; align-items: center; gap: 8px;
   height: 34px; padding: 6px 12px; cursor: pointer; font: inherit;
   font-size: 14px; line-height: 20px; font-weight: 500;
   color: var(--gray-300); background: var(--bg);
-  border: 1px solid var(--hairline); border-right: 0;
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  border: 1px solid var(--gray-200); border-right: 0;
+  border-radius: 0;
 }
+html[data-theme="dark"] .copy-page { border-color: rgba(255, 255, 255, .07); }
 html[data-theme="light"] .copy-page { color: var(--gray-700); border-color: var(--gray-200); }
 .copy-page:hover { background: rgba(165, 160, 164, .08); }
 .copy-page .ic { width: 16px; height: 16px; }
@@ -1725,23 +1792,35 @@ html[data-theme="light"] .copy-page { color: var(--gray-700); border-color: var(
   display: inline-flex; align-items: center; justify-content: center;
   height: 34px; width: 34px; padding: 0; cursor: pointer;
   color: var(--gray-400); background: var(--bg);
-  border: 1px solid var(--hairline);
-  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 0;
 }
+html[data-theme="dark"] .copy-page-more { border-color: rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .5); }
 html[data-theme="light"] .copy-page-more { border-color: var(--gray-200); color: var(--gray-500); }
 .copy-page-more:hover { background: rgba(165, 160, 164, .08); }
+.copy-page-more .ic { width: 12px; height: 12px; transition: transform .15s ease; }
+/* 原站展开时把箭头旋转 180°（rotate-90 → rotate-[270deg]） */
+.copy-page-more[aria-expanded="true"] .ic { transform: rotate(180deg); }
+/* 下拉：实测原站 177×90 / padding 4px / 直角 / border-gray-200 dark:border-white/[0.07] /
+   底色 bg-background-light dark:bg-background-dark；菜单项 8px 12px、16px/1.5 */
 .copy-menu {
-  position: absolute; z-index: 90; min-width: 210px; padding: 6px;
-  background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  position: absolute; z-index: 90; min-width: 156px; padding: 4px;
+  background: var(--bg); border: 1px solid var(--gray-200); border-radius: 0;
   box-shadow: var(--shadow-pop);
 }
+html[data-theme="dark"] .copy-menu { border-color: rgba(255, 255, 255, .07); }
 .copy-menu[hidden] { display: none; }
 .copy-menu button {
-  display: block; width: 100%; text-align: left; padding: 8px 10px;
-  background: none; border: 0; border-radius: 6px; cursor: pointer;
-  font: inherit; font-size: 14px; line-height: 20px; color: var(--fg);
+  display: block; width: 100%; text-align: left; padding: 8px 12px;
+  background: none; border: 0; border-radius: 0; cursor: pointer;
+  font: inherit; font-size: 16px; line-height: 24px; color: var(--fg);
+  white-space: nowrap;
 }
-.copy-menu button:hover { background: var(--sidebar-active-bg); color: var(--fg); }
+.copy-menu button:hover, .copy-menu button:focus {
+  background: rgba(86, 82, 85, .05); outline-offset: -2px;
+}
+html[data-theme="dark"] .copy-menu button:hover,
+html[data-theme="dark"] .copy-menu button:focus { background: rgba(229, 224, 228, .05); }
 
 /* --- 正文 ----------------------------------------------------------- */
 .prose {
@@ -2244,28 +2323,112 @@ const APP_JS = String.raw`
   var d = document;
   var root = d.documentElement;
 
-  /* ---- 主题切换 ---------------------------------------------------- */
-  function currentTheme() {
-    return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  }
+  /* ---- 主题偏好：三态 system / light / dark（对齐 docs.typesafe.ai） ----
+     偏好写在 <html data-theme-preference>，实际生效的主题写在 <html data-theme>；
+     system 时跟随 prefers-color-scheme，并且系统主题变化时实时跟随。 */
+  var THEME_KEY = 'tsd-theme-preference';
   var forcedTheme = (location.search.match(/[?&]theme=(dark|light)/) || [])[1] || null;
-  function applyTheme(theme) {
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+  function normalizePref(v) {
+    return (v === 'dark' || v === 'light' || v === 'system') ? v : 'system';
+  }
+  function currentPref() { return normalizePref(root.getAttribute('data-theme-preference')); }
+  function resolveTheme(pref) {
+    if (pref === 'system') return (mq && mq.matches) ? 'dark' : 'light';
+    return pref;
+  }
+  function currentTheme() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+
+  function applyPreference(pref, persist) {
+    pref = normalizePref(pref);
+    var theme = resolveTheme(pref);
+    root.setAttribute('data-theme-preference', pref);
     root.setAttribute('data-theme', theme);
     root.style.colorScheme = theme;
-    var btns = d.querySelectorAll('[data-theme-toggle]');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].setAttribute('aria-label', theme === 'dark' ? '切换到亮色主题' : '切换到暗色主题');
-      btns[i].setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    var items = d.querySelectorAll('.theme-menu [role="menuitemradio"]');
+    for (var i = 0; i < items.length; i++) {
+      items[i].setAttribute('aria-checked',
+        items[i].getAttribute('data-theme-preference') === pref ? 'true' : 'false');
     }
-    if (forcedTheme) return;                       // URL 显式指定主题时不写入持久化存储
-    try { localStorage.setItem('tsd-theme', theme); } catch (e) { /* 隐私模式忽略 */ }
+    if (persist) { try { localStorage.setItem(THEME_KEY, pref); } catch (e) { /* 隐私模式忽略 */ } }
+    try { d.dispatchEvent(new CustomEvent('tsd:themechange', { detail: { preference: pref, theme: theme } })); } catch (e) {}
   }
-  applyTheme(currentTheme());
-  d.addEventListener('click', function (ev) {
-    var btn = ev.target.closest ? ev.target.closest('[data-theme-toggle]') : null;
-    if (!btn) return;
-    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark');
-  });
+
+  /* ---- 主题偏好菜单：Esc 关闭 / 方向键移动 / 点外关闭 ------------------ */
+  var themeMenu = d.getElementById('theme-preference-menu');
+  var themeTrigger = d.getElementById('theme-preference-menu-trigger');
+  function themeItems() {
+    return themeMenu ? themeMenu.querySelectorAll('[role="menuitemradio"]') : [];
+  }
+  function themeMenuOpen() { return !!(themeMenu && !themeMenu.hidden); }
+  function openThemeMenu() {
+    if (!themeMenu || !themeTrigger) return;
+    var items = themeItems();
+    for (var i = 0; i < items.length; i++) items[i].setAttribute('tabindex', '-1');
+    themeMenu.hidden = false;
+    themeTrigger.setAttribute('aria-expanded', 'true');
+    // 原站 base-ui 打开时把高亮放在第一项上（data-highlighted），这里保持一致
+    if (items.length) items[0].focus();
+  }
+  function closeThemeMenu(refocus) {
+    if (!themeMenuOpen()) return;
+    themeMenu.hidden = true;
+    if (themeTrigger) {
+      themeTrigger.setAttribute('aria-expanded', 'false');
+      if (refocus) themeTrigger.focus();
+    }
+  }
+
+  if (themeMenu && themeTrigger) {
+    applyPreference(currentPref(), false);
+    themeTrigger.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      if (themeMenuOpen()) closeThemeMenu(false); else openThemeMenu();
+    });
+    themeTrigger.addEventListener('keydown', function (ev) {
+      if (ev.key === 'ArrowDown' || ev.key === 'Down') { ev.preventDefault(); openThemeMenu(); }
+    });
+    themeMenu.addEventListener('click', function (ev) {
+      var item = ev.target.closest ? ev.target.closest('[role="menuitemradio"]') : null;
+      if (!item) return;
+      forcedTheme = null;              // 用户显式选择后不再受 ?theme= 约束
+      applyPreference(item.getAttribute('data-theme-preference'), true);
+      closeThemeMenu(true);
+    });
+    themeMenu.addEventListener('keydown', function (ev) {
+      var items = themeItems();
+      if (!items.length) return;
+      var cur = -1;
+      for (var i = 0; i < items.length; i++) if (items[i] === d.activeElement) cur = i;
+      var next = null;
+      if (ev.key === 'ArrowDown' || ev.key === 'Down') next = (cur + 1) % items.length;
+      else if (ev.key === 'ArrowUp' || ev.key === 'Up') next = (cur - 1 + items.length) % items.length;
+      else if (ev.key === 'Home') next = 0;
+      else if (ev.key === 'End') next = items.length - 1;
+      else if (ev.key === 'Escape') { ev.preventDefault(); closeThemeMenu(true); return; }
+      else if (ev.key === 'Tab') { closeThemeMenu(false); return; }
+      if (next === null) return;
+      ev.preventDefault();
+      items[next].focus();
+    });
+    d.addEventListener('click', function (ev) {
+      if (!themeMenuOpen()) return;
+      var t = ev.target;
+      if (t.closest && (t.closest('#theme-preference-menu') || t.closest('#theme-preference-menu-trigger'))) return;
+      closeThemeMenu(false);
+    });
+    d.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') closeThemeMenu(true);
+    });
+    if (mq) {
+      var onSchemeChange = function () { if (currentPref() === 'system') applyPreference('system', false); };
+      if (mq.addEventListener) mq.addEventListener('change', onSchemeChange);
+      else if (mq.addListener) mq.addListener(onSchemeChange);
+    }
+  } else {
+    applyPreference(currentPref(), false);
+  }
 
   /* ---- 移动端侧栏 -------------------------------------------------- */
   d.addEventListener('click', function (ev) {
@@ -2381,17 +2544,45 @@ const APP_JS = String.raw`
     return art.innerText.replace(/\n{3,}/g, '\n\n').trim();
   }
   function flash(el, msg) {
-    var old = el.getAttribute('data-label') || el.textContent;
-    el.setAttribute('data-label', old);
-    el.textContent = msg;
-    setTimeout(function () { el.textContent = old; }, 1800);
+    var span = el.querySelector('.copy-page-label') || el;
+    var old = span.getAttribute('data-label') || span.textContent;
+    span.setAttribute('data-label', old);
+    span.textContent = msg;
+    setTimeout(function () { span.textContent = old; }, 1800);
+  }
+  /* 原站「Copy page」= 复制本页 Markdown（LLMs 版），「View as Markdown」= 打开 .md。
+     我们的 .md 由 tools/gen_llms.mjs 生成到同路径（<path>.md），取不到时退回正文纯文本。 */
+  function pageMdUrl() {
+    return d.body.getAttribute('data-md-src') || '';
+  }
+  function pageMarkdownText() {
+    var url = pageMdUrl();
+    if (!url || !window.fetch) return Promise.resolve(pagePlainText());
+    return fetch(url, { credentials: 'same-origin' }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    }).catch(function () { return pagePlainText(); });
   }
   var copyMenu = null;
-  function closeCopyMenu() { if (copyMenu) { copyMenu.hidden = true; } }
+  function setCopyExpanded(open) {
+    var b = d.getElementById('page-context-menu-more');
+    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function closeCopyMenu() {
+    if (!copyMenu || copyMenu.hidden) return;
+    if (copyMenu.contains(d.activeElement)) {
+      var more = d.getElementById('page-context-menu-more');
+      if (more) more.focus();
+    }
+    copyMenu.hidden = true;
+    setCopyExpanded(false);
+  }
   d.addEventListener('click', function (ev) {
     var main = ev.target.closest ? ev.target.closest('[data-copy-page]') : null;
     if (main) {
-      copyText(pagePlainText()).then(function () { flash(main, '已复制'); }).catch(function () { flash(main, '复制失败'); });
+      pageMarkdownText().then(function (t) { return copyText(t); })
+        .then(function () { flash(main, '已复制'); })
+        .catch(function () { flash(main, '复制失败'); });
       closeCopyMenu();
       return;
     }
@@ -2407,6 +2598,9 @@ const APP_JS = String.raw`
           copyMenu.style.right = Math.max(8, (d.documentElement.clientWidth - r.right)) + 'px';
           copyMenu.style.left = 'auto';
           copyMenu.hidden = false;
+          setCopyExpanded(true);
+          var firstItem = copyMenu.querySelector('[role="menuitem"]');
+          if (firstItem) firstItem.focus();
         }
       }
       return;
@@ -2414,8 +2608,8 @@ const APP_JS = String.raw`
     var item = ev.target.closest ? ev.target.closest('[data-copy-action]') : null;
     if (item) {
       var act = item.getAttribute('data-copy-action');
-      if (act === 'text') copyText(pagePlainText());
-      else if (act === 'link') copyText(location.href);
+      if (act === 'markdown') pageMarkdownText().then(function (t) { return copyText(t); });
+      else if (act === 'view') window.open(pageMdUrl(), '_blank', 'noopener');
       closeCopyMenu();
       return;
     }
@@ -2467,9 +2661,8 @@ const APP_JS = String.raw`
     } else {
       ensureMermaid();
     }
-    d.addEventListener('click', function (ev) {
-      var t = ev.target.closest ? ev.target.closest('[data-theme-toggle]') : null;
-      if (t && window.mermaid) setTimeout(renderMermaid, 60);
+    d.addEventListener('tsd:themechange', function () {
+      if (window.mermaid) setTimeout(renderMermaid, 60);
     });
   }
 
@@ -2727,13 +2920,50 @@ function sidebarHtml(tab, ctx) {
 /* -------------------------------------------------------------- 页面模板 */
 
 function headScript(themeInitOnly) {
-  // 首帧前应用主题：URL 参数 > localStorage > prefers-color-scheme
+  // 首帧前应用主题偏好（三态）：URL 参数 > localStorage > 跟随系统 prefers-color-scheme
+  // 与 docs.typesafe.ai 一致：偏好写在 <html data-theme-preference>，实际主题写在 <html data-theme>。
   return '<script>(function(){var r=document.documentElement;try{' +
     'var m=location.search.match(/[?&]theme=(dark|light)/);' +
-    'var t=m?m[1]:localStorage.getItem("tsd-theme");' +
-    'if(t!=="dark"&&t!=="light"){t=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}' +
+    'var v=m?m[1]:localStorage.getItem("tsd-theme-preference");' +
+    'if(v!=="dark"&&v!=="light"&&v!=="system"){v="system";}' +
+    'var t=(v==="system")?((window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"):v;' +
+    'r.setAttribute("data-theme-preference",v);' +
     'r.setAttribute("data-theme",t);r.style.colorScheme=t;' +
-    '}catch(e){r.setAttribute("data-theme","light");}r.setAttribute("data-js","on");})();<\/script>';
+    '}catch(e){r.setAttribute("data-theme-preference","system");r.setAttribute("data-theme","light");}' +
+    'r.setAttribute("data-js","on");})();<\/script>';
+}
+
+/* 主题偏好三态。触发按钮的图标**随偏好切换**，和原站一致：
+   system→monitor / light→sun / dark→moon。
+   原站的做法是三个图标都在 DOM 里、用
+   html[data-theme-preference=…] [data-theme-preference-icon=…] { display: contents } 控制显隐，
+   这里照抄同一套机制（CSS 见 .theme-trigger-icon 那段）。 */
+const THEME_MENU_OPTIONS = [
+  { value: 'system', label: '跟随系统', icon: 'monitor', aria: 'Switch to system theme' },
+  { value: 'light', label: '浅色', icon: 'sun', aria: 'Switch to light theme' },
+  { value: 'dark', label: '深色', icon: 'moon', aria: 'Switch to dark theme' },
+];
+
+function themeMenuHtml() {
+  let items = '';
+  for (const o of THEME_MENU_OPTIONS) {
+    items += '<button type="button" role="menuitemradio" tabindex="-1" aria-checked="false" ' +
+      'id="theme-preference-menu-item-' + o.value + '" data-theme-preference="' + o.value + '" ' +
+      'aria-label="' + esc(o.aria) + '">' +
+      '<span class="theme-menu-main">' + icon(o.icon, 'ic ic-sm', 2) + '<span>' + esc(o.label) + '</span></span>' +
+      '<span class="theme-menu-check" aria-hidden="true">' + icon('check', 'ic', 2) + '</span></button>';
+  }
+  return '<div class="theme-menu-wrap">' +
+    '<button class="icon-btn" id="theme-preference-menu-trigger" type="button" ' +
+    'aria-label="Change theme preference" aria-haspopup="menu" aria-expanded="false" ' +
+    'data-theme-menu-trigger>' +
+    THEME_MENU_OPTIONS.map(function (o) {
+      return '<span class="theme-trigger-icon" data-theme-preference-icon="' + o.value + '">' +
+        icon(o.icon, 'ic ic-sm', 2) + '</span>';
+    }).join('') +
+    '</button>' +
+    '<div class="theme-menu" id="theme-preference-menu" role="menu" hidden ' +
+    'aria-labelledby="theme-preference-menu-trigger">' + items + '</div></div>';
 }
 
 function topbarHtml(site, ctx, tab) {
@@ -2746,7 +2976,7 @@ function topbarHtml(site, ctx, tab) {
     const active = t === tab;
     tabs += '<a class="top-tab' + (active ? ' is-active' : '') + '" href="' + esc(ctx.base + first + '/') + '"' +
       (active ? ' aria-current="true"' : '') + '>' +
-      (t.icon && ICONS[t.icon] ? icon(t.icon, 'ic ic-sm') : '') + esc(t.label) + '</a>';
+      (t.icon && ICONS[t.icon] ? icon(t.icon, 'ic ic-sm', 2) : '') + esc(t.label) + '</a>';
   }
   const searchBtn = '<button class="search-btn" type="button" data-search-open aria-label="搜索文档">' +
     icon('search', 'ic ic-sm') + '<span class="search-label">Search...</span><kbd>Ctrl K</kbd></button>';
@@ -2764,9 +2994,7 @@ function topbarHtml(site, ctx, tab) {
     (site.docs.console || site.docs.footer && site.docs.footer.console
       ? '<a class="btn-primary" href="' + esc(site.docs.console || site.docs.footer.console) + '" target="_blank" rel="noreferrer noopener">TypeSafe console</a>'
       : '<a class="btn-primary" href="https://console.typesafe.ai" target="_blank" rel="noreferrer noopener">TypeSafe console</a>') +
-    '<button class="icon-btn" id="theme-toggle" type="button" data-theme-toggle aria-label="切换主题">' +
-    '<span class="theme-ic theme-ic-light">' + icon('moon', 'ic ic-sm') + '</span>' +
-    '<span class="theme-ic theme-ic-dark">' + icon('sun', 'ic ic-sm') + '</span></button>' +
+    themeMenuHtml() +
     '</div></div>' +
     '<nav class="topbar-row2" aria-label="主导航"><div class="top-tabs">' + tabs + '</div></nav>' +
     '</header>';
@@ -2847,15 +3075,19 @@ function splitPageBody(bodyHtml) {
   return { h1, lead, rest };
 }
 
+/* Copy page 按钮组：文案与顺序照原站实测（展开菜单只有两项：
+   「Copy page / Copy page as Markdown for LLMs」和「View as Markdown / View this page as plain text」，
+   站点自定义 CSS 把图标框与描述行都 display:none 了，所以可见的只有两行纯文字）。 */
 function copyPageHtml() {
   return '<div class="copy-group">' +
-    '<button class="copy-page" type="button" data-copy-page aria-label="复制本页正文">' +
-    icon('copy', 'ic') + '<span>Copy page</span></button>' +
-    '<button class="copy-page-more" type="button" data-copy-menu aria-label="更多复制选项" aria-haspopup="true">' +
-    icon('chevron-down', 'ic ic-sm') + '</button>' +
+    '<button class="copy-page" type="button" id="page-context-menu-button" data-copy-page aria-label="Copy page">' +
+    icon('copy', 'ic', 1.5) + '<span class="copy-page-label">Copy page</span></button>' +
+    '<button class="copy-page-more" type="button" id="page-context-menu-more" data-copy-menu ' +
+    'aria-label="More actions" aria-haspopup="menu" aria-expanded="false">' +
+    icon('chevron-down', 'ic', 2) + '</button>' +
     '<div class="copy-menu" id="copy-menu" role="menu" hidden>' +
-    '<button type="button" role="menuitem" data-copy-action="text">复制本页正文</button>' +
-    '<button type="button" role="menuitem" data-copy-action="link">复制本页链接</button>' +
+    '<button type="button" role="menuitem" data-copy-action="markdown">Copy page</button>' +
+    '<button type="button" role="menuitem" data-copy-action="view">View as Markdown</button>' +
     '</div></div>';
 }
 
@@ -2878,7 +3110,7 @@ function pageHtml(page, bodyHtml, toc, opts, site) {
     (eyebrow ? '<p class="page-breadcrumb">' + esc(eyebrow) + '</p>' : '') +
     '<div class="page-title-row">' +
     (split.h1 || ('<h1>' + esc(page.title) + '</h1>')) +
-    '<div class="page-actions">' + copyPageHtml() + '</div>' +
+    '<div class="page-actions" id="page-context-menu">' + copyPageHtml() + '</div>' +
     '</div>' +
     (split.lead ? '<p class="page-lead">' + unwrapParagraph(split.lead) + '</p>' : '') +
     '</header>';
@@ -2892,7 +3124,8 @@ function pageHtml(page, bodyHtml, toc, opts, site) {
     headScript() + '\n' +
     '<link rel="stylesheet" href="' + esc(rel) + 'assets/style.css">\n' +
     mermaidPreload +
-    '</head>\n<body data-base="' + esc(opts.base) + '" data-search-index="' + esc(rel + 'search-index.json') + '"' + mermaidAttr + '>\n' +
+    '</head>\n<body data-base="' + esc(opts.base) + '" data-search-index="' + esc(rel + 'search-index.json') + '"' +
+    ' data-md-src="' + esc(rel + page.path + '.md') + '"' + mermaidAttr + '>\n' +
     '<a class="skip-link" href="#main">跳到主要内容</a>\n' +
     topbarHtml(site, ctx, tab) + '\n' +
     '<div class="layout">\n' +
