@@ -7,3 +7,5 @@ node_modules
 __pycache__/
 *.pyc
 _audit_out.txt
+dist/
+_en/
