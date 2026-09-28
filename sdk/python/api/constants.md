@@ -1,6 +1,7 @@
 # 常量
 
-> TypeSafe Python SDK 的默认设置与环境变量名。
+> TypeSafe Python SDK 的默认设置与环境变量名。客户端按下方环境变量读取配置，未设置时使用对应的默认值。
+
 
 <a id="constants" />
 

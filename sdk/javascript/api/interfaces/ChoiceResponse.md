@@ -1,6 +1,7 @@
 # 接口：ChoiceResponse\<T\>
 
-选中的标签及其概率分布。
+选中的标签及其概率分布。[Choice](/primitives/choice) 问题的答案类型：`choice` 为概率最高的选项，`probabilities` 为所有选项上的分布，`confidence` 为 0 到 1 的置信度。
+
 
 ## 类型参数
 

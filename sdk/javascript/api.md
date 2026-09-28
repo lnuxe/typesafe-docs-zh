@@ -1,5 +1,9 @@
 # API 参考
 
+> JavaScript SDK 的完整 API 参考：14 个类、19 个接口、12 个类型别名、3 个变量与 3 个顶层函数。
+
+点击下方链接查看各符号的签名、参数与返回值。
+
 ## 类
 
 * [APIConnectionError](/sdk/javascript/api/classes/APIConnectionError)

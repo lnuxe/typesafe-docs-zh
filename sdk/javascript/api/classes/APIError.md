@@ -1,6 +1,7 @@
 # 类：APIError
 
-来自 API 的失败 HTTP 响应。
+来自 API 的失败 HTTP 响应。这是所有带 HTTP 状态码错误的基类；错误体中包含 API 返回的详细信息，`status` 属性为对应的 HTTP 状态码。
+
 
 ## 继承
 

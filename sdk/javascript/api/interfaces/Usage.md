@@ -1,6 +1,7 @@
 # 接口：Usage
 
-一次请求的 token 用量。
+一次请求的 token 用量。输入按 token 计费，输出 token 免费。参见[模型](/models)。
+
 
 ## 属性
 

@@ -39,6 +39,8 @@ export function SdkSignature({children}) {
   typesafe\_sdk.TypeSafeError
 </h2>
 
+所有 SDK 异常的基类。
+
 基类：<code><a href="https://docs.python.org/3/builtins/exceptions.html#Exception">Exception</a></code>
 
 SDK 失败的基类异常。
@@ -50,6 +52,8 @@ SDK 失败的基类异常。
 <h2 id="typesafe_sdk.TypeSafeAPIError">
   typesafe\_sdk.TypeSafeAPIError
 </h2>
+
+一次未成功的 HTTP 响应对应的基类，各具体错误按状态码细分。
 
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>
 
@@ -147,6 +151,8 @@ endpoint = endpoint
   typesafe\_sdk.TypeSafeBadRequestError
 </h2>
 
+HTTP 400：请求格式错误。
+
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
 请求无效（400）。
@@ -154,6 +160,8 @@ endpoint = endpoint
 <h2 id="typesafe_sdk.TypeSafeAuthenticationError">
   typesafe\_sdk.TypeSafeAuthenticationError
 </h2>
+
+HTTP 401：API 密钥缺失或无效。
 
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
@@ -163,6 +171,8 @@ endpoint = endpoint
   typesafe\_sdk.TypeSafePermissionDeniedError
 </h2>
 
+HTTP 403：当前凭据无权访问该资源。
+
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
 访问被拒绝（403）。
@@ -170,6 +180,8 @@ endpoint = endpoint
 <h2 id="typesafe_sdk.TypeSafeNotFoundError">
   typesafe\_sdk.TypeSafeNotFoundError
 </h2>
+
+HTTP 404：请求的资源不存在（例如模型名错误）。
 
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
@@ -179,6 +191,8 @@ endpoint = endpoint
   typesafe\_sdk.TypeSafeUnprocessableEntityError
 </h2>
 
+HTTP 422：请求体验证失败，例如问题格式错误。
+
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
 请求未通过服务端校验（422）。
@@ -186,6 +200,8 @@ endpoint = endpoint
 <h2 id="typesafe_sdk.TypeSafeRateLimitError">
   typesafe\_sdk.TypeSafeRateLimitError
 </h2>
+
+HTTP 429：超出速率限制，应指数退避后重试。
 
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
@@ -207,6 +223,8 @@ retry_after_ms = parse_retry_after(headers)
   typesafe\_sdk.TypeSafeInternalServerError
 </h2>
 
+HTTP 500：服务端内部错误。
+
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeAPIError">TypeSafeAPIError</a></code>
 
 服务端处理请求失败（5xx）。
@@ -218,6 +236,8 @@ retry_after_ms = parse_retry_after(headers)
 <h2 id="typesafe_sdk.TypeSafeAPIConnectionError">
   typesafe\_sdk.TypeSafeAPIConnectionError
 </h2>
+
+连接失败：网络错误、DNS 失败或连接被拒绝。
 
 基类：<code><a href="/sdk/python/api/exceptions#typesafe_sdk.TypeSafeError">TypeSafeError</a></code>, <code><a href="https://docs.python.org/3/builtins/exceptions.html#ConnectionError">ConnectionError</a></code>
 

@@ -1,6 +1,7 @@
 # 通用类型
 
-> TypeSafe API SDK 的通用类型。
+> TypeSafe API SDK 的通用类型：JSON 值与状态内容的基础类型定义。
+
 
 export function SdkSignature({children}) {
   async function copy(event) {

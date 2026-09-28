@@ -1,6 +1,7 @@
 # 类：AuthenticationError
 
-HTTP 401：认证失败。
+HTTP 401：认证失败。API 密钥缺失或无效时抛出，请检查 `Authorization` 请求头中的密钥是否正确、是否过期。参见[错误处理](/api#errors)。
+
 
 ## 继承
 

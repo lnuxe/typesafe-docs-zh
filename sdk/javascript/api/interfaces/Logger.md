@@ -1,6 +1,7 @@
 # 接口：Logger
 
-接收消息与结构化值的一组日志方法；与 `console` 兼容。
+接收消息与结构化值的一组日志方法；与 `console` 兼容。可在 [TypeSafeClientConfig](/sdk/javascript/api/interfaces/TypeSafeClientConfig) 中注入自定义实现，SDK 内部会用它输出请求日志。
+
 
 ## 方法
 

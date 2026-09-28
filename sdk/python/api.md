@@ -1,6 +1,7 @@
 # API 参考
 
-> TypeSafe AI API 的 Python 客户端
+> TypeSafe AI API 的 Python 客户端。下面是各模块的入口链接：同步与异步客户端、问题与响应类型、重试策略、异常与常量。
+
 
 <a id="api-reference" />
 

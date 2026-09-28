@@ -1,6 +1,7 @@
 # 类：PermissionDeniedError
 
-HTTP 403：访问被拒绝。
+HTTP 403：访问被拒绝。当前 API 密钥无权访问该资源时抛出，请确认密钥具备所需权限。
+
 
 ## 继承
 
